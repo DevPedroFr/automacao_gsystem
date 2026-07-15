@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bezerra Advogados | Excelência Jurídica em Mogi das Cruzes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#edeeef",
+                    "on-tertiary-fixed": "#271900",
+                    "on-primary-container": "#95aac3",
+                    "background": "#f8f9fa",
+                    "outline-variant": "#c3c6cd",
+                    "surface-container-high": "#e7e8e9",
+                    "tertiary-fixed": "#ffdea7",
+                    "inverse-primary": "#b3c9e3",
+                    "primary-container": "#2a3f54",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-dim": "#d9dadb",
+                    "on-tertiary-container": "#cba255",
+                    "primary": "#13293d",
+                    "inverse-on-surface": "#f0f1f2",
+                    "tertiary-fixed-dim": "#ecc070",
+                    "on-error": "#ffffff",
+                    "on-secondary-fixed": "#001e2b",
+                    "outline": "#74777d",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#5e4200",
+                    "surface-container-highest": "#e1e3e4",
+                    "primary-fixed-dim": "#b3c9e3",
+                    "tertiary-container": "#523900",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#34495e",
+                    "on-primary": "#ffffff",
+                    "surface-tint": "#4b6077",
+                    "on-secondary-fixed-variant": "#2a4b5b",
+                    "primary-fixed": "#cfe5ff",
+                    "on-background": "#191c1d",
+                    "inverse-surface": "#2e3132",
+                    "on-primary-fixed": "#051d31",
+                    "tertiary": "#362500",
+                    "surface-container-low": "#f3f4f5",
+                    "on-secondary-container": "#476778",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#191c1d",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#c6e7fc",
+                    "on-surface-variant": "#43474c",
+                    "surface": "#f8f9fa",
+                    "secondary-container": "#c3e4f9",
+                    "secondary": "#436274",
+                    "surface-bright": "#f8f9fa",
+                    "surface-variant": "#e1e3e4",
+                    "secondary-fixed-dim": "#aacbdf"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "section-gap-mobile": "64px",
+                    "section-gap-desktop": "120px",
+                    "gutter": "24px",
+                    "margin-mobile": "20px",
+                    "container-max-width": "1280px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Outfit"],
+                    "display-lg": ["Outfit"],
+                    "headline-md": ["Outfit"],
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-md": ["Inter"],
+                    "headline-lg": ["Outfit"],
+                    "caption": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .glass-header {
+            background: rgba(248, 249, 250, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .service-card {
+            box-shadow: 0 10px 40px rgba(19, 41, 61, 0.04);
+            transition: all 0.3s ease;
+        }
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 50px rgba(19, 41, 61, 0.08);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-item.active .accordion-content {
+            max-height: 200px;
+        }
+        .accordion-item.active .icon-rotate {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-on-surface">
+<!-- Header Navigation -->
+<header class="fixed top-0 left-0 right-0 z-[100] glass-header border-b border-outline-variant/30">
+<nav class="max-w-container-max-width mx-auto flex items-center justify-between px-margin-mobile py-4">
+<div class="flex items-center gap-3">
+<img alt="Bezerra Advogados Logo" class="h-10 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AP1WRLuNcgglu0LHgDfgwwIZHJIu9AgGnaSYDK3Okx8cLGPzmzabkiNLutOnUnD4axdYdRDN0O5gDyrMmjqV15VMReUCcQ9ClXvvPbjt0Hm0OOSiIHb8XB0u-NFnRR87CFdvJwsYGpPlOIXsB4lk6NLONflpwCJvjJH6SY6u4o5jHsOvTOR4Kp_Vx8KobuQbWLiOrCTtasvRQrOYB6R2Mp4yYwNxmxBQ0oJgeB0peEnmi8JvwlDKXqQDkUlH2A"/>
+<span class="hidden md:block font-headline-lg text-primary tracking-tight">BEZERRA ADVOGADOS</span>
+</div>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-primary" onclick="toggleDrawer()">
+<span class="material-symbols-outlined text-[32px]">menu</span>
+</button>
+<!-- Desktop Nav -->
+<ul class="hidden md:flex items-center gap-8">
+<li><a class="font-label-md text-on-surface-variant hover:text-on-tertiary-container transition-colors uppercase" href="#services">Serviços</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-on-tertiary-container transition-colors uppercase" href="#about">Sobre Nós</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-on-tertiary-container transition-colors uppercase" href="#testimonials">Depoimentos</a></li>
+<li><a class="font-label-md text-on-surface-variant hover:text-on-tertiary-container transition-colors uppercase" href="#faq">FAQ</a></li>
+<li>
+<a class="bg-primary text-on-primary px-6 py-2.5 rounded-full font-label-md uppercase tracking-wider hover:bg-primary-container transition-all" href="#contact">
+                        CONTATO
+                    </a>
+</li>
+</ul>
+</nav>
+</header>
+<!-- Mobile Navigation Drawer -->
+<div class="fixed inset-0 z-[110] translate-x-full transition-transform duration-300 ease-in-out md:hidden" id="nav-drawer">
+<div class="absolute inset-0 bg-primary/40 backdrop-blur-sm" onclick="toggleDrawer()"></div>
+<div class="absolute inset-y-0 right-0 w-72 bg-surface-container-lowest shadow-2xl flex flex-col p-6">
+<button class="self-end text-primary mb-8" onclick="toggleDrawer()">
+<span class="material-symbols-outlined text-[32px]">close</span>
+</button>
+<ul class="flex flex-col gap-6">
+<li><a class="flex items-center gap-4 font-headline-md text-primary" href="#services" onclick="toggleDrawer()"><span class="material-symbols-outlined">gavel</span> Serviços</a></li>
+<li><a class="flex items-center gap-4 font-headline-md text-primary" href="#about" onclick="toggleDrawer()"><span class="material-symbols-outlined">account_balance</span> Sobre Nós</a></li>
+<li><a class="flex items-center gap-4 font-headline-md text-primary" href="#testimonials" onclick="toggleDrawer()"><span class="material-symbols-outlined">stars</span> Depoimentos</a></li>
+<li><a class="flex items-center gap-4 font-headline-md text-primary" href="#faq" onclick="toggleDrawer()"><span class="material-symbols-outlined">help</span> FAQ</a></li>
+<li class="mt-4">
+<a class="block text-center bg-on-tertiary-container text-white py-4 rounded-xl font-label-md uppercase" href="#contact" onclick="toggleDrawer()">CONTATO</a>
+</li>
+</ul>
+</div>
+</div>
+<main>
+<!-- Hero Section -->
+<section class="relative pt-32 pb-section-gap-mobile md:pt-48 md:pb-section-gap-desktop overflow-hidden">
+<div class="max-w-container-max-width mx-auto px-margin-mobile flex flex-col md:flex-row items-center gap-12">
+<div class="flex-1 space-y-6 text-center md:text-left z-10">
+<h1 class="font-headline-lg-mobile md:text-display-lg text-primary leading-tight">
+                        Bezerra Advogados: <span class="text-on-tertiary-container">Excelência Jurídica</span> em Mogi das Cruzes
+                    </h1>
+<p class="font-body-lg text-on-surface-variant max-w-xl mx-auto md:mx-0">
+                        Sua segurança jurídica e seus direitos defendidos com expertise e dedicação. Soluções personalizadas para você e sua empresa.
+                    </p>
+<div class="pt-4">
+<a class="inline-block bg-on-tertiary-container text-white px-8 py-4 rounded-full font-label-md uppercase tracking-widest hover:scale-105 transition-transform shadow-lg shadow-on-tertiary-container/20" href="#contact">
+                            AGENDE SUA CONSULTA GRATUITA
+                        </a>
+</div>
+</div>
+<div class="flex-1 w-full relative">
+<div class="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] md:aspect-square">
+<img class="w-full h-full object-cover" data-alt="A professional and modern law office interior located in Mogi das Cruzes, featuring large windows overlooking the city mountains at sunset. The space is filled with soft, warm golden lighting reflecting off rich wooden textures and premium leather furniture. The aesthetic is clean, minimalist, and authoritative, embodying a high-end corporate law firm environment with a sense of calm confidence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtx_JuLy08aMbTrY51FiYz24PDSq0E4s56UlgHxNQDPbzVeKwnWEI7DdONFCEYanXkLKAkPys_o6EG0D-SAKZX5pGk-7aKBX5fQkzngp6i0R3FG5m2GFhG3z3YxyuONgr8fVVmy3KVLg--iO-D4YbpupoWEJi8n_WbR3siuAg9rgILxtNNXrQ452Iz0IClH_YLpdbLBCjJqvxTpCmiMDfSJ-UQMUp0Jd9llwFYtRMi7H4NCt5fJhnKy3QQ967m_RPQpb4VJDurZ1Y"/>
+</div>
+<!-- Decorative Element -->
+<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-primary-container rounded-2xl -z-10 opacity-10"></div>
+</div>
+</div>
+</section>
+<!-- Social Proof -->
+<section class="bg-surface-container-low py-16" id="testimonials">
+<div class="max-w-container-max-width mx-auto px-margin-mobile">
+<div class="text-center mb-12">
+<div class="flex items-center justify-center gap-2 mb-2 text-on-tertiary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<h2 class="font-headline-md text-primary">4.9/5.0 estrelas no Google Maps</h2>
+<p class="font-caption text-outline">Baseadas em 423 avaliações de clientes reais</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/20">
+<p class="font-body-md italic text-on-surface-variant mb-6">"Profissionalismo impecável. Resolveram meu problema contratual com uma agilidade que eu não esperava. Recomendo muito em Mogi."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center font-bold text-primary">RC</div>
+<div>
+<p class="font-label-md text-primary">Ricardo Camargo</p>
+<p class="font-caption text-outline">Empresário</p>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/20">
+<p class="font-body-md italic text-on-surface-variant mb-6">"Fui muito bem atendida em uma causa trabalhista. Transparência total em cada etapa do processo e sempre disponíveis para tirar dúvidas."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center font-bold text-primary">AS</div>
+<div>
+<p class="font-label-md text-primary">Ana Silva</p>
+<p class="font-caption text-outline">Cliente</p>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/20">
+<p class="font-body-md italic text-on-surface-variant mb-6">"A equipe de direito civil é excepcional. Me ajudaram com um inventário complexo de forma muito humana e técnica ao mesmo tempo."</p>
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center font-bold text-primary">MP</div>
+<div>
+<p class="font-label-md text-primary">Marcos Pereira</p>
+<p class="font-caption text-outline">Aposentado</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Services Grid -->
+<section class="py-section-gap-mobile md:py-section-gap-desktop bg-surface" id="services">
+<div class="max-w-container-max-width mx-auto px-margin-mobile">
+<div class="max-w-2xl mb-12">
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-primary mb-4">Especialidades Jurídicas</h2>
+<p class="font-body-md text-on-surface-variant">Oferecemos consultoria e suporte em diversas áreas do direito para garantir a proteção integral dos seus interesses.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Direito Civil -->
+<div class="service-card bg-surface-container-lowest p-8 rounded-xl border-l-4 border-on-tertiary-container">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-on-tertiary-container mb-6">
+<span class="material-symbols-outlined text-[32px]">gavel</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">Direito Civil</h3>
+<p class="font-body-md text-on-surface-variant mb-6">
+                            Assessoria completa em questões de família, contratos, responsabilidade civil e consumidor. Seus direitos protegidos com agilidade e ética.
+                        </p>
+<a class="font-label-md text-on-tertiary-container flex items-center gap-2 hover:gap-3 transition-all" href="#contact">
+                            SABER MAIS <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<!-- Direito Trabalhista -->
+<div class="service-card bg-surface-container-lowest p-8 rounded-xl border-l-4 border-primary">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-primary mb-6">
+<span class="material-symbols-outlined text-[32px]">work</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">Direito Trabalhista</h3>
+<p class="font-body-md text-on-surface-variant mb-6">
+                            Defesa de trabalhadores e empresas em causas trabalhistas, garantindo justiça e conformidade legal. Consultoria preventiva e litígios.
+                        </p>
+<a class="font-label-md text-primary flex items-center gap-2 hover:gap-3 transition-all" href="#contact">
+                            SABER MAIS <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<!-- Direito Empresarial -->
+<div class="service-card bg-surface-container-lowest p-8 rounded-xl border-l-4 border-secondary">
+<div class="w-12 h-12 rounded-lg bg-surface-container flex items-center justify-center text-secondary mb-6">
+<span class="material-symbols-outlined text-[32px]">business</span>
+</div>
+<h3 class="font-headline-md text-primary mb-4">Direito Empresarial</h3>
+<p class="font-body-md text-on-surface-variant mb-6">
+                            Suporte jurídico para empresas, desde a constituição até a resolução de conflitos, contratos e compliance. Foco na segurança do seu negócio.
+                        </p>
+<a class="font-label-md text-secondary flex items-center gap-2 hover:gap-3 transition-all" href="#contact">
+                            SABER MAIS <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- About Us -->
+<section class="py-section-gap-mobile md:py-section-gap-desktop bg-primary text-on-primary" id="about">
+<div class="max-w-container-max-width mx-auto px-margin-mobile flex flex-col md:flex-row gap-16 items-center">
+<div class="flex-1 space-y-6">
+<h2 class="font-headline-lg-mobile md:font-headline-lg">Autoridade Local em Mogi das Cruzes</h2>
+<div class="w-16 h-1 bg-on-tertiary-container"></div>
+<p class="font-body-lg opacity-90 leading-relaxed">
+                        Fundado com o propósito de elevar o padrão do atendimento jurídico na região do Alto Tietê, o escritório Bezerra Advogados consolidou-se como referência pela sua atuação técnica e ética.
+                    </p>
+<p class="font-body-md opacity-80">
+                        Nossa equipe é composta por especialistas que entendem a dinâmica local de Mogi das Cruzes, oferecendo um atendimento humanizado e focado em resultados reais, seja para o cidadão ou para a empresa.
+                    </p>
+<div class="grid grid-cols-2 gap-8 pt-6">
+<div>
+<p class="text-[40px] font-bold text-on-tertiary-container">15+</p>
+<p class="font-label-md opacity-70 uppercase tracking-wider">Anos de Experiência</p>
+</div>
+<div>
+<p class="text-[40px] font-bold text-on-tertiary-container">2k+</p>
+<p class="font-label-md opacity-70 uppercase tracking-wider">Causas Resolvidas</p>
+</div>
+</div>
+</div>
+<div class="flex-1 w-full">
+<div class="rounded-xl overflow-hidden shadow-2xl relative">
+<img class="w-full h-[500px] object-cover" data-alt="A professional portrait of a diverse legal team standing together in a modern, light-filled conference room in Mogi das Cruzes. The team consists of men and women dressed in elegant corporate attire, exuding confidence and approachability. The background features a subtle view of the city skyline through large windows, with soft blue and gold tones dominating the scene. The lighting is flattering and professional, emphasizing a humanized and trustworthy tone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDeJqXyTzOdEkHp1woXuI0FvJV_2vmCdVPCQLFRN2IsbnxHi5n0DIwkZ7R1sHWPGG1aqNjI_IG0eHzfSRG8iW4AYizbQ-NhtKfcnqod5DEKVrJ7MaiTjUBqDh4IvnZTTm4A-mN-QmwWsUZxc9SQI89MMDjsOaJ3z6jV-d2H1ocrYhlLMCviw2K6MYgoz6DNuIECp-sEQbmtd01yHVTNBbjryCMPan5zOkGI1ujx8lB-xTgzU3yTnKHnBR8gaz93yMGGEGet7aulUdc"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="py-section-gap-mobile md:py-section-gap-desktop bg-surface" id="faq">
+<div class="max-w-2xl mx-auto px-margin-mobile">
+<h2 class="font-headline-lg-mobile text-center text-primary mb-12">Dúvidas Frequentes</h2>
+<div class="space-y-4">
+<!-- FAQ Item 1 -->
+<div class="accordion-item border border-outline-variant/30 rounded-lg overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleAccordion(this)">
+<span class="font-label-md text-primary">Como posso agendar uma consulta?</span>
+<span class="material-symbols-outlined icon-rotate transition-transform">expand_more</span>
+</button>
+<div class="accordion-content">
+<div class="p-6 pt-0 font-body-md text-on-surface-variant border-t border-outline-variant/10">
+                                O agendamento pode ser feito diretamente pelo nosso WhatsApp, telefone ou preenchendo o formulário de contato abaixo. Retornamos em no máximo 2 horas úteis.
+                            </div>
+</div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="accordion-item border border-outline-variant/30 rounded-lg overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleAccordion(this)">
+<span class="font-label-md text-primary">Quais as principais áreas de atuação?</span>
+<span class="material-symbols-outlined icon-rotate transition-transform">expand_more</span>
+</button>
+<div class="accordion-content">
+<div class="p-6 pt-0 font-body-md text-on-surface-variant border-t border-outline-variant/10">
+                                Somos especialistas em Direito Civil, Trabalhista e Empresarial, atendendo tanto questões consultivas quanto contenciosas.
+                            </div>
+</div>
+</div>
+<!-- FAQ Item 3 -->
+<div class="accordion-item border border-outline-variant/30 rounded-lg overflow-hidden bg-surface-container-lowest">
+<button class="w-full flex items-center justify-between p-6 text-left hover:bg-surface-container-low transition-colors" onclick="toggleAccordion(this)">
+<span class="font-label-md text-primary">Atendem empresas e pessoas físicas?</span>
+<span class="material-symbols-outlined icon-rotate transition-transform">expand_more</span>
+</button>
+<div class="accordion-content">
+<div class="p-6 pt-0 font-body-md text-on-surface-variant border-t border-outline-variant/10">
+                                Sim. Possuímos departamentos dedicados para o atendimento de pessoas físicas em suas necessidades cotidianas e um braço de consultoria jurídica estratégica para empresas de todos os portes.
+                            </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer / Contact Section -->
+<footer class="bg-primary text-on-primary" id="contact">
+<div class="max-w-container-max-width mx-auto px-margin-mobile py-section-gap-mobile md:py-section-gap-desktop">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+<!-- Contact Form -->
+<div class="bg-surface-container-lowest rounded-2xl p-8 shadow-xl">
+<h3 class="font-headline-md text-primary mb-6">Solicite um Contato</h3>
+<form class="space-y-4">
+<div>
+<label class="block font-label-md text-outline mb-2">Nome Completo</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 focus:ring-2 focus:ring-on-tertiary-container focus:border-transparent outline-none text-on-surface transition-all" placeholder="Seu nome" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-outline mb-2">E-mail ou WhatsApp</label>
+<input class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 focus:ring-2 focus:ring-on-tertiary-container focus:border-transparent outline-none text-on-surface transition-all" placeholder="Contato para retorno" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-outline mb-2">Assunto</label>
+<select class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 focus:ring-2 focus:ring-on-tertiary-container focus:border-transparent outline-none text-on-surface transition-all">
+<option>Direito Civil</option>
+<option>Direito Trabalhista</option>
+<option>Direito Empresarial</option>
+<option>Outros</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-outline mb-2">Mensagem</label>
+<textarea class="w-full bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 focus:ring-2 focus:ring-on-tertiary-container focus:border-transparent outline-none text-on-surface transition-all" placeholder="Como podemos ajudar?" rows="4"></textarea>
+</div>
+<button class="w-full bg-on-tertiary-container text-white font-label-md uppercase tracking-widest py-4 rounded-lg hover:brightness-110 transition-all shadow-lg" type="submit">
+                            ENVIAR MENSAGEM
+                        </button>
+</form>
+</div>
+<!-- Info Column -->
+<div class="space-y-12">
+<div>
+<h4 class="font-label-md text-on-tertiary-container mb-6 uppercase tracking-widest">Informações de Contato</h4>
+<div class="space-y-6">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-on-tertiary-container">location_on</span>
+<div>
+<p class="font-label-md">Endereço</p>
+<p class="opacity-70">Edifício Helbor Dual - Av. Pref. Carlos Ferreira Lopes, 703 - Sl 707 - Vila Mogilar, Mogi das Cruzes - SP, 08773-490</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-tertiary-container">schedule</span>
+<div>
+<p class="font-label-md">Horário de Atendimento</p>
+<p class="opacity-70">Seg-Sex: 09h às 18h</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-tertiary-container">call</span>
+<div>
+<p class="font-label-md">Telefone / WhatsApp</p>
+<p class="opacity-70">(11) 4799-XXXX</p>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h4 class="font-label-md text-on-tertiary-container mb-6 uppercase tracking-widest">Redes Sociais</h4>
+<div class="flex gap-4">
+<a class="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-on-tertiary-container hover:border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">share</span>
+</a>
+<a class="w-12 h-12 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-on-tertiary-container hover:border-transparent transition-all" href="#">
+<span class="material-symbols-outlined">alternate_email</span>
+</a>
+</div>
+</div>
+<div class="pt-8 border-t border-outline-variant/10">
+<p class="font-caption opacity-50">
+                            © 2024 Bezerra Advogados. Todos os direitos reservados. Mogi das Cruzes - SP<br/>
+                            Privacidade • Termos de Uso • OAB/SP
+                        </p>
+</div>
+</div>
+</div>
+</div>
+</footer>
+<script>
+        function toggleDrawer() {
+            const drawer = document.getElementById('nav-drawer');
+            drawer.classList.toggle('translate-x-full');
+        }
+
+        function toggleAccordion(button) {
+            const item = button.parentElement;
+            const isActive = item.classList.contains('active');
+            
+            // Close all items
+            document.querySelectorAll('.accordion-item').forEach(i => {
+                i.classList.remove('active');
+            });
+
+            // If it wasn't active, open it
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // Add scroll animation for header shadow
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-md');
+            } else {
+                header.classList.remove('shadow-md');
+            }
+        });
+    </script>
+</body></html>

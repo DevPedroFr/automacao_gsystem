@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Renata Flora Advocacia | Direito Trabalhista</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&amp;family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#f2f0f0",
+                        "on-tertiary-fixed": "#191c1d",
+                        "background": "#fbf9f8",
+                        "secondary-fixed": "#ffdea5",
+                        "on-background": "#1b1c1c",
+                        "surface-tint": "#515f78",
+                        "primary-fixed": "#d6e3ff",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c5c6cd",
+                        "inverse-surface": "#303030",
+                        "error-container": "#ffdad6",
+                        "primary": "#000000",
+                        "on-secondary-container": "#785a1a",
+                        "tertiary-fixed": "#e1e3e4",
+                        "primary-fixed-dim": "#b9c7e4",
+                        "error": "#ba1a1a",
+                        "surface-dim": "#dbd9d9",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-surface-variant": "#44474d",
+                        "tertiary-container": "#191c1d",
+                        "secondary-container": "#fed488",
+                        "on-tertiary-container": "#828485",
+                        "on-primary-fixed-variant": "#39475f",
+                        "on-secondary-fixed": "#261900",
+                        "outline": "#75777e",
+                        "surface": "#fbf9f8",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "surface-container": "#efeded",
+                        "on-error": "#ffffff",
+                        "on-surface": "#1b1c1c",
+                        "surface-bright": "#fbf9f8",
+                        "surface-container-low": "#f5f3f3",
+                        "inverse-primary": "#b9c7e4",
+                        "surface-container-highest": "#e4e2e2",
+                        "on-primary-container": "#76849f",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#0d1c32",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "surface-variant": "#e4e2e2",
+                        "secondary": "#775a19",
+                        "surface-container-high": "#eae8e7",
+                        "on-primary-fixed": "#0d1c32"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "lg": "48px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "xl": "80px",
+                        "container-max": "1200px",
+                        "md": "24px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["\"Source Serif 4\""],
+                        "headline-sm": ["\"Source Serif 4\""],
+                        "label-md": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "body-lg": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["\"Source Serif 4\""],
+                        "caption": ["Hanken Grotesk"],
+                        "headline-md": ["\"Source Serif 4\""]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "caption": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-nav { backdrop-filter: blur(12px); }
+        .hero-bg {
+            background: linear-gradient(to right, rgba(251, 249, 248, 0.95), rgba(251, 249, 248, 0.4)), url('placeholder');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-secondary-container selection:text-on-secondary-container antialiased">
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 w-full z-50 bg-surface/90 dark:bg-surface-container/90 backdrop-blur-md border-b border-outline-variant/30 shadow-sm transition-all duration-300" id="main-nav">
+<div class="max-w-container-max mx-auto px-gutter flex justify-between items-center h-20">
+<!-- Brand Logo -->
+<a class="flex items-center gap-sm" href="#">
+<img alt="Logo Renata Flora Advocacia" class="h-10 w-10 object-contain rounded-DEFAULT" src="https://renatafloraadvocacia.com.br/wp-content/uploads/2024/04/Logo_re-removebg-preview.png"/>
+<span class="font-headline-md text-headline-sm md:text-headline-md font-bold text-primary dark:text-on-surface tracking-tight">Renata Flora Advocacia</span>
+</a>
+<!-- Desktop Navigation -->
+<div class="hidden md:flex items-center gap-lg">
+<ul class="flex items-center gap-md">
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary font-label-md text-label-md transition-all duration-300 ease-in-out hover:bg-secondary/10 px-sm py-xs rounded-lg active-nav" href="#servicos">Serviços</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary font-label-md text-label-md transition-all duration-300 ease-in-out hover:bg-secondary/10 px-sm py-xs rounded-lg" href="#sobre">Sobre Nós</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary font-label-md text-label-md transition-all duration-300 ease-in-out hover:bg-secondary/10 px-sm py-xs rounded-lg" href="#depoimentos">Depoimentos</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/80 hover:text-primary font-label-md text-label-md transition-all duration-300 ease-in-out hover:bg-secondary/10 px-sm py-xs rounded-lg" href="#faq">FAQ</a></li>
+</ul>
+<a class="bg-primary-container text-on-primary font-label-md text-label-md px-md py-sm rounded-DEFAULT hover:bg-secondary hover:text-on-primary transition-all duration-300 shadow-sm hover:shadow-md" href="#contato">Agendar Consultoria</a>
+</div>
+<!-- Mobile Menu Button -->
+<button aria-label="Menu" class="md:hidden text-primary p-sm" id="mobile-menu-btn">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<!-- Mobile Menu Overlay (Hidden by default) -->
+<div class="fixed inset-0 bg-surface z-40 hidden pt-24 px-gutter flex-col" id="mobile-menu">
+<ul class="flex flex-col gap-lg font-headline-sm text-headline-sm">
+<li><a class="block border-b border-outline-variant/30 pb-sm" href="#servicos">Serviços</a></li>
+<li><a class="block border-b border-outline-variant/30 pb-sm" href="#sobre">Sobre Nós</a></li>
+<li><a class="block border-b border-outline-variant/30 pb-sm" href="#depoimentos">Depoimentos</a></li>
+<li><a class="block border-b border-outline-variant/30 pb-sm" href="#faq">FAQ</a></li>
+</ul>
+<a class="mt-xl bg-primary-container text-on-primary text-center font-label-md text-label-md px-md py-md rounded-DEFAULT" href="#contato">Agendar Consultoria</a>
+</div>
+<!-- Main Content -->
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="relative min-h-[80vh] flex items-center pt-xl pb-xl overflow-hidden bg-surface-container-low" id="home">
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center opacity-40" data-alt="A professional, modern law firm office interior, subtly out of focus in the background, featuring sleek architectural lines, high-end materials like dark wood and glass, bathed in soft, natural daylight conveying trust, stability, and quiet luxury. The overall aesthetic is bright, minimalist, and authoritative." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD_jG4NZ1JULs-JhCkDHtJlO43sXNFvspo3hI2ZiVBps5x6LWDL5IX-4_1mhMrSkxPwXtXpNxRCgGaG67qco3mvqivvDWPY69hsD-pb528C4uVKOUg1FUzAx6PCLGybreYXLysO0ekQl6ZSr8mWZ79dMSeCzcDjG1_J_OwJ2rqu1G76oomE1c-2bZcjx-i4FqFYSwfVV0lt4h2Csw_bWcaVLmXBPNCzpaaiQJlcIQgNL3QVXlgw__7DA3rNcDPPrAt9d1ThaUOlRoY')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent"></div>
+</div>
+<div class="max-w-container-max mx-auto px-gutter w-full relative z-10 grid md:grid-cols-12 gap-lg items-center">
+<div class="md:col-span-8 lg:col-span-7 flex flex-col gap-md">
+<div class="inline-flex items-center gap-xs bg-primary/5 text-primary px-sm py-xs rounded-full w-fit mb-sm border border-primary/10">
+<span class="material-symbols-outlined text-[16px]">gavel</span>
+<span class="font-label-md text-caption uppercase tracking-wider">Direito Trabalhista Especializado</span>
+</div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary leading-tight">
+                        Defesa Jurídica Especializada em Direito Trabalhista para Empresas e Colaboradores
+                    </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mt-sm mb-lg">
+                        Proteja seus direitos com a experiência de quem atua há mais de 15 anos no mercado. Estratégia, transparência e resultados sólidos.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-sm">
+<a class="bg-primary-container text-on-primary font-label-md text-label-md px-lg py-md rounded-DEFAULT hover:bg-secondary hover:text-on-primary transition-all duration-300 text-center shadow-md flex items-center justify-center gap-xs group" href="#contato">
+                            Fale com um Advogado Agora
+                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+<a class="border border-secondary text-secondary font-label-md text-label-md px-lg py-md rounded-DEFAULT hover:bg-secondary/5 transition-all duration-300 text-center flex items-center justify-center" href="#servicos">
+                            Conhecer Nossas Áreas
+                        </a>
+</div>
+</div>
+</div>
+</section>
+<!-- Services Section -->
+<section class="py-xl bg-surface relative" id="servicos">
+<div class="max-w-container-max mx-auto px-gutter">
+<div class="text-center max-w-3xl mx-auto mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary mb-sm">Áreas de Atuação</h2>
+<div class="w-16 h-1 bg-secondary mx-auto mb-md rounded-full"></div>
+<p class="font-body-md text-body-md text-on-surface-variant">Soluções jurídicas estratégicas e personalizadas para desafios complexos no ambiente corporativo e trabalhista.</p>
+</div>
+<div class="grid md:grid-cols-2 lg:grid-cols-4 gap-md">
+<!-- Service Card 1 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-lg hover:border-secondary hover:shadow-[0_4px_20px_rgba(10,25,47,0.05)] transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="w-12 h-12 bg-surface-container-low rounded-DEFAULT flex items-center justify-center mb-md text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors relative z-10">
+<span class="material-symbols-outlined" data-weight="fill">personal_injury</span>
+</div>
+<h3 class="font-headline-sm text-body-lg font-semibold text-primary mb-sm relative z-10">Acidentes de Trabalho</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow relative z-10">Assistência jurídica detalhada para garantir reparação integral, suporte e preservação de direitos em casos de lesões no ambiente laboral.</p>
+</div>
+<!-- Service Card 2 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-lg hover:border-secondary hover:shadow-[0_4px_20px_rgba(10,25,47,0.05)] transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="w-12 h-12 bg-surface-container-low rounded-DEFAULT flex items-center justify-center mb-md text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors relative z-10">
+<span class="material-symbols-outlined" data-weight="fill">description</span>
+</div>
+<h3 class="font-headline-sm text-body-lg font-semibold text-primary mb-sm relative z-10">Rescisões</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow relative z-10">Orientação especializada sobre termos de rescisão contratual, cálculo de verbas rescisórias e garantia do cumprimento da legislação vigente.</p>
+</div>
+<!-- Service Card 3 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-lg hover:border-secondary hover:shadow-[0_4px_20px_rgba(10,25,47,0.05)] transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="w-12 h-12 bg-surface-container-low rounded-DEFAULT flex items-center justify-center mb-md text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors relative z-10">
+<span class="material-symbols-outlined" data-weight="fill">shield_person</span>
+</div>
+<h3 class="font-headline-sm text-body-lg font-semibold text-primary mb-sm relative z-10">Assédio Moral</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow relative z-10">Proteção enérgica e defesa intransigente contra práticas abusivas, garantindo um ambiente de trabalho digno e buscando reparações justas.</p>
+</div>
+<!-- Service Card 4 -->
+<div class="group bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-lg hover:border-secondary hover:shadow-[0_4px_20px_rgba(10,25,47,0.05)] transition-all duration-300 flex flex-col h-full relative overflow-hidden">
+<div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+<div class="w-12 h-12 bg-surface-container-low rounded-DEFAULT flex items-center justify-center mb-md text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors relative z-10">
+<span class="material-symbols-outlined" data-weight="fill">domain</span>
+</div>
+<h3 class="font-headline-sm text-body-lg font-semibold text-primary mb-sm relative z-10">Defesa Patronal</h3>
+<p class="font-body-md text-body-md text-on-surface-variant flex-grow relative z-10">Defesa jurídica estratégica para empresas, mitigação de passivos trabalhistas, consultoria preventiva e representação em contenciosos.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- About Section -->
+<section class="py-xl bg-surface-container-low" id="sobre">
+<div class="max-w-container-max mx-auto px-gutter grid md:grid-cols-2 gap-xl items-center">
+<div class="order-2 md:order-1 relative">
+<div class="aspect-[4/5] rounded-lg overflow-hidden border border-outline-variant/20 shadow-[0_4px_20px_rgba(10,25,47,0.05)] relative z-10">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of a confident female lawyer, middle-aged with sophisticated attire (dark navy blazer), standing in a bright, modern law office. The lighting is soft and flattering, creating a trustworthy and authoritative mood. The background features subtle architectural lines and subtle gold accents. High-end editorial photography style." src="https://renatafloraadvocacia.com.br/wp-content/uploads/2024/04/Renata-2-682x1024.jpg"/>
+</div>
+<div class="absolute -bottom-md -right-md w-2/3 h-2/3 bg-secondary/10 rounded-lg -z-10 border border-secondary/20"></div>
+</div>
+<div class="order-1 md:order-2 flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-primary">Conheça Dra. Renata Flora</h2>
+<div class="w-16 h-1 bg-secondary rounded-full"></div>
+<div class="font-body-md text-body-md text-on-surface-variant space-y-md">
+<p>Com mais de 15 anos de dedicação exclusiva ao Direito Trabalhista, nossa abordagem é fundamentada na humanização do atendimento jurídico e na transparência absoluta com nossos clientes.</p>
+<p>Entendemos que conflitos trabalhistas geram desgastes significativos. Por isso, nosso compromisso vai além da representação técnica: oferecemos um acompanhamento próximo, traduzindo o 'juridiquês' e garantindo que você compreenda cada etapa do processo.</p>
+<p>Nossa sólida trajetória em Mogi das Cruzes e região construiu uma reputação de autoridade técnica, negociações firmes e resultados consistentes, sempre pautados pela ética inegociável.</p>
+</div>
+<div class="flex gap-md mt-sm">
+<div class="flex flex-col border-l-2 border-secondary pl-sm">
+<span class="font-display-lg-mobile text-headline-md text-primary font-bold">+15</span>
+<span class="font-label-md text-caption uppercase text-on-surface-variant tracking-wider">Anos de Experiência</span>
+</div>
+<div class="flex flex-col border-l-2 border-secondary pl-sm">
+<span class="font-display-lg-mobile text-headline-md text-primary font-bold">+2k</span>
+<span class="font-label-md text-caption uppercase text-on-surface-variant tracking-wider">Casos Resolvidos</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer (Shared Component) -->
+<footer class="bg-surface-container-highest dark:bg-surface-container-lowest w-full py-xl border-t border-surface-container-high dark:border-surface-container-lowest">
+<div class="max-w-container-max mx-auto px-gutter grid grid-cols-1 md:grid-cols-3 gap-lg">
+<!-- Brand Logo & Address -->
+<div class="flex flex-col gap-sm">
+<span class="font-headline-sm text-headline-sm font-bold text-primary dark:text-on-surface">Renata Flora Advocacia</span>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                        Rua Senador Dantas, 924, Centro<br/>
+                        Mogi das Cruzes - SP
+                    </p>
+</div>
+<!-- Navigation Links -->
+<div class="flex flex-col gap-sm md:items-center">
+<ul class="flex flex-col gap-sm font-label-md text-label-md">
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/70 hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100" href="#">Privacidade</a></li>
+<li><a class="text-on-surface-variant dark:text-on-surface-variant/70 hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100" href="#">Termos de Uso</a></li>
+<li><a class="text-primary dark:text-inverse-primary font-semibold hover:text-secondary dark:hover:text-secondary-fixed transition-colors opacity-80 hover:opacity-100" href="#contato">Contato</a></li>
+</ul>
+</div>
+<!-- Copyright -->
+<div class="flex flex-col gap-sm md:items-end justify-end font-body-md text-body-md text-on-surface-variant">
+<p>© 2024 Renata Flora Advocacia. Todos os direitos reservados.</p>
+</div>
+</div>
+</footer>
+</main>
+<script>
+        // Simple mobile menu toggle
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIcon = mobileBtn.querySelector('span');
+
+        mobileBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            mobileMenu.classList.toggle('flex');
+            if(mobileMenu.classList.contains('hidden')) {
+                menuIcon.textContent = 'menu';
+                document.body.style.overflow = 'auto';
+            } else {
+                menuIcon.textContent = 'close';
+                document.body.style.overflow = 'hidden';
+            }
+        });
+
+        // Close mobile menu on link click
+        const mobileLinks = mobileMenu.querySelectorAll('a');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenu.classList.remove('flex');
+                menuIcon.textContent = 'menu';
+                document.body.style.overflow = 'auto';
+            });
+        });
+    </script>
+</body></html>

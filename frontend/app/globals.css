@@ -1,0 +1,128 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --color-navy-700: #1E3A5F;
+  --color-navy-800: #172E4A;
+  --color-navy-900: #0F2744;
+  --color-cyan-500: #06B6D4;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #F3F4F6;
+  color: #111827;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F3F4F6;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s ease-out forwards;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   Estilos de Impressão (Nativos para exportação em PDF de alta qualidade)
+   ========================================================================== */
+@media print {
+  /* Oculta elementos que não pertencem ao relatório impresso */
+  aside,
+  button,
+  .no-print,
+  #email-draft-card {
+    display: none !important;
+  }
+
+  /* Ajusta o layout para preencher a folha de papel */
+  body {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Força cores de fundo e bordas nos navegadores */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Ajusta a renderização de cards e evita quebra de blocos no meio da página */
+  div[class*="shadow-sm"],
+  div[class*="border-gray-200"] {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    page-break-inside: avoid !important;
+    background: #ffffff !important;
+  }
+
+  /* Mostra os elementos exclusivos do PDF */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Ajusta tamanho dos textos e margens */
+  h1 {
+    font-size: 20pt !important;
+  }
+
+  h2 {
+    font-size: 14pt !important;
+  }
+}
+
+/* Oculta elementos de relatório da visualização em tela */
+.print-only {
+  display: none;
+}
