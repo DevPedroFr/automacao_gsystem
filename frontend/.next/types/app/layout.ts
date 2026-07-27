@@ -1,4 +1,4 @@
-// File: C:\Users\55119\OneDrive\Documentos\AUTOMAÇÃO DE DIAGNOSTICO\frontend\app\layout.js
+// File: C:\Users\Usuário\Desktop\projetos\automacao_gp\automacao-de-diagnostico\frontend\app\layout.js
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
