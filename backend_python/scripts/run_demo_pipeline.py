@@ -35,7 +35,7 @@ async def run_end_to_end_demo():
 
     target_keyword = sys.argv[1] if len(sys.argv) > 1 else "Clínica Odontológica"
     target_location = sys.argv[2] if len(sys.argv) > 2 else "São Paulo, SP"
-    override_website = sys.argv[3] if len(sys.argv) > 3 else "https://www.google.com"
+    override_website = sys.argv[3] if len(sys.argv) > 3 else None
 
     start_total_time = time.time()
     api_status_log = {}

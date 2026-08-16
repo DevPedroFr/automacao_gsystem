@@ -16,12 +16,12 @@ from app.integrations.google_places import GooglePlacesIntegration
 from app.models.lead import LeadSearchParams
 
 
-async def test_places():
+async def _run_test_places():
     keyword = sys.argv[1] if len(sys.argv) > 1 else "Clínica Odontológica"
     location = sys.argv[2] if len(sys.argv) > 2 else "São Paulo, SP"
 
     print("=" * 60)
-    print(f"Testando integração Google Places API (New)")
+    print("Testando integração Google Places API (New)")
     print(f"Palavra-chave: {keyword}")
     print(f"Localização: {location}")
     print("=" * 60)
@@ -53,5 +53,9 @@ async def test_places():
         print(f"[ERRO] Falha ao buscar leads: {e}")
 
 
+# Prevent pytest from collecting this utility script as a test case.
+_run_test_places.__test__ = False
+
+
 if __name__ == "__main__":
-    asyncio.run(test_places())
+    asyncio.run(_run_test_places())
