@@ -1,11 +1,12 @@
 # Automação GP
 
-Projeto de prospecção e diagnóstico digital com frontend em Next.js e backend migrado para Python/FastAPI.
+Projeto de prospecção e diagnóstico digital com frontend em Next.js e backend principal migrado para Python/FastAPI.
 
 ## Visão geral
 
 - Frontend: Next.js + React + Tailwind
-- Backend: FastAPI + SQLAlchemy + SQLite (dev)
+- Backend principal: FastAPI + SQLAlchemy + SQLite em desenvolvimento
+- Backend legado: Node.js/Express mantido apenas como referência histórica
 - APIs externas: Google Places, PageSpeed, Meta Graph/Instagram, Claude/Gemini, Google Stitch
 - Banco local em desenvolvimento: SQLite
 - Produção/integração futura: Redis/Celery e PostgreSQL
@@ -14,7 +15,7 @@ Estrutura principal:
 
 ```text
 automacao-de-diagnostico/
-├── backend/                     # legado Node.js (mantido como referência)
+├── backend/                     # legado Node.js (referência histórica)
 ├── backend_python/              # backend principal em Python/FastAPI
 │   ├── app/
 │   ├── scripts/
@@ -24,35 +25,20 @@ automacao-de-diagnostico/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── docs/                        # documentação da arquitetura e integrações
-├── frontend/                    # aplicação web em Next.js
+├── frontend/                    # painel administrativo em Next.js
 ├── renata-flora-landing/
 ├── mota-tobias-landing/
 ├── package-lock.json
 ├── refactor.js
-└── README.md
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## Requisitos
+## Como rodar o projeto localmente
 
-- Node.js 18+
-- npm 9+
-- Python 3.11+
-- pip
-- Git
-- (opcional) Redis para workers/filas
-
----
-
-## 1) Clonar e preparar ambiente
-
-```bash
-git clone <repo-url>
-cd automacao-de-diagnostico
-```
-
-### Backend Python
+### 1) Backend Python (principal)
 
 ```bash
 cd backend_python
@@ -61,9 +47,6 @@ python -m venv .venv
 # Windows PowerShell
 .\.venv\Scripts\Activate.ps1
 
-# Windows CMD
-.\.venv\Scripts\activate.bat
-
 # Linux/macOS
 source .venv/bin/activate
 
@@ -71,27 +54,13 @@ pip install -r requirements.txt
 pip install pytest pytest-asyncio
 ```
 
-### Frontend Node
+Crie o arquivo de ambiente a partir do exemplo:
 
 ```bash
-cd ../frontend
-npm install
-```
-
----
-
-## 2) Configurar variáveis de ambiente
-
-### Backend Python
-
-Copie e ajuste o arquivo de ambiente:
-
-```bash
-cd backend_python
 copy .env.example .env
 ```
 
-Arquivo mínimo recomendado:
+O mínimo recomendado é:
 
 ```env
 APP_NAME="Automação GP API"
@@ -99,7 +68,6 @@ DEBUG=True
 PORT=8000
 DATABASE_URL=sqlite:///database.sqlite
 REDIS_URL=redis://localhost:6379/0
-
 GOOGLE_PLACES_API_KEY=
 GOOGLE_PAGESPEED_API_KEY=
 META_GRAPH_ACCESS_TOKEN=
@@ -114,79 +82,77 @@ GOOGLE_STITCH_API_KEY=
 GOOGLE_STITCH_BASE_URL=https://stitch.googleapis.com/v1
 ```
 
-> Em desenvolvimento, o backend funciona com SQLite e sem chaves externas, usando fallback e dados locais quando necessário.
-
-### Frontend
-
-O frontend já vem com um arquivo de ambiente pronto em:
-
-```text
-frontend/.env.local
-```
-
-Conteúdo esperado:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
-Se o arquivo não existir, crie:
-
-```bash
-cd frontend
-copy .env.local.example .env.local
-```
-
-Ou crie diretamente:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
----
-
-## 3) Rodar o backend Python
-
-Na raiz do projeto:
+Inicie o backend:
 
 ```bash
 cd backend_python
-.\.venv\Scripts\activate
-python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8001 --reload
-```
-
-Se estiver usando bash/zsh:
-
-```bash
-cd backend_python
-source .venv/bin/activate
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
 python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### URLs do backend
+Acesse:
 
-- API principal: http://localhost:8000
-- Documentação Swagger: http://localhost:8000/docs
+- API: http://localhost:8000
+- Swagger: http://localhost:8000/docs
 - Healthcheck: http://localhost:8000/api/health
 
----
-
-## 4) Rodar o frontend
+### 2) Frontend
 
 Em outro terminal:
 
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
 Acesse:
 
-- http://localhost:3000
+- Painel: http://localhost:3000
+
+### 3) Landing pages (opcional)
+
+```bash
+cd mota-tobias-landing
+npm install
+npm run dev
+```
+
+ou
+
+```bash
+cd renata-flora-landing
+npm install
+npm run dev
+```
 
 ---
 
-## 5) Validar a stack completa
+## Requisitos
+
+- Node.js 18+
+- npm 9+
+- Python 3.11+
+- pip
+- Git
+- Redis opcional para workers/filas
+
+---
+
+## Variáveis do frontend
+
+O frontend usa a API Python na porta 8000.
+
+Arquivo esperado em [frontend/.env.local](frontend/.env.local):
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+---
+
+## Validação do projeto
 
 ### Testes do backend
 
@@ -195,7 +161,7 @@ cd backend_python
 python -m pytest -q
 ```
 
-Resultado esperado (validado):
+Resultado verificado:
 
 ```text
 4 passed in 0.42s
@@ -208,13 +174,11 @@ cd frontend
 npm run build
 ```
 
-Resultado esperado (validado): build compilado com sucesso pelo Next.js.
+Resultado verificado: compilação bem-sucedida no Next.js.
 
 ---
 
-## 6) Endpoints principais
-
-### API Python
+## Endpoints principais
 
 - GET /api/health
 - GET /api/dashboard/stats
@@ -229,125 +193,64 @@ Resultado esperado (validado): build compilado com sucesso pelo Next.js.
 - POST /api/settings
 - POST /api/settings/test-webhook
 
-### Compatibilidade legacy
-
-Também existem rotas mantidas para compatibilidade com o motor antigo:
-
-- /leads/search
-- /triage/run
-- /diagnosis/generate
-- /site/generate
+Também existem rotas legadas mantidas para compatibilidade com a automação antiga.
 
 ---
 
-## 7) Solução de problemas comuns
+## Solução de problemas comuns
 
-### Erro: ModuleNotFoundError: No module named 'sqlalchemy'
+### Erro de importação do SQLAlchemy
 
 ```bash
 cd backend_python
 pip install -r requirements.txt
 ```
 
-### Erro: async def functions are not natively supported
+### Porta 8000 ocupada
 
-Isso acontece quando o pytest coleta um script assíncrono como teste. O projeto já foi ajustado para não coletar o utilitário de testes de Google Places como caso de teste. Se precisar validar manualmente:
+```bash
+python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Se a porta estiver ocupada, libere o processo anterior ou use outra porta:
+
+```bash
+python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8001 --reload
+```
+
+### Frontend não encontra o backend
+
+Verifique [frontend/.env.local](frontend/.env.local) e confirme:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+### Teste assíncrono coletado pelo pytest
+
+Se aparecer erro de `async def functions are not natively supported`, execute o utilitário manualmente:
 
 ```bash
 cd backend_python
 python scripts/test_google_places.py
 ```
 
-### Frontend não encontra backend
+---
 
-Verifique se o arquivo [frontend/.env.local](frontend/.env.local) contém:
+## Observações importantes
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
-### Backend não sobe
-
-Confirme se a porta 8000 está livre e se a venv foi ativada. Rodando:
-
-```bash
-python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000
-```
-
-### SQLAlchemy / SQLite
-
-O backend usa SQLite em desenvolvimento. O arquivo do banco fica em:
-
-```text
-backend_python/database.sqlite
-```
+- A stack ativa do projeto é Python + FastAPI + Next.js.
+- A pasta [backend](backend) continua como referência histórica do Node.js e pode ser arquivada ou removida após a validação da stack principal.
+- Sem chaves externas preenchidas, o sistema continua funcionando em modo local e fallback.
 
 ---
 
-## 8) Observações importantes
+## Próximo passo recomendado
 
-- O backend Python já está no lugar principal e interage com o frontend em Next.js na porta 3000.
-- O frontend já está configurado para consumir a API em http://localhost:8000/api.
-- Sem chaves externas preenchidas, o sistema continua funcionando em modo local/de demonstração.
-- Para rodar diagnósticos e geração de site com IA real, configure os serviços de API e chaves de ambiente.
-
----
-
-## 9) Comandos rápidos de inicialização
-
-### Windows PowerShell
-
-```powershell
-cd backend_python
-.\.venv\Scripts\Activate.ps1
-python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Outro terminal:
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-### Linux/macOS
-
-```bash
-cd backend_python
-source .venv/bin/activate
-python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-Outro terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## 10) Validação executada no ambiente
-
-Os seguintes pontos foram confirmados no projeto:
-
-- Backend Python importa corretamente e sobe em http://localhost:8000
-- Teste do backend: 4 passed in 0.42s
-- Frontend compilou com sucesso via Next.js build
-- Frontend em desenvolvimento responde em http://localhost:3000
-
----
-
-## 11) Próximo passo recomendado
-
-Se quiser, a próxima etapa é:
-
-1. subir um Redis/Celery real;
-2. conectar banco PostgreSQL em produção;
-3. configurar chaves do Google Places, PageSpeed e Claude;
-4. publicar o frontend e o backend em uma VPS ou plataforma de hospedagem.
+1. Configurar Redis/Celery para filas reais
+2. Conectar banco PostgreSQL em produção
+3. Preencher chaves do Google Places, PageSpeed e Claude
+4. Publicar frontend + backend em VPS ou plataforma cloud
 
 ---
 

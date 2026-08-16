@@ -38,6 +38,7 @@ graph TD
    - **DMS (Digital Maturity Score):** Mede a saúde técnica digital da empresa.
    - **COS (Commercial Opportunity Score):** Mede a atratividade do lead baseado na combinação de alta reputação presencial e baixo DMS (alto gap digital).
 4. **Diagnóstico & Abordagem:** O vendedor abre as oportunidades prioritárias, solicita um diagnóstico de IA estruturado apontando os pontos críticos e copia uma mensagem profissional adaptada pronta para envio manual.
+5. **Entrega de Valor (Landing Pages):** Caso a venda seja fechada, a plataforma fornece templates de Landing Pages otimizados (como os contidos nas pastas `/mota-tobias-landing` e `/renata-flora-landing`) para rápida implantação da presença digital do cliente prospectado.
 
 ---
 

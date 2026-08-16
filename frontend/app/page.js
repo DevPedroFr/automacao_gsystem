@@ -111,8 +111,8 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Visão geral da prospecção comercial</p>
+        <h1 className="text-3xl font-bold text-gray-100 tracking-tight">Dashboard</h1>
+        <p className="text-sm text-gray-400 mt-1">Visão geral da prospecção comercial</p>
       </div>
 
       {/* Stat Cards */}
@@ -144,59 +144,60 @@ export default function DashboardPage() {
       </div>
 
       {/* API Usage & Quotas (Limites Gratuitos) */}
-      <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-1.5">
-          <span>⚡</span> Consumo de APIs (Controle do Limite Gratuito)
+      <Card className="relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <h3 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-1.5 relative z-10">
+          <span className="text-cyan-400 animate-pulse">⚡</span> Consumo de APIs (Limites)
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
           {/* Apify */}
           <div className="space-y-2">
-            <div className="flex justify-between text-xs font-semibold text-gray-600">
-              <span>Apify (Scraper do Maps)</span>
-              <span className="font-mono text-gray-500">{apiUsage.apify.used} / {apiUsage.apify.limit} {apiUsage.apify.unit}</span>
+            <div className="flex justify-between text-xs font-semibold text-gray-400">
+              <span>Apify (Scraper)</span>
+              <span className="font-mono text-gray-500">{apiUsage.apify.used} / {apiUsage.apify.limit}</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-800/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
               <div 
-                className="bg-cyan-500 h-2 rounded-full transition-all duration-700" 
+                className="bg-gradient-to-r from-cyan-600 to-cyan-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(6,182,212,0.5)]" 
                 style={{ width: `${Math.min(100, (apiUsage.apify.used / apiUsage.apify.limit) * 100)}%` }}
               />
             </div>
-            <p className="text-[10px] text-gray-400 font-medium">
-              Sobram <span className="text-cyan-600 font-bold">{Math.max(0, apiUsage.apify.limit - apiUsage.apify.used)}</span> {apiUsage.apify.unit} de prospecção este mês.
+            <p className="text-[10px] text-gray-500 font-medium">
+              Sobram <span className="text-cyan-400 font-bold">{Math.max(0, apiUsage.apify.limit - apiUsage.apify.used)}</span> {apiUsage.apify.unit}.
             </p>
           </div>
 
           {/* Gemini */}
           <div className="space-y-2">
-            <div className="flex justify-between text-xs font-semibold text-gray-600">
-              <span>Gemini 2.5 Flash (Diagnósticos)</span>
-              <span className="font-mono text-gray-500">{apiUsage.gemini.used} / {apiUsage.gemini.limit} {apiUsage.gemini.unit}</span>
+            <div className="flex justify-between text-xs font-semibold text-gray-400">
+              <span>Gemini 2.5 Flash</span>
+              <span className="font-mono text-gray-500">{apiUsage.gemini.used} / {apiUsage.gemini.limit}</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-800/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
               <div 
-                className="bg-emerald-500 h-2 rounded-full transition-all duration-700" 
+                className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
                 style={{ width: `${Math.min(100, (apiUsage.gemini.used / apiUsage.gemini.limit) * 100)}%` }}
               />
             </div>
-            <p className="text-[10px] text-gray-400 font-medium">
-              Sobram <span className="text-emerald-600 font-bold">{Math.max(0, apiUsage.gemini.limit - apiUsage.gemini.used)}</span> {apiUsage.gemini.unit} para geração de relatórios hoje.
+            <p className="text-[10px] text-gray-500 font-medium">
+              Sobram <span className="text-emerald-400 font-bold">{Math.max(0, apiUsage.gemini.limit - apiUsage.gemini.used)}</span> {apiUsage.gemini.unit}.
             </p>
           </div>
 
           {/* PageSpeed */}
           <div className="space-y-2">
-            <div className="flex justify-between text-xs font-semibold text-gray-600">
-              <span>Google PageSpeed Insights</span>
-              <span className="font-mono text-gray-500">{apiUsage.pagespeed.used} / {apiUsage.pagespeed.limit} {apiUsage.pagespeed.unit}</span>
+            <div className="flex justify-between text-xs font-semibold text-gray-400">
+              <span>Google PageSpeed</span>
+              <span className="font-mono text-gray-500">{apiUsage.pagespeed.used} / {apiUsage.pagespeed.limit}</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-gray-800/50 rounded-full h-2 overflow-hidden border border-gray-700/50">
               <div 
-                className="bg-indigo-500 h-2 rounded-full transition-all duration-700" 
+                className="bg-gradient-to-r from-indigo-600 to-indigo-400 h-2 rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(99,102,241,0.5)]" 
                 style={{ width: `${Math.min(100, (apiUsage.pagespeed.used / apiUsage.pagespeed.limit) * 100)}%` }}
               />
             </div>
-            <p className="text-[10px] text-gray-400 font-medium">
-              Sobram <span className="text-indigo-600 font-bold">{Math.max(0, apiUsage.pagespeed.limit - apiUsage.pagespeed.used)}</span> {apiUsage.pagespeed.unit} de auditorias hoje.
+            <p className="text-[10px] text-gray-500 font-medium">
+              Sobram <span className="text-indigo-400 font-bold">{Math.max(0, apiUsage.pagespeed.limit - apiUsage.pagespeed.used)}</span> {apiUsage.pagespeed.unit}.
             </p>
           </div>
         </div>
@@ -205,47 +206,49 @@ export default function DashboardPage() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Distribuição por Prioridade</h3>
+          <h3 className="text-sm font-semibold text-gray-300 mb-4">Distribuição por Prioridade</h3>
           {priorityData.length > 0 ? (
             <PriorityChart data={priorityData} />
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
-              Sem dados disponíveis de leads
+            <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
+              Sem dados disponíveis
             </div>
           )}
         </Card>
 
         <Card>
-          <h3 className="text-sm font-semibold text-gray-700 mb-4">Leads por Campanha (Top 5)</h3>
+          <h3 className="text-sm font-semibold text-gray-300 mb-4">Leads por Campanha (Top 5)</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={barData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
-                  axisLine={{ stroke: '#E5E7EB' }}
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                  axisLine={{ stroke: '#374151' }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: '#9CA3AF' }}
                   axisLine={false}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 20px -1px rgba(0,0,0,0.5)',
                     fontSize: '13px',
+                    color: '#F3F4F6'
                   }}
+                  itemStyle={{ color: '#06B6D4' }}
                   formatter={(value) => [`${value} leads`, 'Total']}
                 />
                 <Bar dataKey="leads" fill="#06B6D4" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
               Sem dados disponíveis
             </div>
           )}
@@ -254,14 +257,14 @@ export default function DashboardPage() {
 
       {/* Campaign Table */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">Campanhas Recentes</h3>
+        <h3 className="text-sm font-semibold text-gray-300 mb-4">Campanhas Recentes</h3>
         <CampaignTable campaigns={campaigns} />
       </Card>
 
       {/* FAB */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center text-2xl font-light z-40"
+        className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-full shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-110 transition-all duration-300 flex items-center justify-center text-3xl font-light z-40"
         title="Nova Campanha"
       >
         +
