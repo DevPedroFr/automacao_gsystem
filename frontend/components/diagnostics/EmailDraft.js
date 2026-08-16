@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
+import { Mail, MessageCircle, Instagram, Copy, Check, MessageSquare } from 'lucide-react';
 
 export default function EmailDraft({ emailText = '', whatsappText = '', instagramText = '' }) {
   const [activeTab, setActiveTab] = useState('email');
   const [copied, setCopied] = useState(false);
 
   const drafts = {
-    email: { label: '📧 E-mail', text: emailText },
-    whatsapp: { label: '💬 WhatsApp', text: whatsappText },
-    instagram: { label: '📸 Instagram DM', text: instagramText },
+    email: { label: 'E-mail', icon: <Mail size={14} />, text: emailText },
+    whatsapp: { label: 'WhatsApp', icon: <MessageCircle size={14} />, text: whatsappText },
+    instagram: { label: 'Instagram DM', icon: <Instagram size={14} />, text: instagramText },
   };
 
   const activeContent = drafts[activeTab]?.text || '';
@@ -37,28 +38,36 @@ export default function EmailDraft({ emailText = '', whatsappText = '', instagra
   if (!emailText && !whatsappText && !instagramText) return null;
 
   return (
-    <Card>
+    <Card padding="p-6" className="bg-gray-900/40 backdrop-blur-md border border-gray-700/50 shadow-xl no-print">
       <div className="flex flex-col space-y-4">
         {/* Header and Copy Button */}
-        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
-          <h3 className="text-base font-bold text-gray-900 flex items-center gap-1.5">
-            <span>📢</span> Mensagens de Abordagem
+        <div className="flex items-center justify-between border-b border-gray-700/50 pb-4">
+          <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider flex items-center gap-2">
+            <MessageSquare size={16} className="text-cyan-400" /> Mensagens de Abordagem
           </h3>
           <button
             onClick={handleCopy}
             disabled={!activeContent}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold shadow-sm transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all duration-300 shadow-sm ${
               copied
-                ? 'bg-green-100 text-green-700 border border-green-200'
-                : 'bg-cyan-50 text-cyan-700 border border-cyan-150 hover:bg-cyan-100'
+                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 hover:shadow-[0_0_15px_rgba(6,182,212,0.2)] disabled:opacity-50 disabled:cursor-not-allowed'
             }`}
           >
-            {copied ? '✓ Copiado!' : '📋 Copiar Mensagem'}
+            {copied ? (
+              <>
+                <Check size={14} /> Copiado!
+              </>
+            ) : (
+              <>
+                <Copy size={14} /> Copiar Mensagem
+              </>
+            )}
           </button>
         </div>
 
         {/* Tab Selector */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-700/50 overflow-x-auto">
           {Object.entries(drafts).map(([key, draft]) => {
             if (!draft.text) return null;
             return (
@@ -68,28 +77,31 @@ export default function EmailDraft({ emailText = '', whatsappText = '', instagra
                   setActiveTab(key);
                   setCopied(false);
                 }}
-                className={`px-4 py-2 text-xs font-bold border-b-2 transition-all duration-200 -mb-px ${
+                className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-all duration-300 border-b-2 -mb-px whitespace-nowrap ${
                   activeTab === key
-                    ? 'border-cyan-500 text-cyan-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
+                    : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 hover:bg-gray-800/30'
                 }`}
               >
-                {draft.label}
+                <span className={activeTab === key ? 'animate-pulse' : ''}>{draft.icon}</span>
+                <span>{draft.label}</span>
               </button>
             );
           })}
         </div>
 
         {/* Message Content Area */}
-        <div>
+        <div className="mt-4">
           {activeContent ? (
             <textarea
               readOnly
               value={activeContent}
-              className="w-full h-56 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-gray-700 leading-relaxed font-mono resize-none focus:outline-none"
+              className="w-full h-64 p-5 bg-gray-950/50 border border-gray-700/50 rounded-xl text-xs text-gray-300 leading-relaxed font-mono resize-none focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
             />
           ) : (
-            <p className="text-xs text-gray-400 italic py-4 text-center">Nenhuma mensagem disponível para este canal.</p>
+            <p className="text-xs text-gray-500 italic py-4 text-center bg-gray-900/50 rounded-xl border border-gray-800/50">
+              Nenhuma mensagem disponível para este canal.
+            </p>
           )}
         </div>
       </div>

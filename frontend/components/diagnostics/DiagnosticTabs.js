@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { LayoutDashboard, Target, Wand2, Copy, Check } from 'lucide-react';
 
 const tabs = [
-  { key: 'panel', label: 'Painel de Diagnóstico', icon: '📊' },
-  { key: 'recommendations', label: 'Recomendações de Venda', icon: '🎯' },
-  { key: 'stitch', label: 'Prompt Google Stitch ⚡', icon: '🛠️' },
+  { key: 'panel', label: 'Painel de Diagnóstico', icon: <LayoutDashboard size={16} /> },
+  { key: 'recommendations', label: 'Recomendações de Venda', icon: <Target size={16} /> },
+  { key: 'stitch', label: 'Prompt Google Stitch ⚡', icon: <Wand2 size={16} /> },
 ];
 
 export default function DiagnosticTabs({ diagnostic = {} }) {
@@ -100,33 +101,33 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-3 print:gap-4">
         {activeCats.map(([key, cat]) => {
-          let borderClass = 'border-blue-200';
-          let bgHeader = 'bg-blue-50 text-blue-800';
-          let iconBg = 'bg-blue-100 text-blue-600';
-          let markerColor = 'text-blue-500';
+          let borderClass = 'border-blue-500/20';
+          let bgHeader = 'bg-blue-500/10 text-blue-400';
+          let iconBg = 'bg-blue-500/20 text-blue-300';
+          let markerColor = 'text-blue-400';
 
           if (key === 'website') {
-            borderClass = 'border-cyan-200';
-            bgHeader = 'bg-cyan-50 text-cyan-800';
-            iconBg = 'bg-cyan-100 text-cyan-600';
-            markerColor = 'text-cyan-500';
+            borderClass = 'border-cyan-500/20';
+            bgHeader = 'bg-cyan-500/10 text-cyan-400';
+            iconBg = 'bg-cyan-500/20 text-cyan-300';
+            markerColor = 'text-cyan-400';
           } else if (key === 'social') {
-            borderClass = 'border-pink-200';
-            bgHeader = 'bg-pink-50 text-pink-800';
-            iconBg = 'bg-pink-100 text-pink-600';
-            markerColor = 'text-pink-500';
+            borderClass = 'border-pink-500/20';
+            bgHeader = 'bg-pink-500/10 text-pink-400';
+            iconBg = 'bg-pink-500/20 text-pink-300';
+            markerColor = 'text-pink-400';
           } else if (key === 'general') {
-            borderClass = 'border-slate-200';
-            bgHeader = 'bg-slate-50 text-slate-800';
-            iconBg = 'bg-slate-100 text-slate-600';
-            markerColor = 'text-slate-500';
+            borderClass = 'border-gray-500/20';
+            bgHeader = 'bg-gray-500/10 text-gray-300';
+            iconBg = 'bg-gray-500/20 text-gray-300';
+            markerColor = 'text-gray-400';
           }
 
           return (
-            <div key={key} className={`bg-white rounded-2xl border ${borderClass} shadow-sm overflow-hidden flex flex-col justify-between print:break-inside-avoid print:shadow-none print:border-gray-200`}>
+            <div key={key} className={`bg-gray-900/60 backdrop-blur-md rounded-2xl border ${borderClass} shadow-lg overflow-hidden flex flex-col justify-between print:bg-white print:break-inside-avoid print:shadow-none print:border-gray-200 hover:shadow-[0_4px_20px_rgba(6,182,212,0.1)] transition-all duration-300`}>
               {/* Header */}
-              <div className={`px-4 py-3.5 ${bgHeader} flex items-center gap-2.5 border-b border-gray-100 print:bg-gray-50 print:text-gray-900`}>
-                <span className={`p-1.5 rounded-lg ${iconBg} text-base leading-none print:bg-gray-100 print:text-gray-700`}>{cat.icon}</span>
+              <div className={`px-4 py-3.5 ${bgHeader} flex items-center gap-2.5 border-b border-gray-700/50 print:bg-gray-50 print:text-gray-900 print:border-gray-200`}>
+                <span className={`p-1.5 rounded-lg ${iconBg} text-base leading-none print:bg-gray-200 print:text-gray-700`}>{cat.icon}</span>
                 <h3 className="font-bold text-xs uppercase tracking-wide">{cat.title}</h3>
               </div>
 
@@ -134,13 +135,13 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
               <div className="p-4 flex-1 flex flex-col justify-between space-y-5">
                 {/* O que auditamos */}
                 <div className="space-y-2">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1">📋 Fatos Identificados</span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-500 block mb-1">📋 Fatos Identificados</span>
                   {cat.facts.length > 0 ? (
                     <ul className="space-y-2">
                       {cat.facts.map((fact, idx) => {
                         const cleanText = fact.replace(/^[-*•\s\d\.)]+\s*/, '');
                         return (
-                          <li key={idx} className="flex items-start gap-1.5 text-xs text-gray-700 leading-relaxed">
+                          <li key={idx} className="flex items-start gap-1.5 text-xs text-gray-300 leading-relaxed print:text-gray-700">
                             <span className={`text-[10px] mt-0.5 select-none ${markerColor}`}>•</span>
                             <span>{formatBoldText(cleanText)}</span>
                           </li>
@@ -148,26 +149,26 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
                       })}
                     </ul>
                   ) : (
-                    <p className="text-[11px] text-gray-400 italic">Sem observações específicas.</p>
+                    <p className="text-[11px] text-gray-600 italic">Sem observações específicas.</p>
                   )}
                 </div>
 
                 {/* Impacto no Negócio */}
-                <div className="pt-3.5 border-t border-gray-100">
-                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block mb-1.5">💡 Análise de Impacto</span>
+                <div className="pt-3.5 border-t border-gray-700/30 print:border-gray-100">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider text-gray-500 block mb-1.5">💡 Análise de Impacto</span>
                   {cat.inferences.length > 0 ? (
                     <div className="space-y-2">
                       {cat.inferences.map((inf, idx) => {
                         const cleanText = inf.replace(/^[-*•\s\d\.)]+\s*/, '');
                         return (
-                          <p key={idx} className="text-xs text-gray-600 leading-relaxed font-medium bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 print:bg-white print:border-gray-100">
+                          <p key={idx} className="text-xs text-gray-400 leading-relaxed font-medium bg-gray-800/50 p-2.5 rounded-xl border border-gray-700/50 print:bg-white print:border-gray-100 print:text-gray-600">
                             {formatBoldText(cleanText)}
                           </p>
                         );
                       })}
                     </div>
                   ) : (
-                    <p className="text-[11px] text-gray-400 italic">Sem diagnóstico específico disponível.</p>
+                    <p className="text-[11px] text-gray-600 italic">Sem diagnóstico específico disponível.</p>
                   )}
                 </div>
               </div>
@@ -225,26 +226,30 @@ ${text}
 
       return (
         <div className="space-y-5">
-          <div className="p-5 bg-gradient-to-r from-slate-900 to-blue-950 rounded-2xl shadow-lg border border-blue-900 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-left">
-              <h4 className="text-white font-bold text-base mb-1.5 flex items-center gap-2">
-                <span className="text-xl">🚀</span> Criar Site com IA (Stitch + Antigravity)
+          <div className="p-6 bg-gradient-to-br from-gray-900 to-indigo-950/80 rounded-2xl shadow-xl border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            
+            <div className="text-left relative z-10">
+              <h4 className="text-white font-extrabold text-lg mb-2 flex items-center gap-2">
+                <Wand2 className="text-cyan-400" size={24} /> Criar Site com IA <span className="bg-cyan-500/20 text-cyan-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-cyan-500/30">Auto</span>
               </h4>
-              <p className="text-blue-200 text-xs sm:text-sm leading-relaxed max-w-xl">
-                Clique no botão ao lado para gerar o <strong>Comando Mágico</strong>. Depois, basta colar o comando no nosso chat para o Antigravity construir e publicar o site inteiro (Frontend + Deploy na Vercel) automaticamente em minutos.
+              <p className="text-gray-300 text-sm leading-relaxed max-w-2xl">
+                Clique no botão ao lado para gerar o <strong>Comando Mágico</strong>. Depois, cole no chat para o Antigravity construir e publicar o site inteiro (Frontend + Deploy Vercel) automaticamente.
               </p>
             </div>
             <button 
               onClick={handleGenerateSite}
-              className="w-full md:w-auto flex-shrink-0 bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-blue-950 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)] hover:shadow-[0_0_25px_rgba(234,179,8,0.5)] hover:-translate-y-0.5 whitespace-nowrap"
+              className="relative z-10 w-full md:w-auto flex-shrink-0 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-8 py-3.5 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:-translate-y-0.5 whitespace-nowrap flex items-center justify-center gap-2"
             >
-              Gerar Comando Mágico
+              <Wand2 size={16} /> Gerar Comando Mágico
             </button>
           </div>
 
-          <div className="space-y-2 bg-[#0F2744]/5 border border-[#0F2744]/15 rounded-xl p-4 relative mt-2">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-600 mb-2">Prompt Copiável para o Google Stitch AI (Manual)</div>
-            <pre className="text-xs font-mono text-gray-800 whitespace-pre-wrap leading-relaxed select-all">
+          <div className="space-y-2 bg-gray-900/50 border border-gray-700/50 rounded-xl p-5 relative mt-4 shadow-inner">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-500 mb-3 flex items-center gap-1">
+              Prompt Copiável para o Google Stitch AI
+            </div>
+            <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-all">
               {text}
             </pre>
           </div>
@@ -258,7 +263,7 @@ ${text}
   return (
     <div className="space-y-6">
       {/* Tab headers (oculto na impressão) */}
-      <div className="flex border-b border-gray-200 no-print overflow-x-auto">
+      <div className="flex border-b border-gray-700/50 no-print overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -266,40 +271,38 @@ ${text}
               setActiveTab(tab.key);
               setCopiedTab(null);
             }}
-            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 border-b-2 -mb-px whitespace-nowrap ${
+            className={`flex items-center gap-2 px-6 py-4 text-sm font-semibold transition-all duration-300 border-b-2 -mb-px whitespace-nowrap ${
               activeTab === tab.key
-                ? 'border-cyan-500 text-cyan-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-cyan-400 text-cyan-400 bg-cyan-500/5'
+                : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-500 hover:bg-gray-800/30'
             }`}
           >
-            <span>{tab.icon}</span>
+            <span className={activeTab === tab.key ? 'animate-pulse' : ''}>{tab.icon}</span>
             <span>{tab.label}</span>
           </button>
         ))}
       </div>
 
       {/* Tab content (com botão de cópia na tela) */}
-      <div className="relative border border-gray-200 rounded-2xl p-6 bg-white shadow-sm hover:shadow-md transition-shadow duration-200 no-print" key={activeTab}>
+      <div className="relative border border-gray-700/50 rounded-b-2xl rounded-tr-2xl p-6 bg-gray-900/40 backdrop-blur-md shadow-xl transition-shadow duration-200 no-print" key={activeTab}>
         {/* Copy button */}
         <div className="absolute top-4 right-4 z-10">
           <button
             onClick={() => handleCopy(activeTab)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 shadow-sm ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-300 shadow-sm ${
               copiedTab === activeTab
-                ? 'bg-green-50 border-green-200 text-green-700'
-                : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                : 'bg-gray-800/50 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white hover:border-gray-600'
             }`}
           >
             {copiedTab === activeTab ? (
               <>
-                <span>✓</span>
+                <Check size={14} />
                 <span>Copiado!</span>
               </>
             ) : (
               <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                </svg>
+                <Copy size={14} />
                 <span>Copiar {activeTab === 'stitch' ? 'Prompt' : (activeTab === 'panel' ? 'Diagnóstico' : 'Texto')}</span>
               </>
             )}

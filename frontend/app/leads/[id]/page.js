@@ -10,6 +10,7 @@ import ScoreBar from '@/components/ui/ScoreBar';
 import DiagnosticTabs from '@/components/diagnostics/DiagnosticTabs';
 import EmailDraft from '@/components/diagnostics/EmailDraft';
 import { PRIORITY_CONFIG } from '@/lib/constants';
+import { ChevronLeft, Download, MapPin, Globe, Instagram, Linkedin, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
 
 export default function LeadDetailPage() {
   const params = useParams();
@@ -140,11 +141,9 @@ export default function LeadDetailPage() {
       {/* Back button (oculto na impressão) */}
       <button
         onClick={() => router.back()}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors no-print"
+        className="flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors no-print font-medium"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <ChevronLeft size={16} />
         Voltar à campanha
       </button>
 
@@ -162,51 +161,57 @@ export default function LeadDetailPage() {
           <Button
             onClick={() => window.print()}
             variant="secondary"
-            className="flex items-center gap-2 no-print"
+            className="flex items-center gap-2 no-print bg-gray-800 hover:bg-gray-700 text-gray-200 border-gray-700"
           >
-            📄 Exportar Diagnóstico (PDF)
+            <Download size={16} /> Exportar Diagnóstico (PDF)
           </Button>
         )}
       </div>
 
-      {/* Resumo de Scores de Venda */}
+      {/* Resumo de Scores de Venda Premium */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
         {/* DMS */}
-        <Card className="bg-gradient-to-br from-white to-slate-50 border-l-4 border-cyan-500 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 text-cyan-500/5 text-9xl font-bold select-none pointer-events-none group-hover:scale-110 transition-transform duration-500">DMS</div>
-          <div className="flex justify-between items-start mb-2">
+        <Card className="border-l-4 border-l-cyan-500 relative group overflow-hidden" padding="p-6">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-cyan-500/20 transition-colors duration-500" />
+          <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 text-cyan-500/5 text-8xl font-black select-none pointer-events-none group-hover:scale-110 transition-transform duration-500">DMS</div>
+          <div className="flex justify-between items-start mb-2 relative z-10">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Maturidade Digital (DMS)</h3>
-              <p className="text-xs text-gray-500 mt-1">Mede a qualidade técnica do site, SEO, GBP e redes sociais.</p>
+              <h3 className="text-xs font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Activity size={14} /> Maturidade Digital (DMS)
+              </h3>
+              <p className="text-xs text-gray-400 mt-1 max-w-[80%]">Mede a qualidade técnica do site, SEO, GBP e redes sociais.</p>
             </div>
             <div className="text-right">
-              <span className={`text-4xl font-extrabold tracking-tight ${getScoreColor(lead.dms ?? 0)}`}>
+              <span className={`text-5xl font-extrabold tracking-tighter drop-shadow-md ${getScoreColor(lead.dms ?? 0)}`}>
                 {lead.dms ?? 0}
               </span>
-              <span className="text-sm font-semibold text-gray-400 ml-0.5">/100</span>
+              <span className="text-sm font-semibold text-gray-500 ml-0.5">/100</span>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6 relative z-10">
             <ScoreBar value={lead.dms ?? 0} />
           </div>
         </Card>
 
         {/* COS */}
-        <Card className="bg-gradient-to-br from-white to-slate-50 border-l-4 border-emerald-500 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 text-emerald-500/5 text-9xl font-bold select-none pointer-events-none group-hover:scale-110 transition-transform duration-500">COS</div>
-          <div className="flex justify-between items-start mb-2">
+        <Card className="border-l-4 border-l-emerald-500 relative group overflow-hidden" padding="p-6">
+          <div className="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none group-hover:bg-emerald-500/20 transition-colors duration-500" />
+          <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 text-emerald-500/5 text-8xl font-black select-none pointer-events-none group-hover:scale-110 transition-transform duration-500">COS</div>
+          <div className="flex justify-between items-start mb-2 relative z-10">
             <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Oportunidade Comercial (COS)</h3>
-              <p className="text-xs text-gray-500 mt-1">Mede a lacuna de vendas (reputação física excelente vs. presença digital fraca).</p>
+              <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Globe size={14} /> Oportunidade (COS)
+              </h3>
+              <p className="text-xs text-gray-400 mt-1 max-w-[80%]">Mede a lacuna de vendas e potencial de melhoria.</p>
             </div>
             <div className="text-right">
-              <span className={`text-4xl font-extrabold tracking-tight ${getScoreColor(lead.cos ?? 0)}`}>
+              <span className={`text-5xl font-extrabold tracking-tighter drop-shadow-md ${getScoreColor(lead.cos ?? 0)}`}>
                 {lead.cos ?? 0}
               </span>
-              <span className="text-sm font-semibold text-gray-400 ml-0.5">/100</span>
+              <span className="text-sm font-semibold text-gray-500 ml-0.5">/100</span>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6 relative z-10">
             <ScoreBar value={lead.cos ?? 0} />
           </div>
         </Card>
@@ -214,46 +219,44 @@ export default function LeadDetailPage() {
 
       {/* Painel de Presença Digital — Os 4 Pilares (Padrão Dashboard Visual) */}
       <div>
-        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2 no-print">
-          <span>📊</span> Painel de Presença Digital (4 Pilares)
+        <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2 no-print">
+          <Activity size={18} className="text-cyan-400" /> Painel de Presença Digital (4 Pilares)
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 no-print">
           {/* Pilar 1: Google Empresa */}
-          <Card padding="p-5" className="flex flex-col justify-between border border-gray-200 shadow-sm hover:border-blue-200 transition-colors duration-300">
+          <Card padding="p-5" className="flex flex-col justify-between group hover:border-blue-500/40">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">1. Google Empresa</span>
-                <span className="bg-blue-50 text-blue-600 p-1.5 rounded-lg">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                  </svg>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">1. Google Empresa</span>
+                <span className="bg-blue-500/10 text-blue-400 p-2 rounded-xl border border-blue-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <MapPin size={18} />
                 </span>
               </div>
               <div className="space-y-3">
                 <div>
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-extrabold text-gray-900">{lead.google_rating ?? '—'}</span>
-                    <span className="text-xs text-gray-400 font-semibold">/ 5.0</span>
+                    <span className="text-3xl font-extrabold text-gray-100">{lead.google_rating ?? '—'}</span>
+                    <span className="text-xs text-gray-500 font-semibold">/ 5.0</span>
                   </div>
                   <div className="flex mt-1">{renderStars(lead.google_rating)}</div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  <strong className="text-gray-900 font-bold">{lead.google_reviews_count ?? 0}</strong> avaliações no Google Maps
+                <div className="text-xs text-gray-400">
+                  <strong className="text-gray-200 font-bold">{lead.google_reviews_count ?? 0}</strong> avaliações no Google Maps
                 </div>
               </div>
             </div>
             
-            <div className="mt-5 pt-3 border-t border-gray-100 space-y-1.5 text-xs text-gray-500">
+            <div className="mt-5 pt-3 border-t border-gray-700/50 space-y-2 text-xs text-gray-400">
               <div className="flex items-center justify-between">
                 <span>Telefone:</span>
-                <span className={`font-semibold ${lead.phone ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className={`font-semibold ${lead.phone ? 'text-emerald-400' : 'text-gray-500'}`}>
                   {lead.phone ? '✓ Presente' : '✗ Ausente'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span>Endereço:</span>
-                <span className={`font-semibold ${lead.address ? 'text-green-600' : 'text-gray-400'}`}>
+                <span className={`font-semibold ${lead.address ? 'text-emerald-400' : 'text-gray-500'}`}>
                   {lead.address ? '✓ Presente' : '✗ Ausente'}
                 </span>
               </div>
@@ -261,14 +264,12 @@ export default function LeadDetailPage() {
           </Card>
 
           {/* Pilar 2: Website & SEO */}
-          <Card padding="p-5" className="flex flex-col justify-between border border-gray-200 shadow-sm hover:border-cyan-200 transition-colors duration-300">
+          <Card padding="p-5" className="flex flex-col justify-between group hover:border-cyan-500/40">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">2. Website & SEO</span>
-                <span className="bg-cyan-50 text-cyan-600 p-1.5 rounded-lg">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">2. Website & SEO</span>
+                <span className="bg-cyan-500/10 text-cyan-400 p-2 rounded-xl border border-cyan-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Globe size={18} />
                 </span>
               </div>
               
@@ -279,27 +280,27 @@ export default function LeadDetailPage() {
                       <span className={`text-3xl font-extrabold ${getScoreColor(lead.pagespeed_score ?? 0)}`}>
                         {lead.pagespeed_score ?? '—'}
                       </span>
-                      <span className="text-xs text-gray-400 font-semibold">/100</span>
+                      <span className="text-xs text-gray-500 font-semibold">/100</span>
                     </div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">PageSpeed Score</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">PageSpeed Score</span>
                   </div>
                   
                   <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="p-1 bg-gray-50 rounded border border-gray-100">
-                      <p className="text-[9px] font-bold text-gray-400">LCP</p>
-                      <p className="text-xs font-bold text-gray-700 mt-0.5">
+                    <div className="p-1 bg-gray-800/50 rounded border border-gray-700/50">
+                      <p className="text-[9px] font-bold text-gray-500">LCP</p>
+                      <p className="text-xs font-bold text-gray-300 mt-0.5">
                         {lead.lcp_ms != null ? `${(lead.lcp_ms / 1000).toFixed(1)}s` : '—'}
                       </p>
                     </div>
-                    <div className="p-1 bg-gray-50 rounded border border-gray-100">
-                      <p className="text-[9px] font-bold text-gray-400">INP</p>
-                      <p className="text-xs font-bold text-gray-700 mt-0.5">
+                    <div className="p-1 bg-gray-800/50 rounded border border-gray-700/50">
+                      <p className="text-[9px] font-bold text-gray-500">INP</p>
+                      <p className="text-xs font-bold text-gray-300 mt-0.5">
                         {lead.inp_ms != null ? `${lead.inp_ms}ms` : '—'}
                       </p>
                     </div>
-                    <div className="p-1 bg-gray-50 rounded border border-gray-100">
-                      <p className="text-[9px] font-bold text-gray-400">SEO</p>
-                      <p className="text-xs font-bold text-gray-700 mt-0.5">
+                    <div className="p-1 bg-gray-800/50 rounded border border-gray-700/50">
+                      <p className="text-[9px] font-bold text-gray-500">SEO</p>
+                      <p className="text-xs font-bold text-gray-300 mt-0.5">
                         {lead.seo_score != null ? `${lead.seo_score}` : '—'}
                       </p>
                     </div>
@@ -307,37 +308,37 @@ export default function LeadDetailPage() {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col justify-center py-2 text-center">
-                  <span className="text-red-500 font-bold text-xs uppercase tracking-wider">⚠️ Sem Website</span>
-                  <p className="text-[11px] text-gray-400 mt-1">Oportunidade ideal para criação de site no Google Stitch.</p>
+                  <div className="flex items-center justify-center gap-1 text-rose-400 font-bold text-xs uppercase tracking-wider">
+                    <AlertTriangle size={14} /> Sem Website
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-2">Oportunidade ideal para criação de site no Google Stitch.</p>
                 </div>
               )}
             </div>
 
-            <div className="mt-4 pt-3 border-t border-gray-100 text-center">
+            <div className="mt-4 pt-3 border-t border-gray-700/50 text-center">
               {lead.website ? (
                 <a
                   href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-bold text-cyan-600 hover:text-cyan-700 hover:underline inline-flex items-center gap-1"
+                  className="text-xs font-bold text-cyan-400 hover:text-cyan-300 hover:underline inline-flex items-center gap-1"
                 >
                   Acessar Website ↗
                 </a>
               ) : (
-                <span className="text-xs text-gray-400 italic">Nenhum site cadastrado</span>
+                <span className="text-xs text-gray-500 italic">Nenhum site cadastrado</span>
               )}
             </div>
           </Card>
 
           {/* Pilar 3: Instagram */}
-          <Card padding="p-5" className="flex flex-col justify-between border border-gray-200 shadow-sm hover:border-pink-200 transition-colors duration-300">
+          <Card padding="p-5" className="flex flex-col justify-between group hover:border-pink-500/40">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">3. Instagram</span>
-                <span className="bg-pink-50 text-pink-600 p-1.5 rounded-lg">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-                  </svg>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">3. Instagram</span>
+                <span className="bg-pink-500/10 text-pink-400 p-2 rounded-xl border border-pink-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Instagram size={18} />
                 </span>
               </div>
               
@@ -349,19 +350,19 @@ export default function LeadDetailPage() {
                 </div>
                 
                 {lead.has_instagram ? (
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    Último post detectado a: <strong className="text-gray-900 font-semibold">{lead.social_last_post_days !== null ? `${lead.social_last_post_days} dias` : '—'}</strong>
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Último post detectado a: <strong className="text-gray-200 font-semibold">{lead.social_last_post_days !== null ? `${lead.social_last_post_days} dias` : '—'}</strong>
                   </p>
                 ) : (
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-gray-500">
                     Rede social essencial para conversão e validação social do negócio.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-gray-100 text-center flex flex-col items-center gap-2">
-              <span className={`text-xs font-bold ${lead.has_instagram && lead.social_last_post_days < 30 ? 'text-green-600' : 'text-amber-500'}`}>
+            <div className="mt-5 pt-3 border-t border-gray-700/50 text-center flex flex-col items-center gap-2">
+              <span className={`text-xs font-bold ${lead.has_instagram && lead.social_last_post_days < 30 ? 'text-emerald-400' : 'text-amber-400'}`}>
                 {lead.has_instagram 
                   ? (lead.social_last_post_days < 30 ? '🔥 Presença Ativa' : '⏳ Falta Frequência') 
                   : '⚠️ Grande Gap Social'}
@@ -371,7 +372,7 @@ export default function LeadDetailPage() {
                   href={lead.instagram_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-bold text-pink-600 hover:text-pink-700 hover:underline inline-flex items-center gap-1"
+                  className="text-xs font-bold text-pink-400 hover:text-pink-300 hover:underline inline-flex items-center gap-1"
                 >
                   Acessar Instagram ↗
                 </a>
@@ -380,14 +381,12 @@ export default function LeadDetailPage() {
           </Card>
 
           {/* Pilar 4: LinkedIn */}
-          <Card padding="p-5" className="flex flex-col justify-between border border-gray-200 shadow-sm hover:border-indigo-200 transition-colors duration-300">
+          <Card padding="p-5" className="flex flex-col justify-between group hover:border-indigo-500/40">
             <div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">4. LinkedIn</span>
-                <span className="bg-indigo-50 text-indigo-600 p-1.5 rounded-lg">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-                  </svg>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">4. LinkedIn</span>
+                <span className="bg-indigo-500/10 text-indigo-400 p-2 rounded-xl border border-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
+                  <Linkedin size={18} />
                 </span>
               </div>
               
@@ -406,8 +405,8 @@ export default function LeadDetailPage() {
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-gray-100 text-center">
-              <span className="text-xs font-bold text-gray-500">
+            <div className="mt-5 pt-3 border-t border-gray-700/50 text-center">
+              <span className="text-xs font-bold text-gray-400">
                 {lead.has_linkedin ? '💼 Conexão B2B' : '🌐 Foco Offline/B2C'}
               </span>
             </div>
@@ -437,9 +436,9 @@ export default function LeadDetailPage() {
               </div>
             ) : (
               <>
-                <p className="text-gray-500 mb-4">Nenhum diagnóstico gerado para este lead.</p>
-                <Button size="lg" onClick={handleGenerateDiagnostic}>
-                  Gerar Diagnóstico com IA 🤖
+                <p className="text-gray-400 mb-4">Nenhum diagnóstico gerado para este lead.</p>
+                <Button size="lg" onClick={handleGenerateDiagnostic} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] border-0">
+                  <RefreshCw className="inline-block mr-2" size={18} /> Gerar Diagnóstico com IA
                 </Button>
               </>
             )}

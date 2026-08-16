@@ -61,7 +61,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
     <Modal isOpen={isOpen} onClose={handleClose} title="Nova Campanha de Prospecção">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="niche" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="niche" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
             Nicho / Segmento
           </label>
           <input
@@ -70,13 +70,13 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
             placeholder="Ex: Clínicas Odontológicas"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none"
+            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             required
             disabled={loading}
           />
         </div>
         <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="location" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
             Localização
           </label>
           <input
@@ -85,7 +85,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Ex: São Paulo, SP"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none"
+            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             required
             disabled={loading}
           />
@@ -93,14 +93,14 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="minRating" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="minRating" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
               Nota Mínima
             </label>
             <select
               id="minRating"
               value={minRating}
               onChange={(e) => setMinRating(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none bg-white"
+              className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
               disabled={loading}
             >
               <option value="0">Qualquer Nota</option>
@@ -110,14 +110,14 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             </select>
           </div>
           <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="status" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
               Status de Funcionamento
             </label>
             <select
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none bg-white"
+              className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
               disabled={loading}
             >
               <option value="open">Apenas Abertos</option>
@@ -127,33 +127,42 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
         </div>
 
         <div>
-          <label htmlFor="negativeKeywords" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Palavras-chave Negativas <span className="text-gray-400 font-normal">(opcional)</span>
+          <label htmlFor="negativeKeywords" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
+            Palavras-chave Negativas <span className="text-gray-600 font-normal normal-case">(opcional)</span>
           </label>
           <input
             id="negativeKeywords"
             type="text"
             value={negativeKeywords}
             onChange={(e) => setNegativeKeywords(e.target.value)}
-            placeholder="Ex: franquia, hospital, prefeitura (separado por vírgula)"
-            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none"
+            placeholder="Ex: franquia, hospital, prefeitura"
+            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             disabled={loading}
           />
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-sm font-medium text-rose-400">
             {error}
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="secondary" onClick={handleClose} disabled={loading}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50 mt-6">
+          <button 
+            type="button" 
+            onClick={handleClose} 
+            disabled={loading}
+            className="px-6 py-3 rounded-xl text-sm font-bold text-gray-400 bg-gray-800/50 hover:bg-gray-800 hover:text-white transition-colors"
+          >
             Cancelar
-          </Button>
-          <Button type="submit" loading={loading}>
-            Iniciar Radar 🔍
-          </Button>
+          </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all flex items-center gap-2"
+          >
+            {loading ? 'Iniciando...' : 'Iniciar Radar'} <span className="text-lg leading-none">🚀</span>
+          </button>
         </div>
       </form>
     </Modal>
