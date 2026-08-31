@@ -23,14 +23,14 @@ export default function LeadTable({ leads = [], onViewDiagnostic }) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cidade</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Avaliações</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[120px]">DMS</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[120px]">COS</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Prioridade</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ações</th>
+          <tr className="border-b border-gray-700/50">
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nome</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cidade</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Avaliações</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider min-w-[120px]">DMS</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider min-w-[120px]">COS</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Prioridade</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -39,15 +39,15 @@ export default function LeadTable({ leads = [], onViewDiagnostic }) {
             return (
               <tr
                 key={lead.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150"
+                className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors duration-150"
               >
-                <td className="py-3.5 px-4 text-sm font-medium text-gray-900">{lead.name}</td>
-                <td className="py-3.5 px-4 text-sm text-gray-600">{lead.city || '—'}</td>
+                <td className="py-3.5 px-4 text-sm font-medium text-gray-100">{lead.name}</td>
+                <td className="py-3.5 px-4 text-sm text-gray-300">{lead.city || '—'}</td>
                 <td className="py-3.5 px-4">
                   <div className="flex items-center gap-1.5">
                     <span className="text-yellow-500">⭐</span>
-                    <span className="text-sm font-medium text-gray-900">{lead.google_rating ?? '—'}</span>
-                    <span className="text-xs text-gray-400">({lead.google_reviews_count ?? 0})</span>
+                    <span className="text-sm font-medium text-gray-100">{lead.google_rating ?? '—'}</span>
+                    <span className="text-xs text-gray-500">({lead.google_reviews_count ?? 0})</span>
                   </div>
                 </td>
                 <td className="py-3.5 px-4">
@@ -64,7 +64,7 @@ export default function LeadTable({ leads = [], onViewDiagnostic }) {
                 <td className="py-3.5 px-4">
                   <button
                     onClick={() => onViewDiagnostic?.(lead.id)}
-                    className="text-sm font-medium text-cyan-600 hover:text-cyan-700 transition-colors"
+                    className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
                   >
                     Ver Diagnóstico
                   </button>
