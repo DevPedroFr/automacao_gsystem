@@ -21,7 +21,7 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
     const parts = text.split(/\*\*([^*]+)\*\*/g);
     return parts.map((part, index) => {
       if (index % 2 === 1) {
-        return <strong key={index} className="font-bold text-gray-900">{part}</strong>;
+        return <strong key={index} className="font-bold text-white print:text-gray-900">{part}</strong>;
       }
       return part;
     });
@@ -198,9 +198,9 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
           {lines.map((line, idx) => {
             const cleanText = line.replace(/^[-*•\s\d\.)]+\s*/, '');
             return (
-              <div key={idx} className="flex items-start gap-3 p-3.5 bg-emerald-50/40 border border-emerald-100 rounded-xl hover:bg-emerald-50/80 transition-colors duration-150">
-                <span className="text-emerald-600 text-base leading-none mt-0.5">🎯</span>
-                <p className="text-sm text-gray-700 leading-relaxed">{formatBoldText(cleanText)}</p>
+              <div key={idx} className="flex items-start gap-3 p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-xl hover:bg-emerald-500/15 transition-colors duration-150 print:bg-white print:border-gray-200">
+                <span className="text-emerald-400 text-base leading-none mt-0.5">🎯</span>
+                <p className="text-sm text-gray-200 print:text-gray-800 leading-relaxed">{formatBoldText(cleanText)}</p>
               </div>
             );
           })}

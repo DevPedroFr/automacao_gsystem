@@ -88,20 +88,20 @@ export default function DashboardPage() {
     return (
       <div className="space-y-8">
         <div>
-          <div className="h-8 bg-gray-200 rounded w-48 animate-pulse-soft" />
-          <div className="h-4 bg-gray-200 rounded w-64 mt-2 animate-pulse-soft" />
+          <div className="h-8 bg-gray-800/60 rounded-xl w-48 animate-pulse-soft border border-gray-700/30" />
+          <div className="h-4 bg-gray-800/40 rounded-lg w-64 mt-2 animate-pulse-soft border border-gray-700/30" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 animate-pulse-soft">
-              <div className="h-4 bg-gray-200 rounded w-24 mb-3" />
-              <div className="h-8 bg-gray-200 rounded w-16" />
+            <div key={i} className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 animate-pulse-soft">
+              <div className="h-4 bg-gray-800/80 rounded w-24 mb-3" />
+              <div className="h-8 bg-gray-800/60 rounded w-16" />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-80 animate-pulse-soft" />
+            <div key={i} className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 h-80 animate-pulse-soft" />
           ))}
         </div>
       </div>

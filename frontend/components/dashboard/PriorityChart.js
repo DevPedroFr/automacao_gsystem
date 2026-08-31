@@ -55,19 +55,22 @@ export default function PriorityChart({ data = [] }) {
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: 'white',
-            border: '1px solid #E5E7EB',
-            borderRadius: '8px',
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+            backgroundColor: 'rgba(17, 24, 39, 0.9)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)',
             fontSize: '13px',
+            color: '#F3F4F6',
           }}
+          itemStyle={{ color: '#06B6D4', fontWeight: 'bold' }}
           formatter={(value, name) => [`${value} leads`, `Prioridade ${name}`]}
         />
         <Legend
           verticalAlign="bottom"
           height={36}
           formatter={(value) => (
-            <span className="text-sm text-gray-600 font-medium">Prioridade {value}</span>
+            <span className="text-sm text-gray-300 font-medium">Prioridade {value}</span>
           )}
         />
       </PieChart>

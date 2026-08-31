@@ -10,7 +10,23 @@ import ScoreBar from '@/components/ui/ScoreBar';
 import DiagnosticTabs from '@/components/diagnostics/DiagnosticTabs';
 import EmailDraft from '@/components/diagnostics/EmailDraft';
 import { PRIORITY_CONFIG } from '@/lib/constants';
-import { ChevronLeft, Download, MapPin, Globe, Instagram, Linkedin, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
+import { ChevronLeft, Download, MapPin, Globe, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
+
+const InstagramIcon = ({ size = 18, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+  </svg>
+);
+
+const LinkedinIcon = ({ size = 18, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+    <rect width="4" height="12" x="2" y="9"/>
+    <circle cx="4" cy="4" r="2"/>
+  </svg>
+);
 
 export default function LeadDetailPage() {
   const params = useParams();
@@ -96,10 +112,10 @@ export default function LeadDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse-soft" />
+        <div className="h-8 bg-gray-800/60 rounded-xl w-64 animate-pulse-soft border border-gray-700/30" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-32 animate-pulse-soft" />
+            <div key={i} className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 h-32 animate-pulse-soft" />
           ))}
         </div>
       </div>
@@ -109,7 +125,7 @@ export default function LeadDetailPage() {
   if (!lead) {
     return (
       <div className="text-center py-20">
-        <p className="text-lg text-gray-500">Lead não encontrado</p>
+        <p className="text-lg text-gray-400">Lead não encontrado</p>
         <Button variant="secondary" className="mt-4" onClick={() => router.back()}>
           Voltar
         </Button>
@@ -150,7 +166,7 @@ export default function LeadDetailPage() {
       {/* Header (oculto/adaptado na impressão via no-print nas ações) */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">{lead.name}</h1>
+          <h1 className="text-2xl font-bold text-gray-100">{lead.name}</h1>
           <Badge variant={getPriorityVariant(lead.priority)} size="md">
             {priorityConf.label || lead.priority}
           </Badge>
@@ -338,7 +354,7 @@ export default function LeadDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">3. Instagram</span>
                 <span className="bg-pink-500/10 text-pink-400 p-2 rounded-xl border border-pink-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <Instagram size={18} />
+                  <InstagramIcon size={18} />
                 </span>
               </div>
               
@@ -386,7 +402,7 @@ export default function LeadDetailPage() {
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">4. LinkedIn</span>
                 <span className="bg-indigo-500/10 text-indigo-400 p-2 rounded-xl border border-indigo-500/20 group-hover:scale-110 transition-transform duration-300">
-                  <Linkedin size={18} />
+                  <LinkedinIcon size={18} />
                 </span>
               </div>
               
@@ -421,11 +437,11 @@ export default function LeadDetailPage() {
             {diagnostic?.diagnostic_status === 'ai_validation_failed' ? (
               <div className="space-y-4 max-w-xl mx-auto">
                 <span className="text-3xl block">❌</span>
-                <p className="text-lg font-semibold text-red-800">Falha ao Gerar Diagnóstico com IA</p>
-                <p className="text-sm text-red-600">
+                <p className="text-lg font-semibold text-rose-400">Falha ao Gerar Diagnóstico com IA</p>
+                <p className="text-sm text-rose-300/80">
                   O provedor de Inteligência Artificial falhou ao analisar os dados do lead. Detalhes do erro:
                 </p>
-                <p className="text-xs font-mono bg-red-100 border border-red-200 rounded p-3 text-red-700 text-left whitespace-pre-wrap">
+                <p className="text-xs font-mono bg-rose-950/40 border border-rose-500/20 rounded-xl p-3 text-rose-300 text-left whitespace-pre-wrap">
                   {diagnostic.error_message || 'Erro desconhecido na geração do Gemini.'}
                 </p>
                 <div className="pt-2">
@@ -443,7 +459,7 @@ export default function LeadDetailPage() {
               </>
             )}
             {diagError && (
-              <p className="text-sm text-red-600 mt-3">{diagError}</p>
+              <p className="text-sm text-rose-400 mt-3">{diagError}</p>
             )}
           </div>
         </Card>
@@ -454,7 +470,7 @@ export default function LeadDetailPage() {
           <div className="flex flex-col items-center gap-4">
             <div className="animate-spin w-8 h-8 border-3 border-cyan-500 border-t-transparent rounded-full" />
             <div>
-              <p className="text-sm font-medium text-gray-700">Gerando diagnóstico com IA...</p>
+              <p className="text-sm font-semibold text-gray-200">Gerando diagnóstico com IA...</p>
               <p className="text-xs text-gray-400 mt-1">Isso pode levar alguns segundos</p>
             </div>
           </div>
@@ -464,7 +480,7 @@ export default function LeadDetailPage() {
       {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && (
         <>
           <Card>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 Diagnóstico</h2>
+            <h2 className="text-lg font-semibold text-gray-100 mb-4">📋 Diagnóstico</h2>
             <DiagnosticTabs diagnostic={diagnostic} />
           </Card>
 
