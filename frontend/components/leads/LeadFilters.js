@@ -26,13 +26,13 @@ export default function LeadFilters({ onFilterChange, onSearchChange, searchValu
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           placeholder="Buscar leads por nome..."
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors outline-none"
+          className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-700/50 rounded-lg text-sm text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-colors outline-none"
         />
       </div>
 
       {/* Priority filter */}
       <div className="flex items-center gap-1.5">
-        <span className="text-xs font-medium text-gray-500 mr-1">Prioridade:</span>
+        <span className="text-xs font-medium text-gray-400 mr-1">Prioridade:</span>
         {priorities.map((p) => (
           <button
             key={p.key}
@@ -41,8 +41,8 @@ export default function LeadFilters({ onFilterChange, onSearchChange, searchValu
               priorityFilter === p.key
                 ? p.color
                   ? `${p.color} text-white shadow-sm`
-                  : 'bg-gray-800 text-white shadow-sm'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-gray-700 text-white shadow-sm'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
             }`}
           >
             {p.label}
