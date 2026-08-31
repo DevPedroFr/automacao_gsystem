@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.database import init_db
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 # Legado: rotas do motor de automação (busca, triagem, diagnóstico, stitch)

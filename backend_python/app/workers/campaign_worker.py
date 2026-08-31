@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.models import Campaign, Lead, ApiCallLog
 from app.models.lead import LeadSearchParams
-from app.integrations.google_places import GooglePlacesIntegration
+from app.services.lead_service import LeadService
 from app.integrations.pagespeed import PageSpeedIntegration
 from app.integrations.domain_checker import DomainSecurityIntegration
 from app.integrations.instagram import InstagramIntegration
@@ -34,13 +34,14 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
     logger.info(f"🔄 Iniciando processamento da campanha {campaign_id} — {niche} em {location}")
 
     try:
-        # 1. Busca leads via Google Places API
-        places_client = GooglePlacesIntegration()
-        search_params = LeadSearchParams(keyword=niche, location=location, max_results=20)
-        leads_found = await places_client.search_leads(search_params)
+        # 1. Busca leads usando o LeadService configurado
+        lead_service = LeadService()
+        leads_found = await lead_service.find_leads(keyword=niche, location=location)
+        
+        provider_name = "apify" if settings.LEAD_PROVIDER == "apify" else "google_places"
 
         # Registra chamada ao log de API
-        _log_api_call(db, "google_places", "search", "/places:searchText", 200, True)
+        _log_api_call(db, provider_name, "search", "/places:searchText" if provider_name == "google_places" else "/acts/compass~crawler-google-places/runs", 200, True)
 
         logger.info(f"   📍 {len(leads_found)} leads encontrados no Google Places")
 
