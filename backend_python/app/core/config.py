@@ -17,8 +17,11 @@ try:
         DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/automacao_gp"
         REDIS_URL: str = "redis://localhost:6379/0"
 
-        # Etapa 1: Lead Search (Google Places)
+        # Etapa 1: Lead Search (Google Places / Apify)
         GOOGLE_PLACES_API_KEY: Optional[str] = None
+        APIFY_API_KEY: Optional[str] = None
+        LEAD_PROVIDER: str = "google"
+        AI_PROVIDER: str = "claude"
 
         # Etapa 2: Digital Triage
         GOOGLE_PAGESPEED_API_KEY: Optional[str] = None
@@ -57,6 +60,9 @@ except ImportError:
         REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
         GOOGLE_PLACES_API_KEY: Optional[str] = os.getenv("GOOGLE_PLACES_API_KEY")
+        APIFY_API_KEY: Optional[str] = os.getenv("APIFY_API_KEY")
+        LEAD_PROVIDER: str = os.getenv("LEAD_PROVIDER", "google")
+        AI_PROVIDER: str = os.getenv("AI_PROVIDER", "claude")
         GOOGLE_PAGESPEED_API_KEY: Optional[str] = os.getenv("GOOGLE_PAGESPEED_API_KEY")
         META_GRAPH_ACCESS_TOKEN: Optional[str] = os.getenv("META_GRAPH_ACCESS_TOKEN")
         META_INSTAGRAM_ACCOUNT_ID: Optional[str] = os.getenv("META_INSTAGRAM_ACCOUNT_ID")

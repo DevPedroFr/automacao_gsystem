@@ -40,60 +40,80 @@ class GooglePlacesIntegration(BaseHTTPClient, LeadSearchProvider):
         self.api_key = key
 
     async def search_leads(self, params: LeadSearchParams) -> List[LeadResult]:
-        if not self.api_key:
-            return []
+        if self.api_key:
+            headers = {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": self.api_key,
+                "X-Goog-FieldMask": (
+                    "places.id,"
+                    "places.displayName,"
+                    "places.formattedAddress,"
+                    "places.nationalPhoneNumber,"
+                    "places.internationalPhoneNumber,"
+                    "places.websiteUri,"
+                    "places.googleMapsUri,"
+                    "places.rating,"
+                    "places.userRatingCount,"
+                    "places.businessStatus"
+                ),
+            }
 
-        headers = {
-            "Content-Type": "application/json",
-            "X-Goog-Api-Key": self.api_key,
-            "X-Goog-FieldMask": (
-                "places.id,"
-                "places.displayName,"
-                "places.formattedAddress,"
-                "places.nationalPhoneNumber,"
-                "places.internationalPhoneNumber,"
-                "places.websiteUri,"
-                "places.googleMapsUri,"
-                "places.rating,"
-                "places.userRatingCount,"
-                "places.businessStatus"
-            ),
-        }
+            payload = {
+                "textQuery": f"{params.keyword} em {params.location}",
+                "pageSize": min(params.max_results, 20),
+            }
 
-        payload = {
-            "textQuery": f"{params.keyword} em {params.location}",
-            "pageSize": min(params.max_results, 20),
-        }
+            try:
+                data = await self._request("POST", "/places:searchText", json_data=payload, headers=headers)
+                places_data = data.get("places", [])
 
-        try:
-            data = await self._request("POST", "/places:searchText", json_data=payload, headers=headers)
-            places_data = data.get("places", [])
-
-            results = []
-            for item in places_data:
-                display_name = item.get("displayName", {}).get("text", "Sem Nome")
-                results.append(
-                    LeadResult(
-                        place_id=item.get("id", ""),
-                        name=display_name,
-                        formatted_address=item.get("formattedAddress"),
-                        national_phone_number=item.get("nationalPhoneNumber"),
-                        international_phone_number=item.get("internationalPhoneNumber"),
-                        website_uri=item.get("websiteUri"),
-                        google_maps_uri=item.get("googleMapsUri"),
-                        rating=item.get("rating"),
-                        user_rating_count=item.get("userRatingCount"),
-                        business_status=item.get("businessStatus"),
+                results = []
+                for item in places_data:
+                    display_name = item.get("displayName", {}).get("text", "Sem Nome")
+                    results.append(
+                        LeadResult(
+                            place_id=item.get("id", ""),
+                            name=display_name,
+                            formatted_address=item.get("formattedAddress"),
+                            national_phone_number=item.get("nationalPhoneNumber"),
+                            international_phone_number=item.get("internationalPhoneNumber"),
+                            website_uri=item.get("websiteUri"),
+                            google_maps_uri=item.get("googleMapsUri"),
+                            rating=item.get("rating"),
+                            user_rating_count=item.get("userRatingCount"),
+                            business_status=item.get("businessStatus"),
+                        )
                     )
-                )
-            if results:
-                return results
-        except Exception:
-            pass
+                if results:
+                    return results
+            except Exception:
+                pass
 
         scraped_results = await self._search_with_google_scraper(params)
         if scraped_results:
             return scraped_results
+
+        if not self.api_key:
+            return [
+                LeadResult(
+                    place_id="mock-1",
+                    name=f"{params.keyword} Teste 1",
+                    formatted_address=f"Rua Centro, 123, {params.location}",
+                    website_uri="https://exemplo1.com.br",
+                    rating=4.5,
+                    user_rating_count=12,
+                    business_status="OPERATIONAL"
+                ),
+                LeadResult(
+                    place_id="mock-2",
+                    name=f"{params.keyword} Premium",
+                    formatted_address=f"Avenida Principal, 456, {params.location}",
+                    website_uri="https://exemplo2.com.br",
+                    rating=4.8,
+                    user_rating_count=35,
+                    business_status="OPERATIONAL"
+                )
+            ]
 
         return []
 

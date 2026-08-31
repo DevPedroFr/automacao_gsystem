@@ -9,9 +9,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Lead, Diagnostic
 from app.integrations.claude_ai import ClaudeAIIntegration
+from app.integrations.gemini_ai import GeminiAIIntegration
 from app.models.triage import FullTriageReport
 from app.models.lead import LeadResult
 
@@ -99,8 +101,12 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             needs_new_website=not bool(lead.website) or (lead.pagespeed_score or 100) < 50,
         )
 
-        claude_client = ClaudeAIIntegration()
-        diag_service = DiagnosisService(llm=claude_client)
+        if settings.AI_PROVIDER == "gemini":
+            ai_client = GeminiAIIntegration()
+        else:
+            ai_client = ClaudeAIIntegration()
+            
+        diag_service = DiagnosisService(llm=ai_client)
         diagnosis_res, stitch_prompt_res = await diag_service.run_diagnosis_and_prompt(report)
 
         diag_id = str(uuid.uuid4())

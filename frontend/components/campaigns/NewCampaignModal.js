@@ -70,7 +70,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             value={niche}
             onChange={(e) => setNiche(e.target.value)}
             placeholder="Ex: Clínicas Odontológicas"
-            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             required
             disabled={loading}
           />
@@ -85,7 +85,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="Ex: São Paulo, SP"
-            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             required
             disabled={loading}
           />
@@ -100,7 +100,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
               id="minRating"
               value={minRating}
               onChange={(e) => setMinRating(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
               disabled={loading}
             >
               <option value="0">Qualquer Nota</option>
@@ -117,7 +117,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
               id="status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
               disabled={loading}
             >
               <option value="open">Apenas Abertos</option>
@@ -136,7 +136,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
             value={negativeKeywords}
             onChange={(e) => setNegativeKeywords(e.target.value)}
             placeholder="Ex: franquia, hospital, prefeitura"
-            className="w-full px-4 py-3 bg-gray-950 border border-gray-700/50 rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
+            className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-600 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner"
             disabled={loading}
           />
         </div>
