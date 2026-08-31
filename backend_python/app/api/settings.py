@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/settings", tags=["Configurações"])
 
 
-@router.get("/", summary="Lista todas as configurações")
+@router.get("", summary="Lista todas as configurações")
 def list_settings(db: Session = Depends(get_db)):
     """GET /api/settings — Retorna todas as configurações em formato chave-valor."""
     rows = db.query(Setting).all()
@@ -24,7 +24,7 @@ def list_settings(db: Session = Depends(get_db)):
     return {"data": settings_dict}
 
 
-@router.post("/", summary="Salva ou atualiza configurações")
+@router.post("", summary="Salva ou atualiza configurações")
 def save_settings(body: dict[str, Any], db: Session = Depends(get_db)):
     """POST /api/settings — Grava ou atualiza configurações (upsert por chave)."""
     if not body or not isinstance(body, dict):

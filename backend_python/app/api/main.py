@@ -29,6 +29,7 @@ app = FastAPI(
         "Claude AI (Haiku) e Google Stitch para triagem e geração de sites."
     ),
     version="2.0.0",
+    redirect_slashes=False,  # Evita redirect 307 que bloqueia CORS no browser
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────────

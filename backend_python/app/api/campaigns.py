@@ -47,7 +47,7 @@ def _campaign_to_dict(c: Campaign) -> dict:
 
 # ── Rotas ─────────────────────────────────────────────────────────────────────
 
-@router.get("/", summary="Lista todas as campanhas")
+@router.get("", summary="Lista todas as campanhas")
 def list_campaigns(db: Session = Depends(get_db)):
     """GET /api/campaigns — Lista todas as campanhas, mais recente primeiro."""
     campaigns = db.query(Campaign).order_by(Campaign.created_at.desc()).all()
@@ -63,7 +63,7 @@ def get_campaign(campaign_id: str, db: Session = Depends(get_db)):
     return {"data": _campaign_to_dict(campaign)}
 
 
-@router.post("/", status_code=201, summary="Cria nova campanha e inicia processamento")
+@router.post("", status_code=201, summary="Cria nova campanha e inicia processamento")
 async def create_campaign(
     body: CampaignCreate,
     background_tasks: BackgroundTasks,

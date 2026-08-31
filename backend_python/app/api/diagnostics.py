@@ -71,7 +71,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
 
     try:
         from app.services.diagnosis_service import DiagnosisService
-        from app.models.triage import FullTriageReport, PageSpeedResult, DomainSecurityResult, InstagramResult
+        from app.models.triage import FullTriageReport, PageSpeedResult, DomainSecurityResult, InstagramProfileResult
 
         pagespeed = PageSpeedResult(
             url=lead.website or "",
@@ -84,7 +84,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             dns_resolved=bool(lead.website),
             ssl_valid=bool(lead.website),
         )
-        instagram = InstagramResult(
+        instagram = InstagramProfileResult(
             handle=lead.name,
             is_business_account=bool(lead.has_instagram),
             followers_count=None,
