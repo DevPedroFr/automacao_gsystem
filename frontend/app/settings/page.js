@@ -80,9 +80,9 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse-soft" />
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-96 animate-pulse-soft" />
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="h-8 bg-gray-800/60 rounded-xl w-64 animate-pulse-soft border border-gray-700/30" />
+        <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 h-96 animate-pulse-soft" />
       </div>
     );
   }
@@ -92,32 +92,33 @@ export default function SettingsPage() {
       {/* Toast Notification */}
       {toast && (
         <div
-          className={`fixed top-4 right-4 z-50 px-4 py-2.5 rounded-lg shadow-lg border text-sm font-medium transition-all duration-300 animate-slide-up ${
+          className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-2xl border text-sm font-semibold backdrop-blur-xl transition-all duration-300 animate-slide-up flex items-center gap-2 ${
             toast.type === 'success'
-              ? 'bg-green-50 border-green-200 text-green-800'
-              : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+              : 'bg-rose-950/80 border-rose-500/40 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
           }`}
         >
-          {toast.type === 'success' ? '✅' : '❌'} {toast.message}
+          <span>{toast.type === 'success' ? '✅' : '❌'}</span>
+          <span>{toast.message}</span>
         </div>
       )}
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configurações & Integrações</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-gray-100">Configurações & Integrações</h1>
+        <p className="text-sm text-gray-400 mt-1">
           Configure automações para n8n/Make.com e consulte as especificações da API.
         </p>
       </div>
 
       {/* Webhooks Panel */}
       <Card>
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
           <span>📡</span> Automação em Tempo Real (Webhooks)
         </h2>
         <form onSubmit={handleSave} className="space-y-4">
           <div>
-            <label htmlFor="webhookUrl" className="block text-sm font-semibold text-gray-700 mb-1.5">
+            <label htmlFor="webhookUrl" className="block text-sm font-semibold text-gray-300 mb-2">
               URL do Webhook (Make.com ou n8n)
             </label>
             <input
@@ -126,12 +127,12 @@ export default function SettingsPage() {
               placeholder="https://hook.us1.make.com/... ou https://n8n.seu-servidor.com/..."
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
-              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors"
+              className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all shadow-inner"
             />
-            <p className="text-xs text-gray-500 mt-1.5">
+            <p className="text-xs text-gray-400 mt-2 leading-relaxed">
               O sistema disparará requisições POST JSON automaticamente quando uma busca for concluída
-              (<code className="font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-800">campaign_completed</code>) ou 
-              quando um diagnóstico de lead for gerado (<code className="font-mono bg-gray-100 px-1 py-0.5 rounded text-gray-800">diagnostic_generated</code>).
+              (<code className="font-mono bg-gray-800 border border-gray-700/60 px-1.5 py-0.5 rounded text-cyan-300">campaign_completed</code>) ou 
+              quando um diagnóstico de lead for gerado (<code className="font-mono bg-gray-800 border border-gray-700/60 px-1.5 py-0.5 rounded text-cyan-300">diagnostic_generated</code>).
             </p>
           </div>
 
@@ -154,16 +155,16 @@ export default function SettingsPage() {
         {/* Test results */}
         {testResult && (
           <div
-            className={`mt-4 p-4 border rounded-lg text-sm ${
+            className={`mt-5 p-4 border rounded-xl text-sm backdrop-blur-md ${
               testResult.success
-                ? 'bg-green-50 border-green-200 text-green-800 animate-fade-in'
-                : 'bg-red-50 border-red-200 text-red-800 animate-fade-in'
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 animate-fade-in'
+                : 'bg-rose-500/10 border-rose-500/30 text-rose-300 animate-fade-in'
             }`}
           >
             <p className="font-semibold">{testResult.success ? 'Conexão Estabelecida!' : 'Falha na Conexão'}</p>
-            <p className="mt-1">{testResult.message}</p>
+            <p className="mt-1 text-xs opacity-90">{testResult.message}</p>
             {testResult.details && (
-              <pre className="mt-2 p-2 bg-red-100/50 border border-red-200 rounded text-xs font-mono overflow-x-auto whitespace-pre-wrap">
+              <pre className="mt-2 p-3 bg-gray-950/70 border border-gray-800 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap text-gray-300">
                 {testResult.details}
               </pre>
             )}
@@ -173,24 +174,24 @@ export default function SettingsPage() {
 
       {/* API Reference */}
       <Card>
-        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-gray-100 mb-4 flex items-center gap-2">
           <span>📚</span> Guia de API (Integração Direta)
         </h2>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-gray-400 mb-5 leading-relaxed">
           Se você prefere que o Make.com ou n8n faça a consulta ativa (*pull*) ou dispare ações diretamente, use os endpoints da nossa API local:
         </p>
 
         <div className="space-y-6">
           {/* Endpoint 1 */}
-          <div className="border-t border-gray-100 pt-4 first:border-0 first:pt-0">
+          <div className="border-t border-gray-800 pt-5 first:border-0 first:pt-0">
             <div className="flex items-center gap-2">
-              <span className="bg-cyan-100 text-cyan-800 font-semibold text-xs px-2 py-0.5 rounded font-mono">POST</span>
-              <span className="font-mono text-sm font-semibold text-gray-900">/api/campaigns</span>
+              <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-semibold text-xs px-2.5 py-0.5 rounded-full font-mono">POST</span>
+              <span className="font-mono text-sm font-semibold text-gray-200">/api/campaigns</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Dispara a busca de novos leads (Radar) para um nicho e cidade.</p>
-            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <p className="text-xs font-semibold text-gray-700 mb-1">Exemplo de Payload (Request):</p>
-              <pre className="text-xs font-mono text-gray-800 overflow-x-auto">
+            <p className="text-xs text-gray-400 mt-1.5">Dispara a busca de novos leads (Radar) para um nicho e cidade.</p>
+            <div className="mt-3 bg-gray-950/60 border border-gray-800 rounded-xl p-4 shadow-inner">
+              <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Exemplo de Payload (Request):</p>
+              <pre className="text-xs font-mono text-cyan-200/90 overflow-x-auto">
 {`{
   "niche": "Clínicas Odontológicas",
   "location": "Curitiba, PR"
@@ -200,33 +201,33 @@ export default function SettingsPage() {
           </div>
 
           {/* Endpoint 2 */}
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-800 pt-5">
             <div className="flex items-center gap-2">
-              <span className="bg-green-100 text-green-800 font-semibold text-xs px-2 py-0.5 rounded font-mono">GET</span>
-              <span className="font-mono text-sm font-semibold text-gray-900">/api/campaigns/:id</span>
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold text-xs px-2.5 py-0.5 rounded-full font-mono">GET</span>
+              <span className="font-mono text-sm font-semibold text-gray-200">/api/campaigns/:id</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Retorna os dados da campanha, incluindo o <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-800">status</code> ("processing", "completed", "failed").</p>
+            <p className="text-xs text-gray-400 mt-1.5">Retorna os dados da campanha, incluindo o <code className="bg-gray-800 border border-gray-700/60 px-1.5 py-0.5 rounded text-cyan-300">status</code> ("processing", "completed", "failed").</p>
           </div>
 
           {/* Endpoint 3 */}
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-800 pt-5">
             <div className="flex items-center gap-2">
-              <span className="bg-green-100 text-green-800 font-semibold text-xs px-2 py-0.5 rounded font-mono">GET</span>
-              <span className="font-mono text-sm font-semibold text-gray-900">/api/campaigns/:campaignId/leads</span>
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold text-xs px-2.5 py-0.5 rounded-full font-mono">GET</span>
+              <span className="font-mono text-sm font-semibold text-gray-200">/api/campaigns/:campaignId/leads</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Lista todos os leads obtidos na campanha, com filtros opcionais.</p>
+            <p className="text-xs text-gray-400 mt-1.5">Lista todos os leads obtidos na campanha, com filtros opcionais.</p>
           </div>
 
           {/* Endpoint 4 */}
-          <div className="border-t border-gray-100 pt-4">
+          <div className="border-t border-gray-800 pt-5">
             <div className="flex items-center gap-2">
-              <span className="bg-cyan-100 text-cyan-800 font-semibold text-xs px-2 py-0.5 rounded font-mono">POST</span>
-              <span className="font-mono text-sm font-semibold text-gray-900">/api/leads/:leadId/diagnostic</span>
+              <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-semibold text-xs px-2.5 py-0.5 rounded-full font-mono">POST</span>
+              <span className="font-mono text-sm font-semibold text-gray-200">/api/leads/:leadId/diagnostic</span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Gera o diagnóstico de IA (com rascunho de e-mail e prompt do Stitch) para um lead específico.</p>
-            <div className="mt-2 bg-gray-50 border border-gray-200 rounded-lg p-3">
-              <p className="text-xs font-semibold text-gray-700 mb-1">Exemplo de Resposta (Response):</p>
-              <pre className="text-xs font-mono text-gray-800 overflow-x-auto max-h-40 overflow-y-auto">
+            <p className="text-xs text-gray-400 mt-1.5">Gera o diagnóstico de IA (com rascunho de e-mail e prompt do Stitch) para um lead específico.</p>
+            <div className="mt-3 bg-gray-950/60 border border-gray-800 rounded-xl p-4 shadow-inner">
+              <p className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">Exemplo de Resposta (Response):</p>
+              <pre className="text-xs font-mono text-cyan-200/90 overflow-x-auto max-h-40 overflow-y-auto">
 {`{
   "data": {
     "lead_id": "uuid-do-lead",

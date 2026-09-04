@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import Card from '@/components/ui/Card';
-import { Mail, MessageCircle, Instagram, Copy, Check, MessageSquare } from 'lucide-react';
+import { Mail, MessageCircle, Copy, Check, MessageSquare } from 'lucide-react';
+
+const InstagramIcon = ({ size = 14 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+  </svg>
+);
 
 export default function EmailDraft({ emailText = '', whatsappText = '', instagramText = '' }) {
   const [activeTab, setActiveTab] = useState('email');
@@ -11,7 +19,7 @@ export default function EmailDraft({ emailText = '', whatsappText = '', instagra
   const drafts = {
     email: { label: 'E-mail', icon: <Mail size={14} />, text: emailText },
     whatsapp: { label: 'WhatsApp', icon: <MessageCircle size={14} />, text: whatsappText },
-    instagram: { label: 'Instagram DM', icon: <Instagram size={14} />, text: instagramText },
+    instagram: { label: 'Instagram DM', icon: <InstagramIcon size={14} />, text: instagramText },
   };
 
   const activeContent = drafts[activeTab]?.text || '';

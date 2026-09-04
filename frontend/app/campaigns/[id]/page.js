@@ -111,9 +111,9 @@ export default function CampaignDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded w-64 animate-pulse-soft" />
-        <div className="h-4 bg-gray-200 rounded w-96 animate-pulse-soft" />
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-96 animate-pulse-soft" />
+        <div className="h-8 bg-gray-800/60 rounded-xl w-64 animate-pulse-soft border border-gray-700/30" />
+        <div className="h-4 bg-gray-800/40 rounded-lg w-96 animate-pulse-soft border border-gray-700/30" />
+        <div className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 h-96 animate-pulse-soft" />
       </div>
     );
   }
@@ -129,7 +129,7 @@ export default function CampaignDetailPage() {
       {/* Back button */}
       <button
         onClick={() => router.push('/')}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+        className="flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 font-medium transition-colors"
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -141,14 +141,14 @@ export default function CampaignDetailPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-100">
               {campaign?.niche} — {campaign?.location}
             </h1>
             <Badge variant={getStatusVariant(campaign?.status)} size="md">
               {statusConf.icon} {statusConf.label || campaign?.status}
             </Badge>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-400 mt-1">
             {leads.length} leads encontrados
           </p>
         </div>
@@ -165,12 +165,12 @@ export default function CampaignDetailPage() {
 
       {/* Processing message */}
       {campaign?.status === 'processing' && (
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-cyan-500/30 bg-cyan-500/10">
           <div className="flex items-center gap-3">
-            <div className="animate-spin w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full" />
+            <div className="animate-spin w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Campanha em processamento...</p>
-              <p className="text-xs text-blue-600 mt-0.5">Os leads estão sendo coletados e analisados. Atualizando automaticamente.</p>
+              <p className="text-sm font-semibold text-cyan-300">Campanha em processamento...</p>
+              <p className="text-xs text-cyan-200/70 mt-0.5">Os leads estão sendo coletados e analisados. Atualizando automaticamente.</p>
             </div>
           </div>
         </Card>
@@ -178,15 +178,15 @@ export default function CampaignDetailPage() {
 
       {/* Error message */}
       {campaign?.status === 'failed' && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-rose-500/30 bg-rose-500/10">
           <div className="flex items-start gap-3">
             <span className="text-xl">⚠️</span>
             <div>
-              <p className="text-sm font-semibold text-red-800">Falha ao processar campanha</p>
-              <p className="text-xs text-red-600 mt-1">
+              <p className="text-sm font-semibold text-rose-400">Falha ao processar campanha</p>
+              <p className="text-xs text-rose-300/80 mt-1">
                 Não foi possível obter os resultados desta campanha. Detalhes do problema:
               </p>
-              <p className="text-xs font-mono bg-red-100 border border-red-200 rounded p-2 text-red-700 mt-2 whitespace-pre-wrap">
+              <p className="text-xs font-mono bg-rose-950/40 border border-rose-500/20 rounded p-2.5 text-rose-300 mt-2 whitespace-pre-wrap">
                 {campaign?.error_message || 'Erro desconhecido na execução das APIs de consulta.'}
               </p>
             </div>
@@ -197,9 +197,9 @@ export default function CampaignDetailPage() {
       {/* Priority counters */}
       <div className="flex flex-wrap gap-3">
         {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-          <div key={key} className={`flex items-center gap-2 px-4 py-2 rounded-lg ${config.bgClass}`}>
+          <div key={key} className={`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm font-semibold ${config.bgClass}`}>
             <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass}`} />
-            <span className="text-sm font-semibold">{config.label}: {priorityCounts[key] || 0}</span>
+            <span className="text-sm">{config.label}: {priorityCounts[key] || 0}</span>
           </div>
         ))}
       </div>

@@ -1,7 +1,32 @@
+# Next.js & Frontend
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+.next/
 node_modules/
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*.class
+*.db
+*.sqlite
+*.sqlite3
+backend_python/__pycache__/
+backend_python/**/__pycache__/
+backend_python/*.db
+backend_python/*.sqlite3
+
+# Environment variables
 .env
-database.sqlite
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs and system
+*.log
 .DS_Store
+Thumbs.db
 dist/
 build/
-frontend/.next/

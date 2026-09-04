@@ -34,12 +34,12 @@ export default function CampaignTable({ campaigns = [] }) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nicho</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Localização</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Leads</th>
-            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Data</th>
+          <tr className="border-b border-gray-700/50">
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Nicho</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Localização</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Leads</th>
+            <th className="text-left py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Data</th>
           </tr>
         </thead>
         <tbody>
@@ -49,17 +49,17 @@ export default function CampaignTable({ campaigns = [] }) {
               <tr
                 key={campaign.id}
                 onClick={() => router.push(`/campaigns/${campaign.id}`)}
-                className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                className="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors duration-150 group"
               >
-                <td className="py-3.5 px-4 text-sm font-medium text-gray-900">{campaign.niche}</td>
-                <td className="py-3.5 px-4 text-sm text-gray-600">{campaign.location}</td>
+                <td className="py-3.5 px-4 text-sm font-medium text-gray-100 group-hover:text-cyan-400 transition-colors">{campaign.niche}</td>
+                <td className="py-3.5 px-4 text-sm text-gray-300">{campaign.location}</td>
                 <td className="py-3.5 px-4">
                   <Badge variant={getStatusVariant(campaign.status)}>
                     {statusConf.icon} {statusConf.label || campaign.status}
                   </Badge>
                 </td>
-                <td className="py-3.5 px-4 text-sm font-semibold text-gray-900">{campaign.total_leads ?? '—'}</td>
-                <td className="py-3.5 px-4 text-sm text-gray-500">{formatDate(campaign.created_at)}</td>
+                <td className="py-3.5 px-4 text-sm font-semibold text-gray-100">{campaign.total_leads ?? '—'}</td>
+                <td className="py-3.5 px-4 text-sm text-gray-400">{formatDate(campaign.created_at)}</td>
               </tr>
             );
           })}
