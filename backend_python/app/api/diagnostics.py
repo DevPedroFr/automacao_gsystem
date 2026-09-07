@@ -51,7 +51,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
 
     existing = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
     if existing:
-        if existing.diagnostic_status == "ai_validation_failed":
+        if existing.diagnostic_status == "ai_validation_failed" or not existing.stitch_prompt:
             db.delete(existing)
             db.commit()
         else:

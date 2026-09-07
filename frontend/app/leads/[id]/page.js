@@ -431,7 +431,7 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Diagnostic section */}
-      {(!diagnostic || diagnostic.diagnostic_status === 'ai_validation_failed') && !diagLoading && (
+      {(!diagnostic || diagnostic.diagnostic_status === 'ai_validation_failed' || !diagnostic.stitch_prompt) && !diagLoading && (
         <Card className="py-10">
           <div className="text-center">
             {diagnostic?.diagnostic_status === 'ai_validation_failed' ? (
@@ -452,7 +452,9 @@ export default function LeadDetailPage() {
               </div>
             ) : (
               <>
-                <p className="text-gray-400 mb-4">Nenhum diagnóstico gerado para este lead.</p>
+                <p className="text-gray-400 mb-4">
+                  {diagnostic ? 'O prompt Google Stitch ainda não foi gerado para este lead.' : 'Nenhum diagnóstico gerado para este lead.'}
+                </p>
                 <Button size="lg" onClick={handleGenerateDiagnostic} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] border-0">
                   <RefreshCw className="inline-block mr-2" size={18} /> Gerar Diagnóstico com IA
                 </Button>
@@ -477,7 +479,7 @@ export default function LeadDetailPage() {
         </Card>
       )}
 
-      {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && (
+      {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && diagnostic.stitch_prompt && (
         <>
           <Card>
             <h2 className="text-lg font-semibold text-gray-100 mb-4">📋 Diagnóstico</h2>
