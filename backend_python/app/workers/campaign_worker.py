@@ -48,6 +48,11 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
         # 2. Processa cada lead com delay escalonado para respeitar rate limits
         processed_count = 0
         for index, place_lead in enumerate(leads_found):
+            campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+            if not campaign or campaign.status == "cancelled":
+                logger.info(f"Campanha {campaign_id} interrompida pelo usuário.")
+                return
+
             if index > 0:
                 await asyncio.sleep(1.0)  # 1s de delay entre leads
 
@@ -67,7 +72,7 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
 
         # 3. Marca campanha como concluída
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-        if campaign:
+        if campaign and campaign.status == "processing":
             campaign.status = "completed"
             campaign.total_leads = processed_count
             campaign.updated_at = datetime.utcnow()

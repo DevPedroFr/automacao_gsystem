@@ -14,6 +14,7 @@ export default function Button({
   const variantClasses = {
     primary: 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white focus:ring-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.35)]',
     secondary: 'bg-gray-800/90 border border-gray-700/80 hover:bg-gray-750 hover:border-gray-600 text-gray-200 hover:text-white focus:ring-cyan-500/50 shadow-sm',
+    danger: 'bg-rose-600 hover:bg-rose-500 text-white focus:ring-rose-500 shadow-sm',
     ghost: 'bg-transparent hover:bg-gray-800/60 text-gray-300 hover:text-white focus:ring-gray-600',
   };
 

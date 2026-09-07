@@ -105,6 +105,24 @@ async def create_campaign(
     return {"data": _campaign_to_dict(campaign)}
 
 
+@router.post("/{campaign_id}/cancel", summary="Cancela o processamento de uma campanha")
+def cancel_campaign(campaign_id: str, db: Session = Depends(get_db)):
+    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
+    if not campaign:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    if campaign.status != "processing":
+        raise HTTPException(
+            status_code=409,
+            detail={"error": "invalid_status", "message": "Somente campanhas em processamento podem ser paradas"},
+        )
+
+    campaign.status = "cancelled"
+    campaign.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(campaign)
+    return {"data": _campaign_to_dict(campaign)}
+
+
 @router.get("/{campaign_id}/stats", summary="Estatísticas detalhadas de uma campanha")
 def get_campaign_stats(campaign_id: str, db: Session = Depends(get_db)):
     """GET /api/campaigns/:id/stats — Retorna métricas e distribuição de prioridades."""

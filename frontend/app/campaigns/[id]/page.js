@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import LeadTable from '@/components/leads/LeadTable';
 import LeadFilters from '@/components/leads/LeadFilters';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from '@/lib/constants';
+import { CircleStop } from 'lucide-react';
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -21,6 +22,7 @@ export default function CampaignDetailPage() {
   const [searchValue, setSearchValue] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   const loadCampaign = useCallback(async () => {
     try {
@@ -49,25 +51,32 @@ export default function CampaignDetailPage() {
   }, [campaignId, searchValue, priorityFilter]);
 
   useEffect(() => {
+    let interval;
+    let disposed = false;
+
     const init = async () => {
       setLoading(true);
       const campaignData = await loadCampaign();
       await loadLeads();
       setLoading(false);
 
-      // Polling if processing
-      if (campaignData?.status === 'processing') {
-        const interval = setInterval(async () => {
+      // Poll campaign and leads while the worker is still processing.
+      if (!disposed && campaignData?.status === 'processing') {
+        interval = setInterval(async () => {
           const updated = await loadCampaign();
+          await loadLeads();
           if (updated?.status !== 'processing') {
             clearInterval(interval);
-            await loadLeads();
           }
         }, 3000);
-        return () => clearInterval(interval);
       }
     };
     init();
+
+    return () => {
+      disposed = true;
+      if (interval) clearInterval(interval);
+    };
   }, [loadCampaign, loadLeads]);
 
   useEffect(() => {
@@ -75,6 +84,20 @@ export default function CampaignDetailPage() {
       loadLeads();
     }
   }, [searchValue, priorityFilter, loadLeads, loading]);
+
+  const handleCancelCampaign = async () => {
+    if (!window.confirm('Deseja parar esta campanha? Os leads já encontrados serão mantidos.')) return;
+    try {
+      setCancelling(true);
+      const result = await fetchApi(`/campaigns/${campaignId}/cancel`, { method: 'POST' });
+      setCampaign(result.data || result);
+    } catch (err) {
+      console.error('Erro ao parar campanha:', err);
+      window.alert(err.message || 'Não foi possível parar a campanha.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleExportCSV = async () => {
     try {
@@ -120,7 +143,7 @@ export default function CampaignDetailPage() {
 
   const statusConf = STATUS_CONFIG[campaign?.status] || {};
   const getStatusVariant = (status) => {
-    const map = { processing: 'info', completed: 'success', failed: 'danger' };
+    const map = { processing: 'info', completed: 'success', failed: 'danger', cancelled: 'warning' };
     return map[status] || 'default';
   };
 
@@ -153,14 +176,16 @@ export default function CampaignDetailPage() {
           </p>
         </div>
 
-        <Button
-          variant="secondary"
-          onClick={handleExportCSV}
-          loading={exporting}
-          disabled={!leads.length}
-        >
-          📥 Exportar CSV
-        </Button>
+        <div className="flex flex-wrap gap-3">
+          {campaign?.status === 'processing' && (
+            <Button variant="danger" onClick={handleCancelCampaign} loading={cancelling}>
+              <CircleStop size={16} /> Parar campanha
+            </Button>
+          )}
+          <Button variant="secondary" onClick={handleExportCSV} loading={exporting} disabled={!leads.length}>
+            📥 Exportar CSV
+          </Button>
+        </div>
       </div>
 
       {/* Processing message */}
@@ -191,6 +216,13 @@ export default function CampaignDetailPage() {
               </p>
             </div>
           </div>
+        </Card>
+      )}
+
+      {campaign?.status === 'cancelled' && (
+        <Card className="border-amber-500/30 bg-amber-500/10">
+          <p className="text-sm font-semibold text-amber-300">Campanha parada</p>
+          <p className="text-xs text-amber-200/70 mt-1">Os leads encontrados antes da parada foram mantidos.</p>
         </Card>
       )}
 

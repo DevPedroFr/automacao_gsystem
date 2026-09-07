@@ -8,4 +8,5 @@ export const STATUS_CONFIG = {
   processing: { label: 'Processando', bgClass: 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30', icon: '⏳' },
   completed: { label: 'Concluído', bgClass: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30', icon: '✅' },
   failed: { label: 'Falhou', bgClass: 'bg-rose-500/15 text-rose-400 border border-rose-500/30', icon: '❌' },
+  cancelled: { label: 'Cancelada', bgClass: 'bg-amber-500/15 text-amber-400 border border-amber-500/30', icon: '■' },
 };

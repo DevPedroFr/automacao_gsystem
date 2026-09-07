@@ -24,7 +24,7 @@ class Campaign(Base):
     id = Column(String, primary_key=True, default=_uuid)
     niche = Column(String, nullable=False)
     location = Column(String, nullable=False)
-    status = Column(String, default="processing")   # processing | completed | failed
+    status = Column(String, default="processing")   # processing | completed | failed | cancelled
     total_leads = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
