@@ -144,6 +144,8 @@ npm run dev
 
 O frontend usa a API Python na porta 8000.
 
+`NEXT_PUBLIC_API_URL` é lida durante o build do Next.js e fica embutida no bundle do navegador. Em produção, configure a variável antes de executar `npm run build`; alterar somente o ambiente do container depois do build não altera a URL já compilada.
+
 Arquivo esperado em [frontend/.env.local](frontend/.env.local):
 
 ```env
@@ -220,10 +222,16 @@ python -m uvicorn app.api.main:app --host 0.0.0.0 --port 8001 --reload
 
 ### Frontend não encontra o backend
 
-Verifique [frontend/.env.local](frontend/.env.local) e confirme:
+Em desenvolvimento, verifique [frontend/.env.local](frontend/.env.local) e confirme:
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
+```
+
+Em uma imagem Docker, passe a variável para a etapa de build:
+
+```bash
+docker build --build-arg NEXT_PUBLIC_API_URL=https://api.seudominio.com.br/api -t automacao-frontend frontend
 ```
 
 ### Teste assíncrono coletado pelo pytest

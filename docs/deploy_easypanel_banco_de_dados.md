@@ -92,6 +92,7 @@ ANTHROPIC_API_KEY=sk-ant-api03-...
 ```env
 NEXT_PUBLIC_API_URL=https://api.seudominio.com.br/api
 ```
+   - Como essa variável é pública e é embutida pelo Next.js durante `next build`, ela precisa estar disponível também na etapa de build da imagem. Se usar o `frontend/Dockerfile`, configure-a como build argument `NEXT_PUBLIC_API_URL`; definir somente uma variável de runtime não altera o bundle já compilado.
 5. **Domínio e Porta:**
    - Na aba **Domains**, configure o domínio principal do painel (ex: `app.seudominio.com.br`).
    - **Container Port:** `3000`.
