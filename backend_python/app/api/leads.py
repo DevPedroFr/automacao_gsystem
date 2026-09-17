@@ -109,6 +109,33 @@ def list_leads(
     return {"data": [_lead_to_dict(l) for l in leads], "total": len(leads)}
 
 
+@router.get("/api/leads", summary="Lista todos os leads globalmente (para o CRM)")
+def list_all_leads(db: Session = Depends(get_db)):
+    """GET /api/leads — Lista todos os leads de todas as campanhas."""
+    leads = db.query(Lead).order_by(Lead.created_at.desc()).all()
+    return {"data": [_lead_to_dict(l) for l in leads], "total": len(leads)}
+
+
+class LeadStatusUpdate(BaseModel):
+    status: str
+
+@router.patch("/api/leads/{lead_id}/status", summary="Atualiza o status comercial de um lead")
+def update_lead_status(lead_id: str, body: LeadStatusUpdate, db: Session = Depends(get_db)):
+    """PATCH /api/leads/:id/status — Atualiza commercial_status."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    valid_statuses = ["new", "contacted", "negotiation", "won", "lost"]
+    if body.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail={"error": "invalid_status", "message": f"Status inválido. Permitidos: {valid_statuses}"})
+
+    lead.commercial_status = body.status
+    db.commit()
+    db.refresh(lead)
+    return {"data": _lead_to_dict(lead)}
+
+
 @router.get("/api/leads/{lead_id}", summary="Detalhes completos de um lead")
 def get_lead(lead_id: str, db: Session = Depends(get_db)):
     """GET /api/leads/:id — Retorna detalhes do lead com diagnóstico, se existir."""
