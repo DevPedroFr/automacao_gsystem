@@ -316,14 +316,6 @@ ${text}
             : renderFormattedContent(contentMap[activeTab], activeTab)}
         </div>
       </div>
-
-      {/* Visualização de Impressão Completa para PDF (Imprime APENAS o Painel de Diagnóstico de 3 colunas) */}
-      <div className="print-only space-y-4">
-        <h3 className="text-sm font-bold text-gray-900 border-b-2 border-gray-200 pb-2 mb-4 uppercase tracking-wider">
-          📋 Relatório de Diagnóstico de Presença Digital
-        </h3>
-        {renderDashboardPanel(categories)}
-      </div>
     </div>
   );
 }

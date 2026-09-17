@@ -9,6 +9,7 @@ import Button from '@/components/ui/Button';
 import ScoreBar from '@/components/ui/ScoreBar';
 import DiagnosticTabs from '@/components/diagnostics/DiagnosticTabs';
 import EmailDraft from '@/components/diagnostics/EmailDraft';
+import PrintReport from '@/components/diagnostics/PrintReport';
 import { PRIORITY_CONFIG } from '@/lib/constants';
 import { ChevronLeft, Download, MapPin, Globe, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
 
@@ -136,25 +137,13 @@ export default function LeadDetailPage() {
   const priorityConf = PRIORITY_CONFIG[lead.priority] || {};
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Cabeçalho de papel timbrado exclusivo para o PDF Impresso */}
-      <div className="print-only border-b-2 border-[#0F2744] pb-4 mb-6">
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="text-2xl font-extrabold text-[#0F2744]">CONSULTINGS APD</h1>
-            <p className="text-xs text-cyan-600 font-bold uppercase tracking-wider">Maturidade Digital & Oportunidade Comercial</p>
-          </div>
-          <div className="text-right text-xs text-gray-500">
-            <p className="font-medium">Data de Emissão: {new Date().toLocaleDateString('pt-BR')}</p>
-            <p>Código do Lead: {lead.id.substring(0, 8).toUpperCase()}</p>
-          </div>
-        </div>
-        <p className="text-sm text-gray-600 mt-3 italic border-t border-gray-100 pt-2">
-          Relatório de auditoria técnica da presença digital preparado para: <strong className="text-gray-950">{lead.name}</strong>
-        </p>
-      </div>
+    <div className="animate-fade-in">
+      {/* O relatório de impressão fica invisível na tela e visível apenas no print */}
+      <PrintReport lead={lead} diagnostic={diagnostic} />
 
-      {/* Back button (oculto na impressão) */}
+      {/* Todo o conteúdo da tela fica oculto na impressão */}
+      <div className="space-y-8 no-print">
+      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 transition-colors no-print font-medium"
@@ -495,6 +484,7 @@ export default function LeadDetailPage() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
