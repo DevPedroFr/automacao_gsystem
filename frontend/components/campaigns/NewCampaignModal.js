@@ -91,7 +91,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="minRating" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
               Nota Mínima
@@ -147,7 +147,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
           </div>
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-700/50 mt-6">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-700/50 mt-6">
           <button 
             type="button" 
             onClick={handleClose} 

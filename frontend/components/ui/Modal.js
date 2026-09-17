@@ -17,7 +17,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-md"
@@ -25,7 +25,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
       />
 
       {/* Modal container */}
-      <div className="relative bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col animate-slide-up">
+      <div className="relative bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
           <h2 className="text-lg font-bold text-gray-100 tracking-wide">{title}</h2>
