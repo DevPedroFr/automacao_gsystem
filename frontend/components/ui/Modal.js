@@ -1,9 +1,13 @@
-'use client';
+﻿'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function Modal({ isOpen, onClose, title, children }) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -14,10 +18,10 @@ export default function Modal({ isOpen, onClose, title, children }) {
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+  const modalContent = (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-md"
@@ -25,9 +29,9 @@ export default function Modal({ isOpen, onClose, title, children }) {
       />
 
       {/* Modal container */}
-      <div className="relative bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-slide-up">
+      <div className="relative z-10 bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 shrink-0">
           <h2 className="text-lg font-bold text-gray-100 tracking-wide">{title}</h2>
           <button
             onClick={onClose}
@@ -44,4 +48,6 @@ export default function Modal({ isOpen, onClose, title, children }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
