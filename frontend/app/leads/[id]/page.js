@@ -83,6 +83,23 @@ export default function LeadDetailPage() {
     }
   };
 
+  const handleSelectInstagram = async (handle) => {
+    try {
+      setDiagLoading(true);
+      await fetchApi(`/leads/${leadId}/select-instagram`, {
+        method: 'POST',
+        body: JSON.stringify({ handle })
+      });
+      // After selecting, trigger diagnostic generation again
+      await handleGenerateDiagnostic();
+      await loadLead(); // Reload lead data to hide candidates
+    } catch (err) {
+      console.error(err);
+      setDiagError('Erro ao selecionar perfil: ' + err.message);
+      setDiagLoading(false);
+    }
+  };
+
   const getPriorityVariant = (priority) => {
     const map = { A: 'success', B: 'warning', C: 'danger' };
     return map[priority] || 'default';
@@ -338,7 +355,7 @@ export default function LeadDetailPage() {
           </Card>
 
           {/* Pilar 3: Instagram */}
-          <Card padding="p-5" className="flex flex-col justify-between group hover:border-pink-500/40">
+          <Card padding="p-5" className="flex flex-col justify-between group hover:border-pink-500/40 relative">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">3. Instagram</span>
@@ -383,6 +400,34 @@ export default function LeadDetailPage() {
                 </a>
               )}
             </div>
+
+            {/* Sugestões de Candidatos */}
+            {!lead.has_instagram && lead.instagram_candidates && (
+              <div className="absolute top-[102%] left-0 right-0 bg-gray-900 border border-gray-700 p-4 rounded-xl shadow-2xl z-20 animate-slide-up">
+                <p className="text-xs font-bold text-gray-300 mb-3 flex items-center gap-2">
+                  <InstagramIcon size={14} className="text-pink-400" /> Você quis dizer algum destes?
+                </p>
+                <div className="space-y-2">
+                  {(() => {
+                    try {
+                      const cands = JSON.parse(lead.instagram_candidates);
+                      return cands.map(cand => (
+                        <button
+                          key={cand}
+                          onClick={() => handleSelectInstagram(cand)}
+                          className="w-full text-left text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg transition-colors border border-gray-700 hover:border-pink-500/50 flex justify-between items-center"
+                        >
+                          <span>@{cand}</span>
+                          <span className="text-[10px] text-pink-400">Selecionar</span>
+                        </button>
+                      ));
+                    } catch (e) {
+                      return null;
+                    }
+                  })()}
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Pilar 4: LinkedIn */}

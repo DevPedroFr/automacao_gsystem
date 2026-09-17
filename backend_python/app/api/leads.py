@@ -8,6 +8,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
@@ -43,6 +44,7 @@ def _lead_to_dict(lead: Lead) -> dict:
         "seo_score": lead.seo_score,
         "has_instagram": lead.has_instagram,
         "instagram_url": lead.instagram_url,
+        "instagram_candidates": lead.instagram_candidates,
         "has_facebook": lead.has_facebook,
         "has_linkedin": lead.has_linkedin,
         "social_last_post_days": lead.social_last_post_days,
@@ -163,3 +165,50 @@ def export_leads_csv(campaign_id: str, db: Session = Depends(get_db)):
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename=leads_{campaign_id}.csv"},
     )
+
+
+class InstagramSelection(BaseModel):
+    handle: str
+
+@router.post("/api/leads/{lead_id}/select-instagram", summary="Seleciona o Instagram correto para o lead")
+def select_instagram(lead_id: str, body: InstagramSelection, db: Session = Depends(get_db)):
+    """Seleciona o Instagram correto dentre os candidatos e atualiza o lead."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    # Atualiza o lead com a seleção
+    lead.has_instagram = 1
+    lead.instagram_url = f"https://instagram.com/{body.handle}"
+    # Opcionalmente podemos limpar os candidatos
+    lead.instagram_candidates = None
+    
+    # Recalcula DMS e COS
+    from app.services.score_service import calculate_dms, calculate_cos, get_priority
+    lead_dict = {
+        "google_rating": lead.google_rating,
+        "google_reviews_count": lead.google_reviews_count,
+        "has_website": lead.has_website,
+        "pagespeed_score": lead.pagespeed_score,
+        "has_instagram": lead.has_instagram,
+        "has_facebook": lead.has_facebook,
+        "social_last_post_days": lead.social_last_post_days,
+    }
+    dms = calculate_dms(lead_dict)
+    cos = calculate_cos(lead_dict, dms)
+    priority = get_priority(cos)
+    
+    lead.dms = dms
+    lead.cos = cos
+    lead.priority = priority
+    
+    db.commit()
+    db.refresh(lead)
+    
+    # Se já existir um diagnóstico, invalida para que o frontend/usuário regere
+    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    if diagnostic:
+        db.delete(diagnostic)
+        db.commit()
+        
+    return {"data": _lead_to_dict(lead)}

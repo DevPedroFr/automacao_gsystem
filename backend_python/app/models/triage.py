@@ -31,6 +31,7 @@ class InstagramProfileResult(BaseModel):
     posts_count: Optional[int] = None
     biography: Optional[str] = None
     provider_used: str = "Meta Graph API"  # or Fallback RapidAPI
+    candidates: Optional[list] = None
     error: Optional[str] = None
 
 

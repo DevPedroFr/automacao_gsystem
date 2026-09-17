@@ -122,14 +122,34 @@ async def _process_single_lead(place_lead, campaign_id: str, db: Session) -> Lea
     # 2b. Instagram
     has_instagram = 0
     instagram_url = None
+    instagram_candidates_json = None
     try:
-        insta_client = InstagramIntegration()
-        insta_result = await insta_client.get_instagram_profile(place_lead.name)
-        has_instagram = 1 if insta_result.is_business_account else 0
-        instagram_url = f"https://instagram.com/{insta_result.handle}" if has_instagram else None
-        _log_api_call(db, "meta", "instagram", "/me/business_discovery", 200, True)
+        from app.integrations.search import DuckDuckGoSearch
+        import json
+        
+        city = location_from_address(place_lead.formatted_address or "")
+        candidates = await DuckDuckGoSearch.search_instagram_profiles(place_lead.name, city)
+        
+        if candidates:
+            clean_name = "".join(c for c in place_lead.name.lower() if c.isalnum())
+            first_candidate_clean = "".join(c for c in candidates[0].lower() if c.isalnum())
+            
+            is_confident = (clean_name in first_candidate_clean or first_candidate_clean in clean_name)
+            
+            if is_confident:
+                insta_client = InstagramIntegration()
+                insta_result = await insta_client.get_instagram_profile(candidates[0])
+                if insta_result.found:
+                    has_instagram = 1
+                    instagram_url = f"https://instagram.com/{insta_result.handle}"
+                else:
+                    instagram_candidates_json = json.dumps(candidates)
+            else:
+                instagram_candidates_json = json.dumps(candidates)
+                
+        _log_api_call(db, "duckduckgo", "search", "/html", 200, True)
     except Exception as insta_err:
-        logger.warning(f"Instagram falhou para {place_lead.name}: {insta_err}")
+        logger.warning(f"Instagram search failed for {place_lead.name}: {insta_err}")
 
     # 2c. Montar dicionário para calcular scores
     lead_dict = {
@@ -173,6 +193,7 @@ async def _process_single_lead(place_lead, campaign_id: str, db: Session) -> Lea
         has_facebook=0,
         has_linkedin=0,
         social_last_post_days=None,
+        instagram_candidates=instagram_candidates_json,
         dms=dms,
         cos=cos,
         priority=priority,

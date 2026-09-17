@@ -66,6 +66,7 @@ class Lead(Base):
     has_facebook = Column(Integer, default=0)
     has_linkedin = Column(Integer, default=0)
     social_last_post_days = Column(Integer, nullable=True)
+    instagram_candidates = Column(Text, nullable=True)
 
     # Scores calculados
     dms = Column(Integer, default=0)    # Digital Maturity Score (0–100)
