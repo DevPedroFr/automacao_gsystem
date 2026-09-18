@@ -125,21 +125,23 @@ export default function CRMPage() {
                       onDragEnd={handleDragEnd}
                       className="cursor-grab active:cursor-grabbing transform transition-all hover:-translate-y-1"
                     >
-                      <Card className="hover:border-gray-600/50" padding="p-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <Link href={`/leads/${lead.id}`} className="font-bold text-gray-200 hover:text-cyan-400 transition-colors text-sm truncate pr-2">
-                            {lead.name}
-                          </Link>
-                          <Badge variant={getPriorityVariant(lead.priority)} size="sm" className="shrink-0">
-                            {pConf.label || lead.priority}
-                          </Badge>
-                        </div>
+                      <Card className="hover:border-gray-600/50 hover:bg-gray-800/30 transition-colors cursor-pointer" padding="0">
+                        <Link href={`/leads/${lead.id}`} className="block p-4">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-bold text-gray-200 hover:text-cyan-400 transition-colors text-sm truncate pr-2 block">
+                              {lead.name}
+                            </span>
+                            <Badge variant={getPriorityVariant(lead.priority)} size="sm" className="shrink-0">
+                              {pConf.label || lead.priority}
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-xs text-gray-500 mb-3 truncate">
+                            {lead.city || 'Cidade desconhecida'}
+                          </div>
+                        </Link>
                         
-                        <div className="text-xs text-gray-500 mb-3 truncate">
-                          {lead.city || 'Cidade desconhecida'}
-                        </div>
-                        
-                        <div className="flex justify-between items-center pt-2 border-t border-gray-700/50">
+                        <div className="flex justify-between items-center pt-2 pb-4 px-4 border-t border-gray-700/50">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wide">DMS</span>
                             <span className="text-sm font-black text-cyan-400">{lead.dms || 0}</span>
@@ -148,7 +150,9 @@ export default function CRMPage() {
                           {/* Botões visíveis apenas no mobile para mover entre colunas se o drag and drop for ruim na tela de toque */}
                           <div className="md:hidden flex gap-1">
                             <button 
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 const currentIndex = STATUS_COLUMNS.findIndex(c => c.id === column.id);
                                 if (currentIndex > 0) updateLeadStatus(lead.id, STATUS_COLUMNS[currentIndex - 1].id);
                               }}
@@ -158,7 +162,9 @@ export default function CRMPage() {
                               {'<'}
                             </button>
                             <button 
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 const currentIndex = STATUS_COLUMNS.findIndex(c => c.id === column.id);
                                 if (currentIndex < STATUS_COLUMNS.length - 1) updateLeadStatus(lead.id, STATUS_COLUMNS[currentIndex + 1].id);
                               }}
