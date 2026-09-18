@@ -11,7 +11,7 @@ import DiagnosticTabs from '@/components/diagnostics/DiagnosticTabs';
 import EmailDraft from '@/components/diagnostics/EmailDraft';
 import PrintReport from '@/components/diagnostics/PrintReport';
 import { PRIORITY_CONFIG } from '@/lib/constants';
-import { ChevronLeft, Download, MapPin, Globe, RefreshCw, AlertTriangle, Activity } from 'lucide-react';
+import { ChevronLeft, Download, MapPin, Globe, RefreshCw, AlertTriangle, Activity, MessageSquare } from 'lucide-react';
 
 const InstagramIcon = ({ size = 18, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
