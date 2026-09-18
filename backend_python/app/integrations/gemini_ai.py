@@ -75,6 +75,7 @@ class GeminiAIIntegration(LLMService):
             "generationConfig": {
                 "temperature": 0.2,
                 "maxOutputTokens": 4096,
+                "responseMimeType": "application/json"
             },
         }
 
@@ -108,8 +109,9 @@ class GeminiAIIntegration(LLMService):
 
         try:
             response_text = await self._call_gemini(prompt)
-            # Remove possible markdown formatting from the response
-            clean_json = response_text.replace("```json", "").replace("```", "").strip()
+            import re
+            match = re.search(r'\{.*\}', response_text.strip(), re.DOTALL)
+            clean_json = match.group(0) if match else response_text.replace("```json", "").replace("```", "").strip()
             data = json.loads(clean_json)
         except Exception as e:
             print(f"Erro no parse do JSON da IA: {e}")
@@ -138,7 +140,9 @@ class GeminiAIIntegration(LLMService):
 
         try:
             response_text = await self._call_gemini(prompt)
-            clean_json = response_text.replace("```json", "").replace("```", "").strip()
+            import re
+            match = re.search(r'\{.*\}', response_text.strip(), re.DOTALL)
+            clean_json = match.group(0) if match else response_text.replace("```json", "").replace("```", "").strip()
             data = json.loads(clean_json)
         except Exception as e:
             print(f"Erro no parse do JSON da IA (Stitch): {e}")

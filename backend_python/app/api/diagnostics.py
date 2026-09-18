@@ -121,7 +121,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             id=diag_id,
             lead_id=lead_id,
             observed_facts=diagnosis_res.overall_summary,
-            recommendations="; ".join(
+            recommendations="\n".join(
                 f"[{r.severity}] {r.category}: {r.finding}" for r in diagnosis_res.recommendations
             ) if diagnosis_res.recommendations else None,
             email_draft=diagnosis_res.email_draft,

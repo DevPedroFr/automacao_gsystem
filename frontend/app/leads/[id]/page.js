@@ -490,7 +490,7 @@ export default function LeadDetailPage() {
 
             {/* Sugestões de Candidatos */}
             {!lead.has_instagram && lead.instagram_candidates && (
-              <div className="absolute top-[102%] left-0 right-0 bg-gray-900 border border-gray-700 p-4 rounded-xl shadow-2xl z-20 animate-slide-up">
+              <div className="absolute top-[102%] left-0 right-0 bg-gray-900 border border-gray-700 p-4 rounded-xl shadow-2xl z-50 animate-slide-up">
                 <p className="text-xs font-bold text-gray-300 mb-3 flex items-center gap-2">
                   <InstagramIcon size={14} className="text-pink-400" /> Você quis dizer algum destes?
                 </p>
