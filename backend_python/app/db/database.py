@@ -61,10 +61,21 @@ def init_db():
 
     try:
         Base.metadata.create_all(bind=engine)
+        with engine.begin() as conn:
+            from sqlalchemy import text
+            try:
+                conn.execute(text("ALTER TABLE leads ADD COLUMN instagram_candidates TEXT"))
+            except Exception:
+                pass
     except Exception as err:
         logger.warning(f"⚠️ Falha ao conectar ao banco principal ({err}). Alternando automaticamente para SQLite local...")
         engine = _get_sqlite_engine()
         SessionLocal.configure(bind=engine)
         Base.metadata.create_all(bind=engine)
+        with engine.begin() as conn:
+            from sqlalchemy import text
+            try:
+                conn.execute(text("ALTER TABLE leads ADD COLUMN instagram_candidates TEXT"))
+            except Exception:
+                pass
         logger.info("✅ Banco SQLite local inicializado com sucesso.")
-
