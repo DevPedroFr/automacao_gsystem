@@ -31,9 +31,9 @@ class GeminiAIIntegration(LLMService):
         sec = report.security
         ig = report.instagram
 
-        needs_new_site = (
+        needs_new_site = bool(
             lead.website_uri is None
-            or (ps and ps.performance_score and ps.performance_score < 50)
+            or (ps and ps.performance_score is not None and ps.performance_score < 50)
             or (sec and not sec.ssl_valid)
         )
 
@@ -146,12 +146,65 @@ class GeminiAIIntegration(LLMService):
             raise RuntimeError("Gemini API key not configured")
 
         url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
+        schema = {
+            "type": "OBJECT",
+            "properties": {
+                "overall_summary": {"type": "STRING"},
+                "needs_new_website": {"type": "BOOLEAN"},
+                "facts": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "pilar": {"type": "STRING"},
+                            "text": {"type": "STRING"}
+                        }
+                    }
+                },
+                "inferences": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "pilar": {"type": "STRING"},
+                            "text": {"type": "STRING"}
+                        }
+                    }
+                },
+                "recommendations": {
+                    "type": "ARRAY",
+                    "items": {
+                        "type": "OBJECT",
+                        "properties": {
+                            "category": {"type": "STRING"},
+                            "severity": {"type": "STRING"},
+                            "finding": {"type": "STRING"},
+                            "action_item": {"type": "STRING"}
+                        }
+                    }
+                },
+                "sales_recommendation": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "approach_angle": {"type": "STRING"},
+                        "pain_points": {"type": "ARRAY", "items": {"type": "STRING"}},
+                        "talking_points": {"type": "ARRAY", "items": {"type": "STRING"}},
+                        "value_proposition": {"type": "STRING"}
+                    }
+                },
+                "whatsapp_draft": {"type": "STRING"},
+                "email_draft": {"type": "STRING"},
+                "instagram_draft": {"type": "STRING"}
+            },
+            "required": ["overall_summary", "needs_new_website", "facts", "inferences", "recommendations", "sales_recommendation", "whatsapp_draft", "email_draft", "instagram_draft"]
+        }
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.2,
                 "maxOutputTokens": max_tokens,
                 "responseMimeType": "application/json",
+                "responseSchema": schema,
             },
         }
 
@@ -166,6 +219,7 @@ class GeminiAIIntegration(LLMService):
 
     def _extract_json(self, text: str) -> dict:
         """Extrai e sanitiza JSON retornado pelo Gemini."""
+        print("GEMINI OUTPUT:\n", text)
         text = text.strip()
         match = re.search(r"\{.*\}", text, re.DOTALL)
         clean = match.group(0) if match else text.replace("```json", "").replace("```", "").strip()

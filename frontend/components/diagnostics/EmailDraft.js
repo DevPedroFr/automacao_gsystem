@@ -43,7 +43,15 @@ export default function EmailDraft({ emailText = '', whatsappText = '', instagra
     }
   };
 
-  if (!emailText && !whatsappText && !instagramText) return null;
+  if (!emailText && !whatsappText && !instagramText) {
+    return (
+      <Card padding="p-8" className="bg-gray-900/40 backdrop-blur-md border border-gray-700/50 shadow-xl h-full flex flex-col items-center justify-center text-center">
+        <MessageSquare size={24} className="text-gray-500 mb-4" />
+        <h3 className="text-gray-300 font-bold mb-2">Mensagens Não Encontradas</h3>
+        <p className="text-sm text-gray-500">Ocorreu um erro na geração das mensagens. Clique em "Regenerar Diagnóstico" para gerar novamente.</p>
+      </Card>
+    );
+  }
 
   return (
     <Card padding="p-6" className="bg-gray-900/40 backdrop-blur-md border border-gray-700/50 shadow-xl no-print">
