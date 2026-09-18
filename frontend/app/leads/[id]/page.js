@@ -190,6 +190,93 @@ export default function LeadDetailPage() {
         )}
       </div>
 
+      {/* ÁREA DE CONTATO / VENDAS */}
+      <div className="no-print">
+        <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
+          💰 Área de Vendas & Contato
+        </h2>
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Info do Cliente */}
+          <div className="xl:col-span-1 flex flex-col gap-4">
+            <Card padding="p-5" className="border-t-4 border-t-blue-500 h-full">
+              <div className="flex flex-col h-full gap-6">
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Telefone / WhatsApp</p>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xl font-medium text-gray-200">
+                      {lead.phone || 'Telefone não disponível'}
+                    </span>
+                    {lead.phone && (
+                      <a 
+                        href={`https://wa.me/${lead.phone.replace(/\D/g, '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2"
+                      >
+                        <MessageSquare size={16} /> Abrir WhatsApp Web
+                      </a>
+                    )}
+                  </div>
+                </div>
+                
+                <div>
+                  <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Endereço</p>
+                  <div className="flex items-start gap-2 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                    <MapPin size={18} className="text-gray-400 mt-0.5 shrink-0" />
+                    <span className="text-sm font-medium text-gray-300 leading-relaxed">
+                      {lead.address || lead.city || 'Endereço não disponível'}
+                    </span>
+                  </div>
+                </div>
+
+                {lead.instagram_url && (
+                  <div>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider mb-2">Instagram</p>
+                    <a 
+                      href={lead.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium flex items-center gap-2 truncate bg-gray-900/50 p-3 rounded-lg border border-gray-800 hover:border-cyan-500/30 transition-colors"
+                    >
+                      <InstagramIcon size={16} />
+                      {lead.instagram_url.replace('https://instagram.com/', '@').replace('https://www.instagram.com/', '@')}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+
+          {/* Mensagem de Venda (Só aparece se o diagnóstico estiver pronto) */}
+          <div className="xl:col-span-2">
+            {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && diagnostic.stitch_prompt ? (
+              <EmailDraft 
+                emailText={diagnostic.email_draft || diagnostic.email_text || ''} 
+                whatsappText={diagnostic.whatsapp_draft || ''}
+                instagramText={diagnostic.instagram_draft || ''}
+              />
+            ) : (
+              <Card padding="p-8" className="h-full flex flex-col items-center justify-center text-center border-dashed border-2 border-gray-700 bg-gray-900/20">
+                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
+                  <MessageSquare className="text-gray-500" size={24} />
+                </div>
+                <h3 className="text-gray-300 font-bold mb-2">Gere o Diagnóstico para ver as mensagens</h3>
+                <p className="text-sm text-gray-500 max-w-sm mb-6">
+                  A inteligência artificial vai criar mensagens de abordagem personalizadas baseadas nas dores técnicas deste cliente.
+                </p>
+                <Button 
+                  onClick={handleGenerateDiagnostic}
+                  disabled={diagLoading}
+                  className="bg-cyan-600 hover:bg-cyan-500"
+                >
+                  {diagLoading ? 'Processando IA...' : 'Gerar Diagnóstico Agora'}
+                </Button>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Resumo de Scores de Venda Premium */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
         {/* DMS */}
@@ -516,17 +603,9 @@ export default function LeadDetailPage() {
       {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && diagnostic.stitch_prompt && (
         <>
           <Card>
-            <h2 className="text-lg font-semibold text-gray-100 mb-4">📋 Diagnóstico</h2>
+            <h2 className="text-lg font-semibold text-gray-100 mb-4">📋 Diagnóstico Detalhado</h2>
             <DiagnosticTabs diagnostic={diagnostic} />
           </Card>
-
-          <div className="no-print" id="email-draft-card">
-            <EmailDraft 
-              emailText={diagnostic.email_draft || diagnostic.email_text || ''} 
-              whatsappText={diagnostic.whatsapp_draft || ''}
-              instagramText={diagnostic.instagram_draft || ''}
-            />
-          </div>
         </>
       )}
       </div>
