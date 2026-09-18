@@ -60,11 +60,10 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
                 detail={"error": "already_exists", "message": "Diagnóstico já gerado. Use GET para consultá-lo."},
             )
 
-    # Monta o triage report mínimo para alimentar o Claude
     lead_result = LeadResult(
         place_id=lead.id,
         name=lead.name,
-        formatted_address=lead.address or "",
+        formatted_address=lead.address or lead.city or "",
         national_phone_number=lead.phone,
         website_uri=lead.website,
         rating=lead.google_rating,
@@ -86,8 +85,16 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             dns_resolved=bool(lead.website),
             ssl_valid=bool(lead.website),
         )
+        
+        # Extract handle from URL if possible
+        ig_handle = lead.name
+        if lead.instagram_url:
+            parts = lead.instagram_url.split("instagram.com/")
+            if len(parts) > 1:
+                ig_handle = parts[1].split("/")[0].strip()
+        
         instagram = InstagramProfileResult(
-            handle=lead.name,
+            handle=ig_handle,
             is_business_account=bool(lead.has_instagram),
             followers_count=None,
             provider_used="db",
@@ -117,6 +124,9 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             recommendations="; ".join(
                 f"[{r.severity}] {r.category}: {r.finding}" for r in diagnosis_res.recommendations
             ) if diagnosis_res.recommendations else None,
+            email_draft=diagnosis_res.email_draft,
+            whatsapp_draft=diagnosis_res.whatsapp_draft,
+            instagram_draft=diagnosis_res.instagram_draft,
             stitch_prompt=stitch_prompt_res.stitch_prompt if stitch_prompt_res else None,
             diagnostic_status="completed",
             generated_at=datetime.utcnow(),

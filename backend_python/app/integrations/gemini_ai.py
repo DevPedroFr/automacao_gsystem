@@ -88,9 +88,20 @@ class GeminiAIIntegration(LLMService):
 
     async def generate_diagnosis(self, report: FullTriageReport) -> DiagnosisResult:
         prompt = (
-            "Você é um consultor especialista em presença digital. "
-            "Analise os dados técnicos do lead e retorne estritamente um JSON com a estrutura:"
-            "{\"overall_summary\": \"...\", \"needs_new_website\": true/false, \"recommendations\": [{\"category\": \"...\", \"severity\": \"HIGH/MEDIUM/LOW\", \"finding\": \"...\", \"action_item\": \"...\"}]}"
+            "Você é um consultor especialista em presença digital e vendas B2B. "
+            "Analise os dados técnicos do lead e forneça um diagnóstico detalhado focado em DORES reais, "
+            "e crie mensagens de abordagem personalizadas, prontas para copiar e colar. "
+            "AS MENSAGENS DEVEM OBRIGATORIAMENTE CITAR as informações do cliente se estiverem disponíveis (Ex: 'Notei que o seu Instagram @xyz...', 'Vi que vcs estão localizados em [cidade]...'). "
+            "O campo 'overall_summary' deve ser um texto muito persuasivo apontando onde o cliente está perdendo dinheiro hoje. "
+            "Retorne estritamente um JSON com a estrutura:"
+            "{"
+            "\"overall_summary\": \"...\", "
+            "\"needs_new_website\": true/false, "
+            "\"recommendations\": [{\"category\": \"...\", \"severity\": \"HIGH/MEDIUM/LOW\", \"finding\": \"...\", \"action_item\": \"...\"}], "
+            "\"whatsapp_draft\": \"... (Mensagem de abordagem pelo WhatsApp)\", "
+            "\"email_draft\": \"... (Email formal mas persuasivo)\", "
+            "\"instagram_draft\": \"... (Mensagem de direct curta)\""
+            "}"
             f"\nDados do Lead:\n{report.model_dump_json(indent=2)}"
         )
 
@@ -106,6 +117,9 @@ class GeminiAIIntegration(LLMService):
             overall_summary=data.get("overall_summary", ""),
             recommendations=recs,
             needs_new_website=data.get("needs_new_website", False),
+            whatsapp_draft=data.get("whatsapp_draft"),
+            email_draft=data.get("email_draft"),
+            instagram_draft=data.get("instagram_draft"),
         )
 
     async def generate_stitch_prompt(self, report: FullTriageReport, diagnosis: DiagnosisResult) -> StitchPromptResult:

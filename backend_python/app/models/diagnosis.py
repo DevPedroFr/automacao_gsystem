@@ -14,6 +14,9 @@ class DiagnosisResult(BaseModel):
     overall_summary: str
     recommendations: List[RecommendationItem]
     needs_new_website: bool
+    whatsapp_draft: Optional[str] = None
+    email_draft: Optional[str] = None
+    instagram_draft: Optional[str] = None
 
 
 class StitchPromptResult(BaseModel):
