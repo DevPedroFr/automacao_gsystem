@@ -107,8 +107,11 @@ class GeminiAIIntegration(LLMService):
 
         try:
             response_text = await self._call_gemini(prompt)
-            data = json.loads(response_text)
-        except Exception:
+            # Remove possible markdown formatting from the response
+            clean_json = response_text.replace("```json", "").replace("```", "").strip()
+            data = json.loads(clean_json)
+        except Exception as e:
+            print(f"Erro no parse do JSON da IA: {e}")
             return self._build_local_diagnosis(report)
 
         recs = [RecommendationItem(**item) for item in data.get("recommendations", [])]
@@ -134,8 +137,10 @@ class GeminiAIIntegration(LLMService):
 
         try:
             response_text = await self._call_gemini(prompt)
-            data = json.loads(response_text)
-        except Exception:
+            clean_json = response_text.replace("```json", "").replace("```", "").strip()
+            data = json.loads(clean_json)
+        except Exception as e:
+            print(f"Erro no parse do JSON da IA (Stitch): {e}")
             return StitchPromptResult(
                 lead_name=report.lead.name,
                 stitch_prompt=(
