@@ -28,7 +28,8 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
   };
 
   /**
-   * Agrupa e estrutura os fatos e as inferências por pilares da presença digital
+   * Agrupa e estrutura os fatos e as inferências por pilares da presença digital.
+   * Suporta tags explícitas [PILAR] e faz fallback inteligente por palavras-chave.
    */
   const parseDiagnosticData = (factsText, inferencesText) => {
     const categories = {
@@ -38,31 +39,39 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
       general: { title: 'Outras Observações', icon: '🔍', facts: [], inferences: [] }
     };
 
-    const getCategory = (text) => {
-      const t = text.toLowerCase();
-      if (t.includes('google') || t.includes('rating') || t.includes('avaliaç') || t.includes('gbp') || t.includes('maps') || t.includes('reviews') || t.includes('comentário') || t.includes('telefone') || t.includes('endereço')) {
-        return 'google';
+    const getPilarFromLine = (line) => {
+      const tagMatch = line.match(/^\[([A-Z]+)\]\s*/);
+      if (tagMatch) {
+        const tag = tagMatch[1].toLowerCase();
+        if (tag === 'google') return { pilar: 'google', text: line.replace(/^\[[A-Z]+\]\s*/, '') };
+        if (tag === 'website') return { pilar: 'website', text: line.replace(/^\[[A-Z]+\]\s*/, '') };
+        if (tag === 'social') return { pilar: 'social', text: line.replace(/^\[[A-Z]+\]\s*/, '') };
+        if (tag === 'general') return { pilar: 'general', text: line.replace(/^\[[A-Z]+\]\s*/, '') };
       }
-      if (t.includes('site') || t.includes('website') || t.includes('pagespeed') || t.includes('lcp') || t.includes('inp') || t.includes('cls') || t.includes('velocidade') || t.includes('performance') || t.includes('seo') || t.includes('vitals') || t.includes('landing page')) {
-        return 'website';
+      const t = line.toLowerCase();
+      if (t.includes('google') || t.includes('rating') || t.includes('avaliaç') || t.includes('gbp') || t.includes('maps') || t.includes('reviews') || t.includes('telefone') || t.includes('endereço')) {
+        return { pilar: 'google', text: line };
       }
-      if (t.includes('instagram') || t.includes('facebook') || t.includes('linkedin') || t.includes('social') || t.includes('redes') || t.includes('post') || t.includes('publicaç') || t.includes('inbox')) {
-        return 'social';
+      if (t.includes('site') || t.includes('website') || t.includes('pagespeed') || t.includes('lcp') || t.includes('inp') || t.includes('ssl') || t.includes('velocidade') || t.includes('performance') || t.includes('seo')) {
+        return { pilar: 'website', text: line };
       }
-      return 'general';
+      if (t.includes('instagram') || t.includes('facebook') || t.includes('linkedin') || t.includes('social') || t.includes('redes') || t.includes('post') || t.includes('seguidores')) {
+        return { pilar: 'social', text: line };
+      }
+      return { pilar: 'general', text: line };
     };
 
     if (typeof factsText === 'string') {
       factsText.split('\n').map(line => line.trim()).filter(Boolean).forEach(line => {
-        const cat = getCategory(line);
-        categories[cat].facts.push(line);
+        const { pilar, text } = getPilarFromLine(line);
+        categories[pilar].facts.push(text);
       });
     }
 
     if (typeof inferencesText === 'string') {
       inferencesText.split('\n').map(line => line.trim()).filter(Boolean).forEach(line => {
-        const cat = getCategory(line);
-        categories[cat].inferences.push(line);
+        const { pilar, text } = getPilarFromLine(line);
+        categories[pilar].inferences.push(text);
       });
     }
 
@@ -71,9 +80,17 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
 
   const categories = parseDiagnosticData(diagnostic.observed_facts, diagnostic.inferences);
 
+  const salesCopyText = [
+    diagnostic.sales_approach ? `🎯 Ângulo de Abordagem:\n${diagnostic.sales_approach}` : '',
+    diagnostic.pain_points ? `\n😣 Pontos de Dor:\n${diagnostic.pain_points}` : '',
+    diagnostic.talking_points ? `\n💬 Argumentos de Venda:\n${diagnostic.talking_points}` : '',
+    diagnostic.value_proposition ? `\n💎 Proposta de Valor:\n${diagnostic.value_proposition}` : '',
+    diagnostic.recommendations ? `\n🔧 Recomendações Técnicas:\n${diagnostic.recommendations}` : '',
+  ].filter(Boolean).join('\n') || 'Nenhum dado disponível.';
+
   const contentMap = {
     panel: `Fatos Observados:\n${diagnostic.observed_facts || ''}\n\nInferências da IA:\n${diagnostic.inferences || ''}`,
-    recommendations: diagnostic.recommendations || 'Nenhum dado disponível.',
+    recommendations: salesCopyText,
     stitch: diagnostic.stitch_prompt || 'Nenhum prompt gerado.',
   };
 
@@ -180,7 +197,126 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
   };
 
   /**
-   * Renderiza o conteúdo do diagnóstico de forma estruturada com ícones e cards para recomendações e prompt
+   * Renderiza a aba de Recomendações de Venda com seções comerciais estruturadas.
+   */
+  const renderSalesRecommendations = () => {
+    const approach = diagnostic.sales_approach;
+    const painPointsRaw = diagnostic.pain_points;
+    const talkingPointsRaw = diagnostic.talking_points;
+    const valueProposition = diagnostic.value_proposition;
+    const recommendations = diagnostic.recommendations;
+
+    const parseList = (text) => {
+      if (!text) return [];
+      return text.split('\n').map(l => l.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
+    };
+
+    const painPoints = parseList(painPointsRaw);
+    const talkingPoints = parseList(talkingPointsRaw);
+    const hasCommercialData = approach || painPoints.length > 0 || talkingPoints.length > 0 || valueProposition;
+
+    return (
+      <div className="space-y-6">
+        {/* Proposta de Valor */}
+        {valueProposition && (
+          <div className="p-5 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-2xl">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">💎</span>
+              <div>
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-cyan-400 mb-1">Proposta de Valor Central</h4>
+                <p className="text-sm text-gray-100 font-medium leading-relaxed">{valueProposition}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ângulo de Abordagem */}
+        {approach && (
+          <div className="p-5 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎯</span>
+              <div>
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-emerald-400 mb-1">Ângulo de Abordagem</h4>
+                <p className="text-sm text-gray-200 leading-relaxed">{approach}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Pontos de Dor & Argumentos lado a lado */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {painPoints.length > 0 && (
+            <div className="p-5 bg-rose-500/10 border border-rose-500/25 rounded-2xl">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-rose-400 mb-3 flex items-center gap-2">
+                <span>😣</span> Pontos de Dor do Cliente
+              </h4>
+              <ul className="space-y-2">
+                {painPoints.map((point, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-300 leading-relaxed">
+                    <span className="text-rose-400 mt-0.5 text-xs">▸</span>
+                    <span>{formatBoldText(point)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {talkingPoints.length > 0 && (
+            <div className="p-5 bg-amber-500/10 border border-amber-500/25 rounded-2xl">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
+                <span>💬</span> Argumentos-Chave de Venda
+              </h4>
+              <ul className="space-y-2">
+                {talkingPoints.map((point, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-300 leading-relaxed">
+                    <span className="text-amber-400 mt-0.5 text-xs">▸</span>
+                    <span>{formatBoldText(point)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {/* Recomendações Técnicas */}
+        {recommendations && (
+          <div>
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+              <span>🔧</span> Recomendações Técnicas Prioritárias
+            </h4>
+            <div className="space-y-2">
+              {recommendations.split('\n').filter(Boolean).map((rec, idx) => {
+                const isHigh = rec.includes('[HIGH]');
+                const isMedium = rec.includes('[MEDIUM]');
+                const cleanRec = rec.replace(/^\[(?:HIGH|MEDIUM|LOW)\]\s*/, '');
+                return (
+                  <div key={idx} className={`flex items-start gap-3 p-3.5 rounded-xl border text-sm ${
+                    isHigh ? 'bg-rose-500/10 border-rose-500/25 text-gray-200' :
+                    isMedium ? 'bg-amber-500/10 border-amber-500/25 text-gray-200' :
+                    'bg-gray-800/40 border-gray-700/40 text-gray-300'
+                  }`}>
+                    <span className="mt-0.5">
+                      {isHigh ? '🔴' : isMedium ? '🟡' : '🟢'}
+                    </span>
+                    <span className="leading-relaxed">{formatBoldText(cleanRec)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {!hasCommercialData && !recommendations && (
+          <div className="text-center py-10 text-gray-500 italic">
+            <p>Gere ou regenere o diagnóstico para carregar as recomendações comerciais detalhadas.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /**
+   * Renderiza o conteúdo do prompt Stitch
    */
   const renderFormattedContent = (text, key) => {
     if (!text || text === 'Nenhum dado disponível.' || text === 'Nenhum prompt gerado.') {
@@ -313,7 +449,9 @@ ${text}
         <div className="pt-8">
           {activeTab === 'panel' 
             ? renderDashboardPanel(categories) 
-            : renderFormattedContent(contentMap[activeTab], activeTab)}
+            : activeTab === 'recommendations'
+              ? renderSalesRecommendations()
+              : renderFormattedContent(contentMap[activeTab], activeTab)}
         </div>
       </div>
     </div>

@@ -28,6 +28,12 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         "observed_facts": d.observed_facts,
         "inferences": d.inferences,
         "recommendations": d.recommendations,
+        # Estratégia de vendas
+        "sales_approach": d.sales_approach,
+        "pain_points": d.pain_points,
+        "talking_points": d.talking_points,
+        "value_proposition": d.value_proposition,
+        # Rascunhos de mensagens
         "email_draft": d.email_draft,
         "whatsapp_draft": d.whatsapp_draft,
         "instagram_draft": d.instagram_draft,
@@ -38,27 +44,22 @@ def _diag_to_dict(d: Diagnostic) -> dict:
     }
 
 
-@router.post("/api/leads/{lead_id}/diagnostic", status_code=201, summary="Gera diagnóstico de um lead via Claude AI")
+@router.post("/api/leads/{lead_id}/diagnostic", status_code=201, summary="Gera diagnóstico de um lead via IA")
 async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
     """
     POST /api/leads/:leadId/diagnostic
-    Gera o diagnóstico inteligente do lead usando Claude AI (ou heurística local se sem chave).
-    Se já existir diagnóstico concluído, retorna 409.
+    Gera (ou regenera) o diagnóstico inteligente do lead usando Gemini AI.
+    Sempre substitui diagnóstico anterior para garantir dados frescos e completos.
     """
     lead = db.query(Lead).filter(Lead.id == lead_id).first()
     if not lead:
         raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
 
+    # Sempre remove diagnóstico anterior para permitir regenerar com o formato rico
     existing = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
     if existing:
-        if existing.diagnostic_status == "ai_validation_failed" or not existing.stitch_prompt:
-            db.delete(existing)
-            db.commit()
-        else:
-            raise HTTPException(
-                status_code=409,
-                detail={"error": "already_exists", "message": "Diagnóstico já gerado. Use GET para consultá-lo."},
-            )
+        db.delete(existing)
+        db.commit()
 
     lead_result = LeadResult(
         place_id=lead.id,
@@ -78,12 +79,13 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             url=lead.website or "",
             performance_score=lead.pagespeed_score,
             seo_score=lead.seo_score,
-            mobile_friendly=True,
+            mobile_friendly=bool(lead.has_website),
         )
         security = DomainSecurityResult(
             domain=lead.website or "",
             dns_resolved=bool(lead.website),
-            ssl_valid=bool(lead.website),
+            ssl_valid=False,
+            is_domain_active=bool(lead.website),
         )
         
         # Extract handle from URL if possible
@@ -95,6 +97,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         
         instagram = InstagramProfileResult(
             handle=ig_handle,
+            found=bool(lead.has_instagram),
             is_business_account=bool(lead.has_instagram),
             followers_count=None,
             provider_used="db",
@@ -108,7 +111,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             needs_new_website=not bool(lead.website) or (lead.pagespeed_score or 100) < 50,
         )
 
-        if settings.AI_PROVIDER == "gemini":
+        if settings.GEMINI_API_KEY or settings.AI_PROVIDER == "gemini":
             ai_client = GeminiAIIntegration()
         else:
             ai_client = ClaudeAIIntegration()
@@ -117,13 +120,44 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         diagnosis_res, stitch_prompt_res = await diag_service.run_diagnosis_and_prompt(report)
 
         diag_id = str(uuid.uuid4())
+
+        # Formata fatos observados por pilar com tags [GOOGLE], [WEBSITE], [SOCIAL]
+        facts_lines = []
+        if diagnosis_res.facts:
+            for fact in diagnosis_res.facts:
+                facts_lines.append(f"[{fact.pilar.upper()}] {fact.text}")
+        observed_facts_text = "\n".join(facts_lines) if facts_lines else diagnosis_res.overall_summary
+
+        # Formata inferências por pilar
+        inferences_lines = []
+        if diagnosis_res.inferences:
+            for inf in diagnosis_res.inferences:
+                inferences_lines.append(f"[{inf.pilar.upper()}] {inf.text}")
+        inferences_text = "\n".join(inferences_lines) if inferences_lines else None
+
+        # Formata recomendações técnicas
+        rec_text = "\n".join(
+            f"[{r.severity}] {r.category}: {r.finding} → {r.action_item}"
+            for r in diagnosis_res.recommendations
+        ) if diagnosis_res.recommendations else None
+
+        # Estratégia de venda consultiva
+        sales = diagnosis_res.sales_recommendation
+        sales_approach = sales.approach_angle if sales else None
+        pain_points_text = "\n".join(f"- {p}" for p in sales.pain_points) if sales else None
+        talking_points_text = "\n".join(f"- {t}" for t in sales.talking_points) if sales else None
+        value_prop = sales.value_proposition if sales else None
+
         diagnostic = Diagnostic(
             id=diag_id,
             lead_id=lead_id,
-            observed_facts=diagnosis_res.overall_summary,
-            recommendations="\n".join(
-                f"[{r.severity}] {r.category}: {r.finding}" for r in diagnosis_res.recommendations
-            ) if diagnosis_res.recommendations else None,
+            observed_facts=observed_facts_text,
+            inferences=inferences_text,
+            recommendations=rec_text,
+            sales_approach=sales_approach,
+            pain_points=pain_points_text,
+            talking_points=talking_points_text,
+            value_proposition=value_prop,
             email_draft=diagnosis_res.email_draft,
             whatsapp_draft=diagnosis_res.whatsapp_draft,
             instagram_draft=diagnosis_res.instagram_draft,

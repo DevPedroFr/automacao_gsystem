@@ -21,7 +21,7 @@ try:
         GOOGLE_PLACES_API_KEY: Optional[str] = None
         APIFY_API_KEY: Optional[str] = None
         LEAD_PROVIDER: str = "google"
-        AI_PROVIDER: str = "claude"
+        AI_PROVIDER: str = "gemini"
 
         # Etapa 2: Digital Triage
         GOOGLE_PAGESPEED_API_KEY: Optional[str] = None
@@ -34,7 +34,7 @@ try:
         ANTHROPIC_API_KEY: Optional[str] = None
         CLAUDE_MODEL: str = "claude-3-5-haiku-20241022"
         GEMINI_API_KEY: Optional[str] = None
-        GEMINI_MODEL: str = "gemini-1.5-flash"
+        GEMINI_MODEL: str = "gemini-2.5-flash"
 
         # Etapa 5: Site Generation
         GOOGLE_STITCH_API_KEY: Optional[str] = None
@@ -62,7 +62,7 @@ except ImportError:
         GOOGLE_PLACES_API_KEY: Optional[str] = os.getenv("GOOGLE_PLACES_API_KEY")
         APIFY_API_KEY: Optional[str] = os.getenv("APIFY_API_KEY")
         LEAD_PROVIDER: str = os.getenv("LEAD_PROVIDER", "google")
-        AI_PROVIDER: str = os.getenv("AI_PROVIDER", "claude")
+        AI_PROVIDER: str = os.getenv("AI_PROVIDER", "gemini")
         GOOGLE_PAGESPEED_API_KEY: Optional[str] = os.getenv("GOOGLE_PAGESPEED_API_KEY")
         META_GRAPH_ACCESS_TOKEN: Optional[str] = os.getenv("META_GRAPH_ACCESS_TOKEN")
         META_INSTAGRAM_ACCOUNT_ID: Optional[str] = os.getenv("META_INSTAGRAM_ACCOUNT_ID")
@@ -72,7 +72,7 @@ except ImportError:
         ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY")
         CLAUDE_MODEL: str = os.getenv("CLAUDE_MODEL", "claude-3-5-haiku-20241022")
         GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY")
-        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
         GOOGLE_STITCH_API_KEY: Optional[str] = os.getenv("GOOGLE_STITCH_API_KEY")
         GOOGLE_STITCH_BASE_URL: str = os.getenv("GOOGLE_STITCH_BASE_URL", "https://stitch.googleapis.com/v1")

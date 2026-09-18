@@ -588,10 +588,21 @@ export default function LeadDetailPage() {
         </Card>
       )}
 
-      {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && diagnostic.stitch_prompt && (
+      {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && (
         <>
           <Card>
-            <h2 className="text-lg font-semibold text-gray-100 mb-4">📋 Diagnóstico Detalhado</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-100">📋 Diagnóstico Detalhado</h2>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleGenerateDiagnostic}
+                disabled={diagLoading}
+                className="hover:border-cyan-500/50"
+              >
+                {diagLoading ? 'Processando IA...' : '🔄 Regenerar Diagnóstico'}
+              </Button>
+            </div>
             <DiagnosticTabs diagnostic={diagnostic} />
           </Card>
         </>

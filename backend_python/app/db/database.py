@@ -59,23 +59,30 @@ def init_db():
     global engine, SessionLocal
     from app.db import models  # noqa: F401 — importar para registrar os modelos
 
+    def _apply_migrations(target_engine):
+        from sqlalchemy import text
+        cols = [
+            ("leads", "instagram_candidates", "TEXT"),
+            ("diagnostics", "sales_approach", "TEXT"),
+            ("diagnostics", "pain_points", "TEXT"),
+            ("diagnostics", "talking_points", "TEXT"),
+            ("diagnostics", "value_proposition", "TEXT"),
+        ]
+        with target_engine.begin() as conn:
+            for table, col, col_type in cols:
+                try:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
+                except Exception:
+                    pass
+
     try:
         Base.metadata.create_all(bind=engine)
-        with engine.begin() as conn:
-            from sqlalchemy import text
-            try:
-                conn.execute(text("ALTER TABLE leads ADD COLUMN instagram_candidates TEXT"))
-            except Exception:
-                pass
+        _apply_migrations(engine)
     except Exception as err:
         logger.warning(f"⚠️ Falha ao conectar ao banco principal ({err}). Alternando automaticamente para SQLite local...")
         engine = _get_sqlite_engine()
         SessionLocal.configure(bind=engine)
         Base.metadata.create_all(bind=engine)
-        with engine.begin() as conn:
-            from sqlalchemy import text
-            try:
-                conn.execute(text("ALTER TABLE leads ADD COLUMN instagram_candidates TEXT"))
-            except Exception:
-                pass
+        _apply_migrations(engine)
         logger.info("✅ Banco SQLite local inicializado com sucesso.")
+
