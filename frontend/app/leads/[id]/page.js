@@ -39,6 +39,7 @@ export default function LeadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [diagLoading, setDiagLoading] = useState(false);
   const [diagError, setDiagError] = useState('');
+  const [showCandidates, setShowCandidates] = useState(false);
 
   const loadLead = useCallback(async () => {
     try {
@@ -490,29 +491,16 @@ export default function LeadDetailPage() {
 
             {/* Sugestões de Candidatos */}
             {!lead.has_instagram && lead.instagram_candidates && (
-              <div className="absolute top-[102%] left-0 right-0 bg-gray-900 border border-gray-700 p-4 rounded-xl shadow-2xl z-50 animate-slide-up">
-                <p className="text-xs font-bold text-gray-300 mb-3 flex items-center gap-2">
-                  <InstagramIcon size={14} className="text-pink-400" /> Você quis dizer algum destes?
-                </p>
-                <div className="space-y-2">
-                  {(() => {
-                    try {
-                      const cands = JSON.parse(lead.instagram_candidates);
-                      return cands.map(cand => (
-                        <button
-                          key={cand}
-                          onClick={() => handleSelectInstagram(cand)}
-                          className="w-full text-left text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg transition-colors border border-gray-700 hover:border-pink-500/50 flex justify-between items-center"
-                        >
-                          <span>@{cand}</span>
-                          <span className="text-[10px] text-pink-400">Selecionar</span>
-                        </button>
-                      ));
-                    } catch (e) {
-                      return null;
-                    }
-                  })()}
-                </div>
+              <div className="mt-4 pt-3 border-t border-gray-700/50">
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  className="w-full text-xs py-2 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 border-pink-500/20"
+                  onClick={() => setShowCandidates(true)}
+                >
+                  <InstagramIcon size={14} className="mr-2" />
+                  Ver possíveis perfis
+                </Button>
               </div>
             )}
           </Card>
@@ -609,6 +597,45 @@ export default function LeadDetailPage() {
         </>
       )}
       </div>
+
+      {/* Modal de Candidatos de Instagram */}
+      {showCandidates && lead?.instagram_candidates && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCandidates(false)} />
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl shadow-2xl z-10 w-full max-w-md overflow-hidden animate-scale-up">
+            <div className="p-5 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="font-bold text-gray-100 flex items-center gap-2">
+                <InstagramIcon className="text-pink-400" /> Possíveis Perfis
+              </h3>
+              <button onClick={() => setShowCandidates(false)} className="text-gray-400 hover:text-white p-1">
+                ✕
+              </button>
+            </div>
+            <div className="p-5 space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+              {(() => {
+                try {
+                  const cands = JSON.parse(lead.instagram_candidates);
+                  return cands.map(cand => (
+                    <button
+                      key={cand}
+                      onClick={() => {
+                        setShowCandidates(false);
+                        handleSelectInstagram(cand);
+                      }}
+                      className="w-full text-left bg-gray-800/50 hover:bg-gray-700 text-gray-200 px-4 py-3 rounded-xl transition-colors border border-gray-700 hover:border-pink-500/50 flex justify-between items-center group"
+                    >
+                      <span className="font-medium">@{cand}</span>
+                      <span className="text-xs font-bold text-pink-500/0 group-hover:text-pink-400 transition-colors">Selecionar →</span>
+                    </button>
+                  ));
+                } catch (e) {
+                  return <p className="text-sm text-gray-400">Erro ao carregar candidatos.</p>;
+                }
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
