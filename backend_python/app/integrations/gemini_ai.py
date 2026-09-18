@@ -74,11 +74,11 @@ class GeminiAIIntegration(LLMService):
             ],
             "generationConfig": {
                 "temperature": 0.2,
-                "maxOutputTokens": 1200,
+                "maxOutputTokens": 4096,
             },
         }
 
-        async with httpx.AsyncClient(timeout=20.0) as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(url, json=payload)
             response.raise_for_status()
             data = response.json()
@@ -88,21 +88,22 @@ class GeminiAIIntegration(LLMService):
 
     async def generate_diagnosis(self, report: FullTriageReport) -> DiagnosisResult:
         prompt = (
-            "Você é um consultor especialista em presença digital e vendas B2B. "
-            "Analise os dados técnicos do lead e forneça um diagnóstico detalhado focado em DORES reais, "
-            "e crie mensagens de abordagem personalizadas, prontas para copiar e colar. "
-            "AS MENSAGENS DEVEM OBRIGATORIAMENTE CITAR as informações do cliente se estiverem disponíveis (Ex: 'Notei que o seu Instagram @xyz...', 'Vi que vcs estão localizados em [cidade]...'). "
-            "O campo 'overall_summary' deve ser um texto muito persuasivo apontando onde o cliente está perdendo dinheiro hoje. "
+            "Você é o melhor consultor de vendas B2B do Brasil, especialista em vender criação de sites, automações e presença digital. "
+            "Você vai analisar os dados deste lead e criar a CÓPIA DE VENDAS PERFEITA (copy) para abordar o cliente no frio (cold outreach). "
+            "Seu objetivo com as mensagens é despertar extrema curiosidade e agendar uma reunião rápida. "
+            "USE TÉCNICAS DE COPYWRITING: AIDA, SPIN Selling. "
+            "AS MENSAGENS DEVEM SER OBRIGATORIAMENTE PERSONALIZADAS com o nome do negócio, Instagram ou cidade do cliente. "
+            "Mostre que você estudou o negócio dele. Aponte um erro técnico específico (ex: 'vi que seu site está muito lento', ou 'vi que vocês não têm um site profissional no endereço XYZ...'). "
             "Retorne estritamente um JSON com a estrutura:"
             "{"
             "\"overall_summary\": \"...\", "
             "\"needs_new_website\": true/false, "
             "\"recommendations\": [{\"category\": \"...\", \"severity\": \"HIGH/MEDIUM/LOW\", \"finding\": \"...\", \"action_item\": \"...\"}], "
-            "\"whatsapp_draft\": \"... (Mensagem de abordagem pelo WhatsApp)\", "
-            "\"email_draft\": \"... (Email formal mas persuasivo)\", "
-            "\"instagram_draft\": \"... (Mensagem de direct curta)\""
+            "\"whatsapp_draft\": \"... (Mensagem de abordagem pelo WhatsApp, curta, amigável e direta ao ponto, usando emojis)\", "
+            "\"email_draft\": \"... (Email formal mas persuasivo, com Assunto forte)\", "
+            "\"instagram_draft\": \"... (Mensagem de direct curtíssima e intrigante)\""
             "}"
-            f"\nDados do Lead:\n{report.model_dump_json(indent=2)}"
+            f"\n\nDados do Lead:\n{report.model_dump_json(indent=2)}"
         )
 
         try:
