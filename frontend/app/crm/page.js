@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { fetchApi } from '@/lib/api';
@@ -39,7 +39,7 @@ export default function CRMPage() {
     // Optimistic UI update
     setLeads(current => current.map(l => l.id === leadId ? { ...l, commercial_status: newStatus } : l));
     try {
-      await fetchApi(\/leads/\/status\, {
+      await fetchApi(`/leads/${leadId}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus }),
       });
@@ -102,7 +102,7 @@ export default function CRMPage() {
           return (
             <div 
               key={column.id}
-              className={\lex-shrink-0 w-80 bg-gray-900/40 rounded-xl border-t-4 \ flex flex-col snap-center\}
+              className={`flex-shrink-0 w-80 bg-gray-900/40 rounded-xl border-t-4 ${column.color} flex flex-col snap-center`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
@@ -127,7 +127,7 @@ export default function CRMPage() {
                     >
                       <Card className="hover:border-gray-600/50" padding="p-4">
                         <div className="flex justify-between items-start mb-2">
-                          <Link href={\/leads/\\} className="font-bold text-gray-200 hover:text-cyan-400 transition-colors text-sm truncate pr-2">
+                          <Link href={`/leads/${lead.id}`} className="font-bold text-gray-200 hover:text-cyan-400 transition-colors text-sm truncate pr-2">
                             {lead.name}
                           </Link>
                           <Badge variant={getPriorityVariant(lead.priority)} size="sm" className="shrink-0">
