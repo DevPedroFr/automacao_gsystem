@@ -37,26 +37,34 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState(null);
   const [diagnostic, setDiagnostic] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [leadError, setLeadError] = useState(null);
   const [diagLoading, setDiagLoading] = useState(false);
   const [diagError, setDiagError] = useState('');
   const [showCandidates, setShowCandidates] = useState(false);
 
   const loadLead = useCallback(async () => {
     try {
+      setLeadError(null);
       const data = await fetchApi(`/leads/${leadId}`);
-      setLead(data.data || data);
+      const leadData = data?.data || data;
+      setLead(leadData);
+      if (leadData?.diagnostic) {
+        setDiagnostic(leadData.diagnostic);
+      }
     } catch (err) {
       console.error('Erro ao carregar lead:', err);
+      setLeadError(err.message || 'Erro ao carregar dados do lead');
     }
   }, [leadId]);
 
   const loadDiagnostic = useCallback(async () => {
     try {
       const data = await fetchApi(`/leads/${leadId}/diagnostic`);
-      setDiagnostic(data.data || data);
+      if (data?.data || data) {
+        setDiagnostic(data.data || data);
+      }
     } catch {
-      // 404 means no diagnostic yet
-      setDiagnostic(null);
+      // 404 significa que o diagnóstico ainda não foi gerado
     }
   }, [leadId]);
 
@@ -68,6 +76,7 @@ export default function LeadDetailPage() {
     };
     init();
   }, [loadLead, loadDiagnostic]);
+
 
   const handleGenerateDiagnostic = async () => {
     try {
@@ -141,6 +150,29 @@ export default function LeadDetailPage() {
     );
   }
 
+  if (leadError) {
+    return (
+      <div className="text-center py-20 space-y-4">
+        <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/25 text-rose-400 rounded-full flex items-center justify-center mx-auto text-2xl">
+          ⚠️
+        </div>
+        <h2 className="text-xl font-bold text-gray-100">Não foi possível carregar os dados deste lead</h2>
+        <p className="text-sm text-gray-400 max-w-md mx-auto">{leadError}</p>
+        <div className="flex justify-center gap-3 pt-2">
+          <Button variant="secondary" onClick={() => router.back()}>
+            Voltar
+          </Button>
+          <Button onClick={() => {
+            setLoading(true);
+            Promise.all([loadLead(), loadDiagnostic()]).finally(() => setLoading(false));
+          }}>
+            Tentar Novamente 🔄
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!lead) {
     return (
       <div className="text-center py-20">
@@ -151,6 +183,7 @@ export default function LeadDetailPage() {
       </div>
     );
   }
+
 
   const priorityConf = PRIORITY_CONFIG[lead.priority] || {};
 
@@ -250,13 +283,14 @@ export default function LeadDetailPage() {
 
           {/* Mensagem de Venda (Só aparece se o diagnóstico estiver pronto) */}
           <div className="xl:col-span-2">
-            {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && diagnostic.stitch_prompt ? (
+            {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && (diagnostic.email_draft || diagnostic.whatsapp_draft || diagnostic.instagram_draft) ? (
               <EmailDraft 
                 emailText={diagnostic.email_draft || diagnostic.email_text || ''} 
                 whatsappText={diagnostic.whatsapp_draft || ''}
                 instagramText={diagnostic.instagram_draft || ''}
               />
             ) : (
+
               <Card padding="p-8" className="h-full flex flex-col items-center justify-center text-center border-dashed border-2 border-gray-700 bg-gray-900/20">
                 <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4">
                   <MessageSquare className="text-gray-500" size={24} />
@@ -540,7 +574,7 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Diagnostic section */}
-      {(!diagnostic || diagnostic.diagnostic_status === 'ai_validation_failed' || !diagnostic.stitch_prompt) && !diagLoading && (
+      {(!diagnostic || diagnostic.diagnostic_status === 'ai_validation_failed') && !diagLoading && (
         <Card className="py-10">
           <div className="text-center">
             {diagnostic?.diagnostic_status === 'ai_validation_failed' ? (
@@ -562,7 +596,7 @@ export default function LeadDetailPage() {
             ) : (
               <>
                 <p className="text-gray-400 mb-4">
-                  {diagnostic ? 'O prompt Google Stitch ainda não foi gerado para este lead.' : 'Nenhum diagnóstico gerado para este lead.'}
+                  Nenhum diagnóstico gerado para este lead.
                 </p>
                 <Button size="lg" onClick={handleGenerateDiagnostic} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] border-0">
                   <RefreshCw className="inline-block mr-2" size={18} /> Gerar Diagnóstico com IA
@@ -575,6 +609,7 @@ export default function LeadDetailPage() {
           </div>
         </Card>
       )}
+
 
       {diagLoading && (
         <Card className="text-center py-10">

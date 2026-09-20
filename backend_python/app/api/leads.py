@@ -64,10 +64,12 @@ def _diagnostic_to_dict(d: Diagnostic) -> dict:
         "observed_facts": d.observed_facts,
         "inferences": d.inferences,
         "recommendations": d.recommendations,
+        # Estratégia de vendas
         "sales_approach": getattr(d, "sales_approach", None),
         "pain_points": getattr(d, "pain_points", None),
         "talking_points": getattr(d, "talking_points", None),
         "value_proposition": getattr(d, "value_proposition", None),
+        # Rascunhos de mensagens
         "email_draft": d.email_draft,
         "whatsapp_draft": d.whatsapp_draft,
         "instagram_draft": d.instagram_draft,
@@ -76,6 +78,8 @@ def _diagnostic_to_dict(d: Diagnostic) -> dict:
         "error_message": d.error_message,
         "generated_at": d.generated_at.isoformat() if d.generated_at else None,
     }
+
+
 
 
 # ── Rotas ─────────────────────────────────────────────────────────────────────
@@ -147,10 +151,17 @@ def get_lead(lead_id: str, db: Session = Depends(get_db)):
     if not lead:
         raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
 
-    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    diagnostic = None
+    try:
+        diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    except Exception as e:
+        logger.error(f"Erro ao buscar diagnóstico para o lead {lead_id}: {e}")
+        db.rollback()
+
     data = _lead_to_dict(lead)
     data["diagnostic"] = _diagnostic_to_dict(diagnostic) if diagnostic else None
     return {"data": data}
+
 
 
 @router.get("/api/campaigns/{campaign_id}/leads/export", summary="Exporta leads em CSV")

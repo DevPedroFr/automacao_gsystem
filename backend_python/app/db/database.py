@@ -54,26 +54,76 @@ def get_db():
         db.close()
 
 
+def _apply_migrations(target_engine):
+    """Aplica migrações incrementais de forma segura para SQLite e PostgreSQL."""
+    from sqlalchemy import inspect, text
+
+    is_postgres = target_engine.dialect.name == "postgresql"
+
+    migrations = [
+        ("leads", "instagram_candidates", "TEXT"),
+        ("leads", "commercial_status", "VARCHAR(50) DEFAULT 'new'"),
+        ("leads", "source_provider", "VARCHAR(50) DEFAULT 'google_places'"),
+        ("leads", "raw_data_path", "TEXT"),
+        ("diagnostics", "sales_approach", "TEXT"),
+        ("diagnostics", "pain_points", "TEXT"),
+        ("diagnostics", "talking_points", "TEXT"),
+        ("diagnostics", "value_proposition", "TEXT"),
+        ("diagnostics", "stitch_prompt", "TEXT"),
+        ("diagnostics", "email_draft", "TEXT"),
+        ("diagnostics", "whatsapp_draft", "TEXT"),
+        ("diagnostics", "instagram_draft", "TEXT"),
+        ("diagnostics", "diagnostic_status", "VARCHAR(50) DEFAULT 'completed'"),
+        ("diagnostics", "error_message", "TEXT"),
+    ]
+
+    try:
+        inspector = inspect(target_engine)
+        existing_tables = set(inspector.get_table_names())
+    except Exception as e:
+        logger.warning(f"⚠️ Erro ao inspecionar tabelas para migrações: {e}")
+        existing_tables = set()
+
+    results = []
+
+    for table, col, col_type in migrations:
+        if existing_tables and table not in existing_tables:
+            continue
+
+        col_exists = False
+        if existing_tables:
+            try:
+                table_cols = {c["name"].lower() for c in inspector.get_columns(table)}
+                col_exists = col.lower() in table_cols
+            except Exception:
+                col_exists = False
+
+        if col_exists:
+            results.append({"table": table, "column": col, "status": "already_exists"})
+            continue
+
+        sql = (
+            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col} {col_type}"
+            if is_postgres
+            else f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"
+        )
+        try:
+            with target_engine.connect() as conn:
+                conn.execute(text(sql))
+                conn.commit()
+            logger.info(f"✅ Migração concluída: {table}.{col} adicionada.")
+            results.append({"table": table, "column": col, "status": "added"})
+        except Exception as e:
+            logger.warning(f"⚠️ Migração {table}.{col}: {e}")
+            results.append({"table": table, "column": col, "status": "error", "error": str(e)})
+
+    return results
+
+
 def init_db():
     """Cria todas as tabelas no banco com fallback automático caso o Postgres remoto/local falhe."""
     global engine, SessionLocal
     from app.db import models  # noqa: F401 — importar para registrar os modelos
-
-    def _apply_migrations(target_engine):
-        from sqlalchemy import text
-        cols = [
-            ("leads", "instagram_candidates", "TEXT"),
-            ("diagnostics", "sales_approach", "TEXT"),
-            ("diagnostics", "pain_points", "TEXT"),
-            ("diagnostics", "talking_points", "TEXT"),
-            ("diagnostics", "value_proposition", "TEXT"),
-        ]
-        with target_engine.begin() as conn:
-            for table, col, col_type in cols:
-                try:
-                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"))
-                except Exception:
-                    pass
 
     try:
         Base.metadata.create_all(bind=engine)
@@ -85,4 +135,5 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         _apply_migrations(engine)
         logger.info("✅ Banco SQLite local inicializado com sucesso.")
+
 

@@ -80,3 +80,16 @@ async def health():
         "service": settings.APP_NAME,
         "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
     }
+
+
+@app.api_route("/api/migrate", methods=["GET", "POST"], tags=["System"])
+def run_migrations():
+    """Executa as migrações no banco de dados e retorna o status detalhado."""
+    from app.db.database import _apply_migrations, engine
+    results = _apply_migrations(engine)
+    return {
+        "status": "success",
+        "dialect": engine.dialect.name,
+        "migrations": results,
+    }
+

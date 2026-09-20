@@ -29,10 +29,10 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         "inferences": d.inferences,
         "recommendations": d.recommendations,
         # Estratégia de vendas
-        "sales_approach": d.sales_approach,
-        "pain_points": d.pain_points,
-        "talking_points": d.talking_points,
-        "value_proposition": d.value_proposition,
+        "sales_approach": getattr(d, "sales_approach", None),
+        "pain_points": getattr(d, "pain_points", None),
+        "talking_points": getattr(d, "talking_points", None),
+        "value_proposition": getattr(d, "value_proposition", None),
         # Rascunhos de mensagens
         "email_draft": d.email_draft,
         "whatsapp_draft": d.whatsapp_draft,
@@ -42,6 +42,7 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         "error_message": d.error_message,
         "generated_at": d.generated_at.isoformat() if d.generated_at else None,
     }
+
 
 
 @router.post("/api/leads/{lead_id}/diagnostic", status_code=201, summary="Gera diagnóstico de um lead via IA")
@@ -193,10 +194,17 @@ def get_diagnostic(lead_id: str, db: Session = Depends(get_db)):
     if not lead:
         raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
 
-    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    diagnostic = None
+    try:
+        diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    except Exception as e:
+        logger.error(f"Erro ao buscar diagnóstico para o lead {lead_id}: {e}")
+        db.rollback()
+
     if not diagnostic:
         raise HTTPException(
             status_code=404,
             detail={"error": "not_found", "message": "Diagnóstico não gerado ainda. Use POST para gerar."},
         )
     return {"data": _diag_to_dict(diagnostic)}
+
