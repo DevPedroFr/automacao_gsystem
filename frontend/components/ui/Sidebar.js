@@ -54,7 +54,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 min-h-screen bg-[#0F2744] flex-col shrink-0">
+      <aside className="hidden md:flex w-64 min-h-screen bg-[#0F2744] flex-col shrink-0 print:hidden">
         {/* Logo */}
         <div className="px-6 py-8">
           <h1 className="text-white font-bold text-xl tracking-wide">CONSULTINGS</h1>
@@ -89,7 +89,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F2744] border-t border-gray-800 z-50 px-6 py-3 flex items-center justify-between shadow-[0_-5px_20px_rgba(0,0,0,0.3)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F2744] border-t border-gray-800 z-50 px-6 py-3 flex items-center justify-between shadow-[0_-5px_20px_rgba(0,0,0,0.3)] print:hidden">
         {navItems.map((item) => {
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href) && item.href !== '#';
           return (
