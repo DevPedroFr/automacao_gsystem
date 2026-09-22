@@ -1,17 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { LayoutDashboard, Target, Wand2, Copy, Check } from 'lucide-react';
+import { 
+  LayoutDashboard, Target, Wand2, Copy, Check, 
+  Globe, ExternalLink, Smartphone, Monitor, RefreshCw, Sparkles, Palette, Users 
+} from 'lucide-react';
 
 const tabs = [
   { key: 'panel', label: 'Painel de Diagnóstico', icon: <LayoutDashboard size={16} /> },
   { key: 'recommendations', label: 'Recomendações de Venda', icon: <Target size={16} /> },
-  { key: 'stitch', label: 'Prompt Google Stitch ⚡', icon: <Wand2 size={16} /> },
+  { key: 'stitch', label: 'Landing Page Sob Medida 🚀', icon: <Sparkles size={16} /> },
 ];
 
 export default function DiagnosticTabs({ diagnostic = {} }) {
   const [activeTab, setActiveTab] = useState('panel');
   const [copiedTab, setCopiedTab] = useState(null);
+  const [isGeneratingSite, setIsGeneratingSite] = useState(false);
+  const [siteData, setSiteData] = useState(diagnostic);
+  const [viewMode, setViewMode] = useState('desktop');
+  const [generationError, setGenerationError] = useState(null);
+  const [showPromptCode, setShowPromptCode] = useState(false);
 
   /**
    * Converte marcações simples de **negrito** do Markdown para tags HTML strong
@@ -345,50 +353,212 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
     }
 
     if (key === 'stitch') {
-      const handleGenerateSite = async () => {
-        const payload = `Antigravity, por favor atue como meu backend automatizado e crie o site Next.js para este lead, com deploy na Vercel. 
-Utilize o seguinte prompt perfeito no Google Stitch MCP para gerar o design e HTML:
+      const currentLeadId = siteData.lead_id || diagnostic.lead_id;
+      const previewUrl = `/api/leads/${currentLeadId}/lp-preview`;
+      const hasGeneratedSite = siteData.has_generated_site || diagnostic.has_generated_site;
+      const brandColors = siteData.brand_colors || diagnostic.brand_colors;
+      const ownersInfo = siteData.owners_info || diagnostic.owners_info;
+      const promptText = siteData.stitch_prompt || diagnostic.stitch_prompt || text;
 
----
-${text}
----`;
+      const handleGenerateLandingPage = async () => {
+        if (!currentLeadId) return;
+        setIsGeneratingSite(true);
+        setGenerationError(null);
         try {
-          await navigator.clipboard.writeText(payload);
-          alert('Comando mágico copiado! Cole no chat para o Antigravity iniciar a criação e o deploy do site automaticamente.');
-        } catch(err) {
+          const res = await fetch(`/api/leads/${currentLeadId}/generate-lp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const jsonResp = await res.json();
+          if (!res.ok) {
+            throw new Error(jsonResp?.detail?.message || 'Falha ao gerar Landing Page');
+          }
+          setSiteData(jsonResp.data);
+          if (diagnostic) {
+            diagnostic.has_generated_site = true;
+            diagnostic.preview_url = jsonResp.data.preview_url;
+            diagnostic.brand_colors = jsonResp.data.brand_colors;
+            diagnostic.owners_info = jsonResp.data.owners_info;
+            diagnostic.stitch_prompt = jsonResp.data.stitch_prompt;
+          }
+        } catch (err) {
+          setGenerationError(err.message);
+        } finally {
+          setIsGeneratingSite(false);
+        }
+      };
+
+      const handleCopyShareLink = async () => {
+        try {
+          const fullUrl = `${window.location.origin}${previewUrl}`;
+          await navigator.clipboard.writeText(fullUrl);
+          alert('Link público da Landing Page copiado com sucesso!');
+        } catch (err) {
           console.error(err);
         }
       };
 
       return (
-        <div className="space-y-5">
-          <div className="p-6 bg-gradient-to-br from-gray-900 to-indigo-950/80 rounded-2xl shadow-xl border border-indigo-500/30 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-            
-            <div className="text-left relative z-10">
-              <h4 className="text-white font-extrabold text-lg mb-2 flex items-center gap-2">
-                <Wand2 className="text-cyan-400" size={24} /> Criar Site com IA <span className="bg-cyan-500/20 text-cyan-400 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-cyan-500/30">Auto</span>
-              </h4>
-              <p className="text-gray-300 text-sm leading-relaxed max-w-2xl">
-                Clique no botão ao lado para gerar o <strong>Comando Mágico</strong>. Depois, cole no chat para o Antigravity construir e publicar o site inteiro (Frontend + Deploy Vercel) automaticamente.
+        <div className="space-y-6">
+          {/* Header Action Banner */}
+          <div className="p-6 bg-gradient-to-br from-gray-900 via-indigo-950/70 to-slate-900 rounded-2xl shadow-xl border border-indigo-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="relative z-10 max-w-2xl">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="text-cyan-400" size={22} />
+                <h4 className="text-white font-extrabold text-lg">
+                  Landing Page Sob Medida com IA
+                </h4>
+                <span className="bg-cyan-500/20 text-cyan-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-cyan-500/30">
+                  {hasGeneratedSite ? 'Pronta' : 'Meta-Prompt CRO'}
+                </span>
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed">
+                {hasGeneratedSite 
+                  ? 'A Landing Page deste lead foi gerada sob medida com Tailwind CSS, integrando as dores do diagnóstico, cores da marca e liderança identificada.'
+                  : 'Clique no botão ao lado para enriquecer a identidade visual, identificar sócios e gerar automaticamente a Landing Page de alta conversão sem templates genéricos.'}
               </p>
+
+              {/* Badges de Ativos Enriquecidos */}
+              {(brandColors || (ownersInfo && ownersInfo.length > 0)) && (
+                <div className="mt-4 pt-3 border-t border-gray-700/50 flex flex-wrap items-center gap-4 text-xs">
+                  {brandColors && (
+                    <div className="flex items-center gap-2 bg-gray-900/60 px-3 py-1 rounded-lg border border-gray-700/60">
+                      <Palette size={14} className="text-cyan-400" />
+                      <span className="text-gray-400">Paleta da Marca:</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: brandColors.background }} title={`Fundo: ${brandColors.background}`} />
+                        <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: brandColors.primary }} title={`Primária: ${brandColors.primary}`} />
+                        <span className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: brandColors.secondary }} title={`Secundária: ${brandColors.secondary}`} />
+                      </div>
+                    </div>
+                  )}
+
+                  {ownersInfo && ownersInfo.length > 0 && (
+                    <div className="flex items-center gap-2 bg-gray-900/60 px-3 py-1 rounded-lg border border-gray-700/60">
+                      <Users size={14} className="text-indigo-400" />
+                      <span className="text-gray-400">Liderança:</span>
+                      <span className="text-white font-medium">
+                        {ownersInfo.map(o => o.name).join(', ')}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {generationError && (
+                <div className="mt-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">
+                  ⚠️ {generationError}
+                </div>
+              )}
             </div>
-            <button 
-              onClick={handleGenerateSite}
-              className="relative z-10 w-full md:w-auto flex-shrink-0 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-8 py-3.5 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:-translate-y-0.5 whitespace-nowrap flex items-center justify-center gap-2"
-            >
-              <Wand2 size={16} /> Gerar Comando Mágico
-            </button>
+
+            <div className="relative z-10 flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+              <button 
+                onClick={handleGenerateLandingPage}
+                disabled={isGeneratingSite}
+                className="w-full md:w-auto flex-shrink-0 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-7 py-3 rounded-xl font-bold text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isGeneratingSite ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" />
+                    <span>Construindo Landing Page...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    <span>{hasGeneratedSite ? 'Regenerar Página' : 'Gerar LP Sob Medida'}</span>
+                  </>
+                )}
+              </button>
+
+              {hasGeneratedSite && (
+                <a
+                  href={previewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full md:w-auto flex-shrink-0 bg-gray-800 hover:bg-gray-700 text-cyan-300 border border-cyan-500/30 px-5 py-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <ExternalLink size={16} />
+                  <span>Abrir Tela Cheia</span>
+                </a>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2 bg-gray-900/50 border border-gray-700/50 rounded-xl p-5 relative mt-4 shadow-inner">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-500 mb-3 flex items-center gap-1">
-              Prompt Copiável para o Google Stitch AI
+          {/* Interactive Preview Container */}
+          {hasGeneratedSite && (
+            <div className="space-y-3">
+              {/* Preview Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 px-2">
+                <div className="flex items-center gap-2 bg-gray-900/80 border border-gray-700/60 p-1 rounded-xl">
+                  <button
+                    onClick={() => setViewMode('desktop')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      viewMode === 'desktop' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Monitor size={14} /> Desktop
+                  </button>
+                  <button
+                    onClick={() => setViewMode('mobile')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                      viewMode === 'mobile' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40' : 'text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <Smartphone size={14} /> Mobile (375px)
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCopyShareLink}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold text-gray-300 hover:text-white rounded-lg transition-all"
+                  >
+                    <Copy size={13} /> Copiar Link para o Cliente
+                  </button>
+                  <button
+                    onClick={() => setShowPromptCode(!showPromptCode)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/60 hover:bg-gray-700 border border-gray-700 text-xs font-semibold text-gray-400 hover:text-white rounded-lg transition-all"
+                  >
+                    <Wand2 size={13} /> {showPromptCode ? 'Ocultar Prompt' : 'Ver Prompt Usado'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Iframe Frame */}
+              <div className="bg-gray-950/80 border border-gray-700/60 rounded-2xl p-4 flex justify-center shadow-2xl overflow-hidden">
+                <div 
+                  className={`transition-all duration-300 rounded-xl overflow-hidden shadow-2xl border border-gray-800 ${
+                    viewMode === 'mobile' ? 'w-[375px] h-[680px]' : 'w-full h-[650px]'
+                  }`}
+                >
+                  <iframe 
+                    src={previewUrl} 
+                    title="Landing Page Preview" 
+                    className="w-full h-full border-0 bg-gray-950" 
+                  />
+                </div>
+              </div>
             </div>
-            <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-all">
-              {text}
-            </pre>
-          </div>
+          )}
+
+          {/* Collapsible Prompt Specification */}
+          {(showPromptCode || !hasGeneratedSite) && (
+            <div className="space-y-2 bg-gray-900/50 border border-gray-700/50 rounded-xl p-5 relative shadow-inner">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 mb-3 flex items-center justify-between">
+                <span>Meta-Prompt de Elite Estruturado (CRO & Nicho)</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(promptText)}
+                  className="text-gray-400 hover:text-white flex items-center gap-1"
+                >
+                  <Copy size={12} /> Copiar Prompt
+                </button>
+              </div>
+              <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-all max-h-64 overflow-y-auto pr-2">
+                {promptText}
+              </pre>
+            </div>
+          )}
         </div>
       );
     }

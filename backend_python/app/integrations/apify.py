@@ -118,9 +118,9 @@ class ApifyIntegration(BaseHTTPClient, LeadSearchProvider):
                 except (ValueError, TypeError):
                     reviews_count = 0
                     
-                image_url = item.get("imageUrl")
-                if not image_url and item.get("imageUrls") and len(item.get("imageUrls")) > 0:
-                    image_url = item.get("imageUrls")[0]
+                image_urls_list = item.get("imageUrls") or []
+                if not image_url and image_urls_list:
+                    image_url = image_urls_list[0]
                     
                 results.append(
                     LeadResult(
@@ -134,6 +134,8 @@ class ApifyIntegration(BaseHTTPClient, LeadSearchProvider):
                         rating=rating,
                         user_rating_count=reviews_count,
                         business_status="CLOSED" if item.get("permanentlyClosed") else "OPERATIONAL",
+                        image_url=image_url,
+                        image_urls=image_urls_list,
                     )
                 )
             return results

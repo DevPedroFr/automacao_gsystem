@@ -73,6 +73,12 @@ class Lead(Base):
     cos = Column(Integer, default=0)    # Commercial Opportunity Score (0–100)
     priority = Column(String, default="C")  # A | B | C
 
+    # Enriquecimento e Ativos
+    logo_url = Column(String, nullable=True)
+    gallery_urls = Column(Text, nullable=True)       # JSON array de fotos do local
+    cnpj = Column(String, nullable=True)
+    owners_info = Column(Text, nullable=True)        # JSON array com nomes e cargos dos sócios
+
     # Status interno e rastreamento
     commercial_status = Column(String, default="new")
     source_provider = Column(String, default="google_places")
@@ -100,6 +106,10 @@ class Diagnostic(Base):
     whatsapp_draft = Column(Text, nullable=True)
     instagram_draft = Column(Text, nullable=True)
     stitch_prompt = Column(Text, nullable=True)
+    brand_colors = Column(Text, nullable=True)         # JSON com paleta detectada
+    owners_info = Column(Text, nullable=True)          # JSON com dados dos sócios/fundadores
+    logo_url = Column(String, nullable=True)           # URL ou path da logo
+    generated_site_html = Column(Text, nullable=True)  # Código HTML da Landing Page gerada
     diagnostic_status = Column(String, default="completed")
     error_message = Column(Text, nullable=True)
     generated_at = Column(DateTime, default=datetime.utcnow)

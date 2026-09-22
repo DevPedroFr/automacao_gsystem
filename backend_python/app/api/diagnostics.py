@@ -21,7 +21,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Diagnósticos"])
 
 
+import json
+from fastapi.responses import HTMLResponse
+
 def _diag_to_dict(d: Diagnostic) -> dict:
+    brand_colors_parsed = None
+    if getattr(d, "brand_colors", None):
+        try:
+            brand_colors_parsed = json.loads(d.brand_colors)
+        except Exception:
+            pass
+
+    owners_info_parsed = None
+    if getattr(d, "owners_info", None):
+        try:
+            owners_info_parsed = json.loads(d.owners_info)
+        except Exception:
+            pass
+
+    has_site = bool(getattr(d, "generated_site_html", None))
+
     return {
         "id": d.id,
         "lead_id": d.lead_id,
@@ -38,6 +57,12 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         "whatsapp_draft": d.whatsapp_draft,
         "instagram_draft": d.instagram_draft,
         "stitch_prompt": d.stitch_prompt,
+        # Landing Page & Ativos
+        "brand_colors": brand_colors_parsed,
+        "owners_info": owners_info_parsed,
+        "logo_url": getattr(d, "logo_url", None),
+        "has_generated_site": has_site,
+        "preview_url": f"/api/leads/{d.lead_id}/lp-preview" if has_site else None,
         "diagnostic_status": d.diagnostic_status,
         "error_message": d.error_message,
         "generated_at": d.generated_at.isoformat() if d.generated_at else None,
@@ -207,4 +232,128 @@ def get_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             detail={"error": "not_found", "message": "Diagnóstico não gerado ainda. Use POST para gerar."},
         )
     return {"data": _diag_to_dict(diagnostic)}
+
+
+@router.post("/api/leads/{lead_id}/generate-lp", summary="Gera a Landing Page sob medida a partir do diagnóstico")
+async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
+    """
+    POST /api/leads/:leadId/generate-lp
+    1. Busca o diagnóstico e dados do lead.
+    2. Executa o enriquecimento de ativos (cores da marca, fotos, busca de sócios).
+    3. Constrói o Meta-Prompt de Elite baseado nas regras de nicho e nas dores identificadas.
+    4. Gera o código HTML completo e responsivo (Tailwind CSS) e salva no banco.
+    """
+    from app.services.enrichment_service import EnrichmentService
+    from app.services.lp_prompt_engine import LPPromptEngine
+    from app.services.site_generator_service import SiteGeneratorService
+
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    if not diagnostic:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "diagnostic_required", "message": "Gere primeiro o diagnóstico antes de criar a Landing Page."},
+        )
+
+    try:
+        # 1. Enriquecimento de Dados (Cores, Sócios, Logo)
+        enrichment = await EnrichmentService.enrich_lead_data(
+            lead_name=lead.name,
+            city=lead.city or "",
+            website_url=lead.website,
+            instagram_bio=lead.name,
+            logo_url_or_path=lead.logo_url or lead.image_url,
+            reviews_text=diagnostic.observed_facts,
+        )
+
+        brand_colors = enrichment["brand_colors"]
+        owners = enrichment["owners"]
+        cnpj = enrichment["cnpj"]
+
+        # Atualiza Lead se achou CNPJ ou Sócios
+        if cnpj and not lead.cnpj:
+            lead.cnpj = cnpj
+        if owners and not lead.owners_info:
+            lead.owners_info = json.dumps(owners)
+
+        # 2. Constrói o Prompt de Elite customizado por Nicho
+        lead_dict = {
+            "name": lead.name,
+            "category": lead.category,
+            "phone": lead.phone,
+            "address": lead.address,
+            "city": lead.city,
+            "google_rating": lead.google_rating,
+            "google_reviews_count": lead.google_reviews_count,
+        }
+        diagnostic_dict = {
+            "pain_points": diagnostic.pain_points,
+            "value_proposition": diagnostic.value_proposition,
+            "sales_approach": diagnostic.sales_approach,
+            "talking_points": diagnostic.talking_points,
+        }
+
+        custom_prompt = LPPromptEngine.build_custom_prompt(
+            lead_data=lead_dict,
+            diagnostic_data=diagnostic_dict,
+            brand_colors=brand_colors,
+            owners_info=owners,
+            logo_url=lead.logo_url or lead.image_url,
+        )
+
+        # Salva o prompt customizado
+        diagnostic.stitch_prompt = custom_prompt
+        diagnostic.brand_colors = json.dumps(brand_colors)
+        if owners:
+            diagnostic.owners_info = json.dumps(owners)
+
+        # 3. Gera o Código HTML Completo
+        html_code = await SiteGeneratorService.generate_landing_page_html(
+            prompt=custom_prompt,
+            lead_data=lead_dict,
+            brand_colors=brand_colors,
+            owners=owners,
+            logo_url=lead.logo_url or lead.image_url,
+        )
+
+        diagnostic.generated_site_html = html_code
+        db.commit()
+        db.refresh(diagnostic)
+
+        return {
+            "status": "success",
+            "message": "Landing Page gerada com sucesso sob medida!",
+            "data": _diag_to_dict(diagnostic),
+        }
+    except Exception as err:
+        logger.error(f"Erro ao gerar Landing Page para o lead {lead_id}: {err}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail={"error": "site_generation_failed", "message": str(err)})
+
+
+@router.get("/api/leads/{lead_id}/lp-preview", summary="Visualiza a Landing Page gerada pelo lead", response_class=HTMLResponse)
+def preview_landing_page(lead_id: str, db: Session = Depends(get_db)):
+    """GET /api/leads/:leadId/lp-preview — Renderiza o HTML da Landing Page gerada."""
+    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+    if not diagnostic or not diagnostic.generated_site_html:
+        return HTMLResponse(
+            content="""<!DOCTYPE html>
+            <html class="dark">
+            <head><title>Landing Page não gerada</title><script src="https://cdn.tailwindcss.com"></script></head>
+            <body class="bg-gray-950 text-white flex items-center justify-center min-h-screen">
+                <div class="p-8 bg-gray-900 border border-gray-800 rounded-2xl text-center max-w-md shadow-2xl">
+                    <div class="text-4xl mb-4">⏳</div>
+                    <h2 class="text-xl font-bold mb-2">Landing Page ainda não foi gerada</h2>
+                    <p class="text-gray-400 text-sm mb-6">Abra o diagnóstico deste lead no CRM e clique no botão <strong>"🚀 Gerar Landing Page Sob Medida"</strong>.</p>
+                </div>
+            </body>
+            </html>""",
+            status_code=404,
+        )
+
+    return HTMLResponse(content=diagnostic.generated_site_html, status_code=200)
+
 

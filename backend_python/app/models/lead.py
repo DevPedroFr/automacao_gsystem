@@ -19,3 +19,5 @@ class LeadResult(BaseModel):
     rating: Optional[float] = None
     user_rating_count: Optional[int] = None
     business_status: Optional[str] = None
+    image_url: Optional[str] = None
+    image_urls: Optional[List[str]] = None
