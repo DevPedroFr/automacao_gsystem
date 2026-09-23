@@ -48,8 +48,25 @@ const navItems = [
   },
 ];
 
+import { useRouter } from 'next/navigation';
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  if (pathname === '/login') {
+    return null;
+  }
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth', { method: 'DELETE' });
+      router.push('/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Erro ao sair:', err);
+    }
+  };
 
   return (
     <>
@@ -82,9 +99,20 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="px-6 py-6">
-          <p className="text-xs text-gray-500">MVP v1.0</p>
+        {/* Footer com botão Sair */}
+        <div className="px-4 py-6 border-t border-white/5 space-y-3">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span>Encerrar Sessão</span>
+          </button>
+          <div className="px-4 text-[10px] text-gray-500 font-mono">
+            CONSULTINGS APD v1.2
+          </div>
         </div>
       </aside>
 

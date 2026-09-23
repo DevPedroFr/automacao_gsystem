@@ -108,6 +108,21 @@ export default function PrintReport({ lead, diagnostic }) {
 
   return (
     <div className="print-only bg-white text-gray-900 font-sans p-2">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @page {
+          size: A4;
+          margin: 10mm 12mm !important;
+        }
+        @media print {
+          a[href]:after {
+            content: none !important;
+          }
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}} />
       {/* 1. Cabeçalho */}
       <div className="border-b-2 border-[#0F2744] pb-4 mb-6">
         <div className="flex justify-between items-end">
