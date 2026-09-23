@@ -21,3 +21,10 @@ export async function fetchApi(endpoint, options = {}) {
   }
   return res.json();
 }
+
+export { API_BASE };
+
+export function getApiUrl(endpoint = '') {
+  return `${API_BASE}${endpoint}`;
+}
+

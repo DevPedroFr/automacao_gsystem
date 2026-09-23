@@ -235,6 +235,7 @@ def get_diagnostic(lead_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/api/leads/{lead_id}/generate-lp", summary="Gera a Landing Page sob medida a partir do diagnóstico")
+@router.post("/leads/{lead_id}/generate-lp", include_in_schema=False)
 async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
     """
     POST /api/leads/:leadId/generate-lp
@@ -335,6 +336,7 @@ async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/api/leads/{lead_id}/lp-preview", summary="Visualiza a Landing Page gerada pelo lead", response_class=HTMLResponse)
+@router.get("/leads/{lead_id}/lp-preview", response_class=HTMLResponse, include_in_schema=False)
 def preview_landing_page(lead_id: str, db: Session = Depends(get_db)):
     """GET /api/leads/:leadId/lp-preview — Renderiza o HTML da Landing Page gerada."""
     diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()

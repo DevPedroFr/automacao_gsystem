@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { fetchApi, getApiUrl } from '@/lib/api';
 import { 
   LayoutDashboard, Target, Wand2, Copy, Check, 
   Globe, ExternalLink, Smartphone, Monitor, RefreshCw, Sparkles, Palette, Users 
@@ -354,7 +355,7 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
 
     if (key === 'stitch') {
       const currentLeadId = siteData.lead_id || diagnostic.lead_id;
-      const previewUrl = `/api/leads/${currentLeadId}/lp-preview`;
+      const previewUrl = getApiUrl(`/leads/${currentLeadId}/lp-preview`);
       const hasGeneratedSite = siteData.has_generated_site || diagnostic.has_generated_site;
       const brandColors = siteData.brand_colors || diagnostic.brand_colors;
       const ownersInfo = siteData.owners_info || diagnostic.owners_info;
@@ -365,14 +366,9 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
         setIsGeneratingSite(true);
         setGenerationError(null);
         try {
-          const res = await fetch(`/api/leads/${currentLeadId}/generate-lp`, {
+          const jsonResp = await fetchApi(`/leads/${currentLeadId}/generate-lp`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
           });
-          const jsonResp = await res.json();
-          if (!res.ok) {
-            throw new Error(jsonResp?.detail?.message || 'Falha ao gerar Landing Page');
-          }
           setSiteData(jsonResp.data);
           if (diagnostic) {
             diagnostic.has_generated_site = true;
@@ -382,7 +378,7 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
             diagnostic.stitch_prompt = jsonResp.data.stitch_prompt;
           }
         } catch (err) {
-          setGenerationError(err.message);
+          setGenerationError(err.message || 'Falha ao conectar com o servidor para gerar a Landing Page');
         } finally {
           setIsGeneratingSite(false);
         }
@@ -390,7 +386,9 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
 
       const handleCopyShareLink = async () => {
         try {
-          const fullUrl = `${window.location.origin}${previewUrl}`;
+          const fullUrl = previewUrl.startsWith('http')
+            ? previewUrl
+            : `${window.location.origin}${previewUrl}`;
           await navigator.clipboard.writeText(fullUrl);
           alert('Link público da Landing Page copiado com sucesso!');
         } catch (err) {
