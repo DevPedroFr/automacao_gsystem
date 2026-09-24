@@ -45,7 +45,7 @@ class SiteGeneratorService:
                     "6. Retorne APENAS o código HTML completo começando com <!DOCTYPE html> e terminando com </html>, sem explicações em markdown antes ou depois.\n\n"
                     f"ESPECIFICAÇÃO COMPLETA DA LANDING PAGE:\n{prompt}"
                 )
-                html_resp = await gemini._call_gemini(system_prompt, max_tokens=7000)
+                html_resp = await gemini.generate_text(system_prompt, max_tokens=7000)
                 
                 # Limpar possíveis blocos markdown ```html ... ```
                 clean_html = re.sub(r"^```(?:html)?\s*", "", html_resp.strip(), flags=re.IGNORECASE)

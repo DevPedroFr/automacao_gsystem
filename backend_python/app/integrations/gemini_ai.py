@@ -141,6 +141,28 @@ class GeminiAIIntegration(LLMService):
             sales_recommendation=sales_rec,
         )
 
+    async def generate_text(self, prompt: str, max_tokens: int = 8000) -> str:
+        """Gera texto livre / HTML sem imposição de schema JSON estruturado."""
+        if not self.api_key:
+            raise RuntimeError("Gemini API key not configured")
+
+        url = f"{self.base_url}/{self.model}:generateContent?key={self.api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.4,
+                "maxOutputTokens": max_tokens,
+            },
+        }
+        logger.info(f"Gerando texto livre via Gemini ({self.model})...")
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            data = response.json()
+
+        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+        return text or ""
+
     async def _call_gemini(self, prompt: str, max_tokens: int = 3500) -> str:
         if not self.api_key:
             raise RuntimeError("Gemini API key not configured")

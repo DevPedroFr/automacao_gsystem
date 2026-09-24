@@ -378,7 +378,10 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
             diagnostic.stitch_prompt = jsonResp.data.stitch_prompt;
           }
         } catch (err) {
-          setGenerationError(err.message || 'Falha ao conectar com o servidor para gerar a Landing Page');
+          const msg = err.message === 'Failed to fetch'
+            ? 'Falha de comunicação com o Backend (Failed to fetch). Certifique-se de realizar o Deploy do serviço Backend no Easypanel.'
+            : (err.message || 'Falha ao conectar com o servidor para gerar a Landing Page');
+          setGenerationError(msg);
         } finally {
           setIsGeneratingSite(false);
         }

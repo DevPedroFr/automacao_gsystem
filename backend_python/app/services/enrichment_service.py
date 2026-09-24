@@ -7,7 +7,12 @@ from io import BytesIO
 from collections import Counter
 
 import httpx
-from PIL import Image
+try:
+    from PIL import Image
+    HAS_PILLOW = True
+except ImportError:
+    Image = None
+    HAS_PILLOW = False
 
 from app.core.config import settings
 
@@ -28,6 +33,8 @@ class EnrichmentService:
         Analisa uma imagem de logotipo ou foto do estabelecimento e extrai
         a paleta de cores dominante (Fundo, Primária, Secundária e Contraste).
         """
+        if not HAS_PILLOW or not image_bytes_or_path:
+            return EnrichmentService._default_palette()
         try:
             if isinstance(image_bytes_or_path, str) and (image_bytes_or_path.startswith("http://") or image_bytes_or_path.startswith("https://")):
                 with httpx.Client(timeout=8.0) as client:
