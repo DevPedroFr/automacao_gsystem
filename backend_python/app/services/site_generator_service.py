@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import urllib.parse
 from typing import Dict, Any, Optional, List
 
 from app.core.config import settings
@@ -24,11 +25,18 @@ class SiteGeneratorService:
         brand_colors: Dict[str, Any],
         owners: List[Dict[str, str]],
         logo_url: Optional[str] = None,
+        diagnostic_data: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Gera o código HTML completo e independente com Tailwind CSS.
-        Tenta gerar via Gemini AI e faz fallback para um gerador semântico de elite.
+        Tenta gerar via Gemini AI com regras estritas de nicho e faz fallback
+        para o gerador semântico de elite 100% customizado por nicho.
         """
+        lead_name = lead_data.get("name", "Empresa")
+        category = lead_data.get("category", "")
+        niche_key = LPPromptEngine.detect_niche(lead_name, category)
+        niche_rule = LPPromptEngine.NICHE_RULES.get(niche_key, LPPromptEngine.NICHE_RULES["geral"])
+
         if settings.GEMINI_API_KEY:
             try:
                 gemini = GeminiAIIntegration()
@@ -36,13 +44,17 @@ class SiteGeneratorService:
                     "Você é um engenheiro sênior de UI/UX especializado em Landing Pages de altíssima conversão (CRO) "
                     "do Google Stitch. Gere um documento HTML5 completo, único e autônomo (single-file HTML) "
                     "estritamente de acordo com as especificações a seguir.\n\n"
-                    "REGRAS OBRIGATÓRIAS:\n"
-                    "1. Use Tailwind CSS via <script src=\"https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js\"></script> ou <script src=\"https://cdn.tailwindcss.com\"></script>.\n"
-                    "2. Configure as cores fornecidas no tailwind.config dentro de uma tag <script id=\"tailwind-config\">.\n"
-                    "3. Use Google Fonts (Playfair Display e Plus Jakarta Sans) e Material Symbols Outlined.\n"
-                    "4. Não use textos placeholder (Lorem Ipsum). Use os dados reais fornecidos (nome, sócios, endereço, dores).\n"
-                    "5. Adicione o botão flutuante de WhatsApp fixo no canto inferior direito com animação pulse.\n"
-                    "6. Retorne APENAS o código HTML completo começando com <!DOCTYPE html> e terminando com </html>, sem explicações em markdown antes ou depois.\n\n"
+                    "REGRAS OBRIGATÓRIAS E INEGOCIÁVEIS:\n"
+                    f"1. O NEGÓCIO É EXCLUSIVAMENTE DO RAMO: '{niche_rule['name']}' (Nome da Empresa: {lead_name}, Categoria: {category}).\n"
+                    "   É TERMINANTEMENTE PROIBIDO gerar conteúdo de outro segmento. "
+                    "   Por exemplo: NUNCA gere termos de advocacia, tribunais ou jurídico se a empresa for depósito de construção, oficina, clínica médica, etc. "
+                    "   Todos os títulos, blocos de serviços, diferenciais e CTAs devem ser 100% fiéis a este ramo comercial.\n"
+                    "2. Use Tailwind CSS via <script src=\"https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js\"></script> ou <script src=\"https://cdn.tailwindcss.com\"></script>.\n"
+                    "3. Configure as cores fornecidas no tailwind.config dentro de uma tag <script id=\"tailwind-config\">.\n"
+                    "4. Use Google Fonts (Plus Jakarta Sans) e Material Symbols Outlined.\n"
+                    "5. Não use textos placeholder (Lorem Ipsum). Use os dados reais fornecidos (nome, telefone, endereço, dores e diferenciais).\n"
+                    "6. Adicione o botão flutuante de WhatsApp fixo no canto inferior direito com animação pulse e link correto wa.me.\n"
+                    "7. Retorne APENAS o código HTML completo começando com <!DOCTYPE html> e terminando com </html>, sem explicações em markdown antes ou depois.\n\n"
                     f"ESPECIFICAÇÃO COMPLETA DA LANDING PAGE:\n{prompt}"
                 )
                 html_resp = await gemini.generate_text(system_prompt, max_tokens=7000)
@@ -58,11 +70,22 @@ class SiteGeneratorService:
                             "https://cdn.tailwindcss.com",
                             "https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"
                         )
-                    return clean_html
+                    # Checagem de segurança de nicho: se o nicho NÃO for advocacia mas o modelo colocou 'advocacia' ou 'oab'
+                    lower_clean = clean_html.lower()
+                    if niche_key != "advocacia" and ("código de ética da oab" in lower_clean or "defesa rigorosa dos seus direitos" in lower_clean or "atendimento jurídico" in lower_clean):
+                        logger.warning(f"Gemini alucinou conteúdo jurídico para nicho {niche_key}. Usando gerador de nicho calibrado.")
+                    else:
+                        return clean_html
             except Exception as e:
-                logger.warning(f"Geração de HTML via Gemini falhou ({e}). Usando gerador de elite local.")
+                logger.warning(f"Geração de HTML via Gemini falhou ({e}). Usando gerador de elite local calibrado para {niche_key}.")
 
-        return cls._build_semantic_landing_page(lead_data, brand_colors, owners, logo_url)
+        return cls._build_semantic_landing_page(
+            lead_data=lead_data,
+            brand_colors=brand_colors,
+            owners=owners,
+            logo_url=logo_url,
+            diagnostic_data=diagnostic_data
+        )
 
     @classmethod
     def _build_semantic_landing_page(
@@ -71,59 +94,100 @@ class SiteGeneratorService:
         brand_colors: Dict[str, Any],
         owners: List[Dict[str, str]],
         logo_url: Optional[str] = None,
+        diagnostic_data: Optional[Dict[str, Any]] = None,
     ) -> str:
-        """Gerador local resiliente que compõe a Landing Page em HTML/Tailwind."""
+        """
+        Gerador local resiliente que compõe a Landing Page em HTML/Tailwind
+        rigorosamente adaptado ao nicho e aos dados reais do lead.
+        """
         name = lead_data.get("name", "Empresa de Excelência")
+        category = lead_data.get("category", "")
         phone = lead_data.get("phone") or "(11) 99999-9999"
         clean_phone = "".join(filter(str.isdigit, phone))
         address = lead_data.get("address") or lead_data.get("city") or "Brasil"
-        rating = lead_data.get("google_rating") or 4.9
-        reviews_count = lead_data.get("google_reviews_count") or 120
+        rating = lead_data.get("google_rating") or 4.8
+        reviews_count = lead_data.get("google_reviews_count") or 85
 
-        bg = brand_colors.get("background", "#3E0B15")
-        primary = brand_colors.get("primary", "#d4af37")
-        secondary = brand_colors.get("secondary", "#551320")
-        text_color = brand_colors.get("text", "#ffffff")
+        # Detectar Nicho & Regras correspondentes
+        niche_key = LPPromptEngine.detect_niche(name, category)
+        niche_rules = LPPromptEngine.NICHE_RULES.get(niche_key, LPPromptEngine.NICHE_RULES["geral"])
 
-        # Sócios cards
+        # Cores (detectadas ou padrão do nicho)
+        colors = brand_colors or niche_rules.get("default_colors", {})
+        bg = colors.get("background") or niche_rules["default_colors"]["background"]
+        primary = colors.get("primary") or niche_rules["default_colors"]["primary"]
+        secondary = colors.get("secondary") or niche_rules["default_colors"]["secondary"]
+        text_color = colors.get("text") or niche_rules["default_colors"]["text"]
+
+        # Textos e CTAs do nicho
+        hero_badge = niche_rules.get("hero_badge", "Excelência & Atendimento Especializado")
+        headline = niche_rules.get("headline", f"{name} — Soluções Completas para Você")
+        subheadline = niche_rules.get("subheadline", f"Qualidade, garantia e atendimento com quem entende do assunto em {address}.")
+        cta_label = niche_rules.get("cta_label", "Falar no WhatsApp")
+        whatsapp_msg = niche_rules.get("whatsapp_msg", f"Olá! Vim pelo site da {name} e gostaria de mais informações.")
+        encoded_whatsapp_msg = urllib.parse.quote(whatsapp_msg)
+
+        # Montar Cards de Soluções/Produtos do Nicho
+        cards_html = ""
+        for card in niche_rules.get("solution_cards", []):
+            cards_html += f"""
+            <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant hover:border-primary/50 transition-all duration-300 flex flex-col justify-between group">
+                <div>
+                    <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-2xl">{card.get('icon', 'check_circle')}</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-on-surface mb-2">{card.get('title')}</h4>
+                    <p class="text-sm text-on-surface/70 leading-relaxed mb-4">{card.get('desc')}</p>
+                </div>
+                <a href="https://wa.me/{clean_phone}?text={urllib.parse.quote(f'Olá! Gostaria de um orçamento sobre {card.get("title")}.')}" target="_blank" class="text-xs font-bold text-primary flex items-center gap-1 hover:underline mt-auto">
+                    Consultar Disponibilidade & Orçamento
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
+            </div>
+            """
+
+        # Montar Seção de Liderança / Sócios (se houver)
         owners_html = ""
-        if owners:
+        if owners and len(owners) > 0:
             owners_cards = []
             for o in owners:
+                initial = (o.get('name') or 'S')[0]
+                role = o.get('role', 'Sócio Proprietário')
                 owners_cards.append(f"""
-                <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant/30 flex flex-col items-center text-center">
-                    <div class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-primary text-2xl font-bold mb-4 border border-primary/30">
-                        {o.get('name', 'Adv')[0]}
+                <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant flex flex-col items-center text-center">
+                    <div class="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center text-primary text-2xl font-bold mb-4 border border-primary/30 shadow-md">
+                        {initial}
                     </div>
-                    <h4 class="text-xl font-bold text-on-surface mb-1">{o.get('name')}</h4>
-                    <span class="text-xs uppercase tracking-widest text-primary font-semibold">{o.get('role', 'Sócio')}</span>
+                    <h4 class="text-lg font-bold text-on-surface mb-1">{o.get('name')}</h4>
+                    <span class="text-xs uppercase tracking-wider text-primary font-semibold">{role}</span>
                 </div>
                 """)
             owners_html = f"""
-            <section class="py-20 bg-background/50 border-t border-outline-variant/20">
+            <section class="py-16 bg-surface-container/30 border-t border-outline-variant">
                 <div class="max-w-[1240px] mx-auto px-6">
-                    <div class="text-center max-w-2xl mx-auto mb-14">
-                        <span class="text-primary text-xs uppercase tracking-widest font-bold">Liderança & Governança</span>
-                        <h3 class="text-3xl font-bold mt-2 text-on-surface">Sócios Fundadores & Corpo Técnico</h3>
+                    <div class="text-center max-w-2xl mx-auto mb-12">
+                        <span class="text-primary text-xs uppercase tracking-widest font-bold">Liderança & Compromisso</span>
+                        <h3 class="text-2xl md:text-3xl font-bold mt-2 text-on-surface">Direção & Responsáveis</h3>
+                        <p class="text-xs md:text-sm text-on-surface/70 mt-2">Profissionais comprometidos com o mais alto padrão de atendimento e transparência.</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-{min(len(owners), 3)} gap-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-{min(len(owners), 3)} gap-6 max-w-4xl mx-auto">
                         {''.join(owners_cards)}
                     </div>
                 </div>
             </section>
             """
 
-        logo_elem = f'<img src="{logo_url}" alt="{name}" class="h-12 w-auto object-contain" />' if logo_url else f'<span class="text-xl font-bold text-primary font-serif tracking-wider">{name}</span>'
+        logo_elem = f'<img src="{logo_url}" alt="{name}" class="h-10 w-auto object-contain" />' if logo_url else f'<span class="text-xl font-bold text-primary tracking-tight">{name}</span>'
 
         return f"""<!DOCTYPE html>
 <html lang="pt-BR" class="dark scroll-smooth">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{name} | Excelência & Confiança</title>
+    <title>{name} | {niche_rules['name']}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
     <script id="tailwind-config">
@@ -137,10 +201,9 @@ class SiteGeneratorService:
                         "surface-container": "{secondary}",
                         "primary": "{primary}",
                         "on-surface": "{text_color}",
-                        "outline-variant": "rgba(255,255,255,0.15)"
+                        "outline-variant": "rgba(255,255,255,0.12)"
                     }},
                     fontFamily: {{
-                        serif: ['"Playfair Display"', 'serif'],
                         sans: ['"Plus Jakarta Sans"', 'sans-serif']
                     }}
                 }}
@@ -148,26 +211,27 @@ class SiteGeneratorService:
         }};
     </script>
 </head>
-<body class="bg-background text-on-surface font-sans antialiased">
+<body class="bg-background text-on-surface font-sans antialiased selection:bg-primary selection:text-background">
     <!-- TOP NAVIGATION -->
-    <header class="sticky top-0 z-50 bg-background/85 backdrop-blur-md border-b border-outline-variant">
+    <header class="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-outline-variant">
         <div class="max-w-[1320px] mx-auto px-6 h-20 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 {logo_elem}
             </div>
             <nav class="hidden md:flex items-center gap-8 text-sm font-semibold">
-                <a href="#solucoes" class="hover:text-primary transition-colors">Soluções</a>
+                <a href="#solucoes" class="hover:text-primary transition-colors">Produtos & Serviços</a>
                 <a href="#diferenciais" class="hover:text-primary transition-colors">Diferenciais</a>
-                <a href="#depoimentos" class="hover:text-primary transition-colors">Avaliações</a>
-                <a href="#contato" class="hover:text-primary transition-colors">Localização</a>
+                <a href="#avaliacoes" class="hover:text-primary transition-colors">Avaliações</a>
+                <a href="#localizacao" class="hover:text-primary transition-colors">Localização</a>
             </nav>
             <div class="flex items-center gap-4">
                 <a href="tel:{clean_phone}" class="hidden sm:flex items-center gap-2 text-xs font-semibold px-4 py-2 border border-outline-variant rounded-lg hover:border-primary transition-colors">
                     <span class="material-symbols-outlined text-primary text-base">call</span>
                     {phone}
                 </a>
-                <a href="https://wa.me/{clean_phone}?text=Olá,%20gostaria%20de%20um%20atendimento%20especializado." target="_blank" class="bg-primary text-background font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg shadow-lg hover:opacity-90 transition-opacity">
-                    Agendar Consulta
+                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg shadow-lg hover:opacity-90 transition-opacity flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base">chat</span>
+                    {cta_label}
                 </a>
             </div>
         </div>
@@ -177,25 +241,29 @@ class SiteGeneratorService:
     <section class="py-20 md:py-28 relative overflow-hidden">
         <div class="max-w-[1320px] mx-auto px-6 relative z-10">
             <div class="max-w-4xl mx-auto text-center flex flex-col items-center">
-                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-surface-container border border-primary/30 mb-6 text-xs text-primary font-bold tracking-wider uppercase">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-primary/30 mb-6 text-xs text-primary font-bold tracking-wider uppercase shadow-sm">
                     <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                    Atendimento Jurídico & Consultoria Especializada
+                    {hero_badge}
                 </div>
-                <h1 class="text-4xl md:text-6xl font-bold font-serif leading-tight mb-6">
-                    Advocacia Estratégica, Segurança e <span class="text-primary italic">Defesa Rigorosa</span> dos Seus Direitos.
+                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-on-surface">
+                    {headline}
                 </h1>
-                <p class="text-lg md:text-xl text-on-surface/80 max-w-2xl mb-10 leading-relaxed">
-                    Compromisso inegociável com a excelência técnica, agilidade e sigilo para defender seus interesses patrimoniais e corporativos.
+                <p class="text-base md:text-xl text-on-surface/80 max-w-2xl mb-10 leading-relaxed font-normal">
+                    {subheadline}
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
-                    <a href="https://wa.me/{clean_phone}?text=Olá,%20preciso%20de%20uma%20orientação%20jurídica." target="_blank" class="bg-primary text-background font-bold px-8 py-4 rounded-xl shadow-xl hover:scale-105 transition-transform flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
-                        <span class="material-symbols-outlined text-lg">chat</span>
-                        Falar com Especialista no WhatsApp
+                    <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-extrabold px-8 py-4 rounded-xl shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-xl">chat</span>
+                        {cta_label}
+                    </a>
+                    <a href="tel:{clean_phone}" class="px-6 py-4 rounded-xl border border-outline-variant bg-surface-container hover:border-primary/50 transition-colors flex items-center justify-center gap-2 text-sm font-bold text-on-surface">
+                        <span class="material-symbols-outlined text-lg text-primary">call</span>
+                        Ligue Agora: {phone}
                     </a>
                 </div>
                 <!-- SOCIAL PROOF BADGE -->
-                <div class="mt-12 flex items-center justify-center gap-3 text-xs text-on-surface/70">
-                    <div class="flex text-amber-400">
+                <div class="mt-12 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-xs text-on-surface/80">
+                    <div class="flex text-amber-400 text-sm">
                         ★★★★★
                     </div>
                     <span><strong>{rating} de 5.0 estrelas</strong> no Google ({reviews_count}+ avaliações reais)</span>
@@ -204,23 +272,120 @@ class SiteGeneratorService:
         </div>
     </section>
 
+    <!-- PRODUTOS / SERVIÇOS DO NICHO -->
+    <section id="solucoes" class="py-20 bg-surface-container/20 border-t border-outline-variant">
+        <div class="max-w-[1320px] mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-primary text-xs uppercase tracking-widest font-bold">Catálogo & Soluções</span>
+                <h3 class="text-3xl font-extrabold mt-2 text-on-surface">O que oferecemos com máxima qualidade</h3>
+                <p class="text-sm text-on-surface/70 mt-2">Linha completa, pronta-entrega e atendimento rápido para sua necessidade.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {cards_html}
+            </div>
+        </div>
+    </section>
+
+    <!-- DIFERENCIAIS -->
+    <section id="diferenciais" class="py-20 border-t border-outline-variant">
+        <div class="max-w-[1320px] mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-primary text-xs uppercase tracking-widest font-bold">Por Que Escolher a {name}?</span>
+                <h3 class="text-3xl font-extrabold mt-2 text-on-surface">Compromisso com o seu melhor resultado</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-2xl mx-auto mb-5">
+                        <span class="material-symbols-outlined text-3xl">bolt</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Agilidade & Pronta-Entrega</h4>
+                    <p class="text-sm text-on-surface/70 leading-relaxed">Processamento rápido do seu pedido com entrega garantida e pontual para não atrasar seu cronograma.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-2xl mx-auto mb-5">
+                        <span class="material-symbols-outlined text-3xl">verified</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Marcas de Confiança</h4>
+                    <p class="text-sm text-on-surface/70 leading-relaxed">Trabalhamos exclusivamente com fornecedores homologados e produtos com certificação e garantia de fábrica.</p>
+                </div>
+                <div class="p-8 rounded-2xl bg-surface-container border border-outline-variant text-center">
+                    <div class="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-2xl mx-auto mb-5">
+                        <span class="material-symbols-outlined text-3xl">support_agent</span>
+                    </div>
+                    <h4 class="text-xl font-bold mb-2">Cotação Instantânea no WhatsApp</h4>
+                    <p class="text-sm text-on-surface/70 leading-relaxed">Nossa equipe atende prontamente para tirar dúvidas técnicas e enviar propostas comerciais sem burocracia.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {owners_html}
 
-    <!-- FOOTER & WHATSAPP FLOATING -->
+    <!-- AVALIAÇÕES / PROVA SOCIAL -->
+    <section id="avaliacoes" class="py-20 bg-surface-container/20 border-t border-outline-variant">
+        <div class="max-w-[1320px] mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-14">
+                <span class="text-primary text-xs uppercase tracking-widest font-bold">Reputação Comprovada</span>
+                <h3 class="text-3xl font-extrabold mt-2 text-on-surface">Reconhecido pelos nossos clientes</h3>
+            </div>
+            <div class="max-w-3xl mx-auto bg-surface-container p-8 rounded-3xl border border-outline-variant flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="text-3xl font-extrabold text-primary">{rating}</span>
+                        <div class="flex text-amber-400 text-lg">★★★★★</div>
+                    </div>
+                    <p class="text-sm text-on-surface font-semibold">Avaliação consolidada no Google Business</p>
+                    <p class="text-xs text-on-surface/60 mt-1">Mais de {reviews_count} clientes satisfeitos com atendimento, preço e qualidade.</p>
+                </div>
+                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="shrink-0 bg-primary text-background font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">chat</span>
+                    Solicitar Atendimento VIP
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- LOCALIZAÇÃO & CONTATO -->
+    <section id="localizacao" class="py-20 border-t border-outline-variant">
+        <div class="max-w-[1320px] mx-auto px-6 text-center">
+            <div class="max-w-2xl mx-auto">
+                <span class="text-primary text-xs uppercase tracking-widest font-bold">Venha nos Conhecer</span>
+                <h3 class="text-3xl font-extrabold mt-2 mb-4 text-on-surface">Visite Nossa Unidade</h3>
+                <p class="text-sm text-on-surface/70 mb-8 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-primary">location_on</span>
+                    {address}
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="https://maps.google.com/?q={urllib.parse.quote(name + ' ' + address)}" target="_blank" class="px-6 py-3.5 rounded-xl bg-surface-container border border-outline-variant hover:border-primary text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-base">map</span>
+                        Abrir no Google Maps
+                    </a>
+                    <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-base">chat</span>
+                        Chamar no WhatsApp
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
     <footer class="py-12 bg-background border-t border-outline-variant text-center text-xs text-on-surface/60">
-        <p class="mb-2">© 2026 {name}. Todos os direitos reservados. {address}.</p>
-        <p>Desenvolvido com foco em alta performance e conformidade técnica.</p>
+        <div class="max-w-[1320px] mx-auto px-6">
+            <p class="mb-2 font-medium">© 2026 {name}. Todos os direitos reservados. {address}.</p>
+            <p class="text-[11px] text-on-surface/40">Desenvolvido com foco em alta performance, velocidade e conversão.</p>
+        </div>
     </footer>
 
-    <!-- STICKY WHATSAPP BUTTON -->
+    <!-- STICKY FLOATING WHATSAPP BUTTON -->
     <div class="fixed bottom-6 right-6 z-50">
-        <a href="https://wa.me/{clean_phone}?text=Olá,%20vim%20pelo%20site%20e%20gostaria%20de%20atendimento." target="_blank" class="flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba59] text-gray-950 font-bold px-4 py-3 rounded-full shadow-2xl transition-transform hover:scale-110">
-            <span class="relative flex h-3 w-3">
+        <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba59] text-gray-950 font-extrabold px-5 py-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-110">
+            <span class="relative flex h-3.5 w-3.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-white"></span>
             </span>
             <span class="material-symbols-outlined text-2xl">chat</span>
-            <span class="text-xs uppercase tracking-wider pr-1">Atendimento Online</span>
+            <span class="text-xs uppercase tracking-wider pr-1">Atendimento WhatsApp</span>
         </a>
     </div>
 </body>

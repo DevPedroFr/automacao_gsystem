@@ -318,6 +318,7 @@ async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
             brand_colors=brand_colors,
             owners=owners,
             logo_url=lead.logo_url or lead.image_url,
+            diagnostic_data=diagnostic_dict,
         )
 
         diagnostic.generated_site_html = html_code
