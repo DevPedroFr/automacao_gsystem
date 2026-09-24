@@ -5,8 +5,10 @@ Porta fiel das rotas do backend Node.js (routes/diagnostics.js).
 import uuid
 import logging
 from datetime import datetime
+from typing import Optional, Dict, Any, List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -234,9 +236,26 @@ def get_diagnostic(lead_id: str, db: Session = Depends(get_db)):
     return {"data": _diag_to_dict(diagnostic)}
 
 
+class GenerateLPPayload(BaseModel):
+    archetype_id: Optional[str] = None
+
+
+@router.get("/api/design-archetypes", summary="Lista modelos e arquétipos de design de inspiração")
+@router.get("/design-archetypes", include_in_schema=False)
+def get_design_archetypes():
+    """GET /api/design-archetypes — Retorna os modelos de inspiração arquitetural."""
+    from app.services.design_archetypes import DesignArchetypes
+    return {"data": DesignArchetypes.list_archetypes()}
+
+
 @router.post("/api/leads/{lead_id}/generate-lp", summary="Gera a Landing Page sob medida a partir do diagnóstico")
 @router.post("/leads/{lead_id}/generate-lp", include_in_schema=False)
-async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
+async def generate_landing_page(
+    lead_id: str,
+    payload: Optional[GenerateLPPayload] = None,
+    archetype: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
     """
     POST /api/leads/:leadId/generate-lp
     1. Busca o diagnóstico e dados do lead.
@@ -297,12 +316,28 @@ async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
             "talking_points": diagnostic.talking_points,
         }
 
+        # Determina o arquétipo visual (modelo de inspiração)
+        chosen_archetype = (payload.archetype_id if payload else None) or archetype
+        if not chosen_archetype or chosen_archetype == "auto":
+            niche_key = LPPromptEngine.detect_niche(lead.name, lead.category)
+            if niche_key == "construcao":
+                chosen_archetype = "showcase_catalog"
+            elif niche_key == "advocacia":
+                chosen_archetype = "clean_editorial"
+            elif niche_key in ["odontologia", "medicina"]:
+                chosen_archetype = "authority_proof"
+            elif niche_key == "automotivo":
+                chosen_archetype = "split_dynamic"
+            else:
+                chosen_archetype = "cro_high_impact"
+
         custom_prompt = LPPromptEngine.build_custom_prompt(
             lead_data=lead_dict,
             diagnostic_data=diagnostic_dict,
             brand_colors=brand_colors,
             owners_info=owners,
             logo_url=lead.logo_url or lead.image_url,
+            archetype_id=chosen_archetype,
         )
 
         # Salva o prompt customizado
@@ -319,6 +354,7 @@ async def generate_landing_page(lead_id: str, db: Session = Depends(get_db)):
             owners=owners,
             logo_url=lead.logo_url or lead.image_url,
             diagnostic_data=diagnostic_dict,
+            archetype_id=chosen_archetype,
         )
 
         diagnostic.generated_site_html = html_code

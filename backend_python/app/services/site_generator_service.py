@@ -26,6 +26,7 @@ class SiteGeneratorService:
         owners: List[Dict[str, str]],
         logo_url: Optional[str] = None,
         diagnostic_data: Optional[Dict[str, Any]] = None,
+        archetype_id: Optional[str] = None,
     ) -> str:
         """
         Gera o código HTML completo e independente com Tailwind CSS.
@@ -84,7 +85,8 @@ class SiteGeneratorService:
             brand_colors=brand_colors,
             owners=owners,
             logo_url=logo_url,
-            diagnostic_data=diagnostic_data
+            diagnostic_data=diagnostic_data,
+            archetype_id=archetype_id,
         )
 
     @classmethod
@@ -95,6 +97,7 @@ class SiteGeneratorService:
         owners: List[Dict[str, str]],
         logo_url: Optional[str] = None,
         diagnostic_data: Optional[Dict[str, Any]] = None,
+        archetype_id: Optional[str] = None,
     ) -> str:
         """
         Gerador local resiliente que compõe a Landing Page em HTML/Tailwind
@@ -129,18 +132,22 @@ class SiteGeneratorService:
 
         # Montar Cards de Soluções/Produtos do Nicho
         cards_html = ""
-        for card in niche_rules.get("solution_cards", []):
+        for idx, card in enumerate(niche_rules.get("solution_cards", []), start=1):
+            num_str = f"0{idx}" if idx < 10 else str(idx)
             cards_html += f"""
-            <div class="p-6 rounded-2xl bg-surface-container border border-outline-variant hover:border-primary/50 transition-all duration-300 flex flex-col justify-between group">
+            <div class="p-5 sm:p-6 rounded-2xl bg-surface-container border border-outline-variant hover:border-primary/50 transition-all duration-300 flex flex-col justify-between group">
                 <div>
-                    <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
-                        <span class="material-symbols-outlined text-2xl">{card.get('icon', 'check_circle')}</span>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-2xl">{card.get('icon', 'check_circle')}</span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-on-surface/30">{num_str}</span>
                     </div>
-                    <h4 class="text-xl font-bold text-on-surface mb-2">{card.get('title')}</h4>
-                    <p class="text-sm text-on-surface/70 leading-relaxed mb-4">{card.get('desc')}</p>
+                    <h4 class="text-lg sm:text-xl font-bold text-on-surface mb-2">{card.get('title')}</h4>
+                    <p class="text-xs sm:text-sm text-on-surface/70 leading-relaxed mb-5">{card.get('desc')}</p>
                 </div>
-                <a href="https://wa.me/{clean_phone}?text={urllib.parse.quote(f'Olá! Gostaria de um orçamento sobre {card.get("title")}.')}" target="_blank" class="text-xs font-bold text-primary flex items-center gap-1 hover:underline mt-auto">
-                    Consultar Disponibilidade & Orçamento
+                <a href="https://wa.me/{clean_phone}?text={urllib.parse.quote(f'Olá! Gostaria de um orçamento sobre {card.get("title")}.')}" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-background font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all text-center mt-auto">
+                    <span>Pedir Cotação</span>
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
             </div>
@@ -177,13 +184,13 @@ class SiteGeneratorService:
             </section>
             """
 
-        logo_elem = f'<img src="{logo_url}" alt="{name}" class="h-10 w-auto object-contain" />' if logo_url else f'<span class="text-xl font-bold text-primary tracking-tight">{name}</span>'
+        logo_elem = f'<img src="{logo_url}" alt="{name}" class="h-8 sm:h-10 w-auto object-contain max-w-[140px] sm:max-w-none" />' if logo_url else f'<span class="text-sm sm:text-base md:text-lg font-bold text-primary tracking-tight truncate max-w-[170px] sm:max-w-xs">{name}</span>'
 
         return f"""<!DOCTYPE html>
 <html lang="pt-BR" class="dark scroll-smooth">
 <head>
     <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0"/>
     <title>{name} | {niche_rules['name']}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
@@ -212,58 +219,58 @@ class SiteGeneratorService:
     </script>
 </head>
 <body class="bg-background text-on-surface font-sans antialiased selection:bg-primary selection:text-background">
-    <!-- TOP NAVIGATION -->
-    <header class="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-outline-variant">
-        <div class="max-w-[1320px] mx-auto px-6 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-3">
+    <!-- TOP NAVIGATION (100% RESPONSIVA) -->
+    <header class="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-outline-variant">
+        <div class="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 sm:h-20 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2 min-w-0">
                 {logo_elem}
             </div>
-            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold">
+            <nav class="hidden lg:flex items-center gap-7 text-sm font-semibold">
                 <a href="#solucoes" class="hover:text-primary transition-colors">Produtos & Serviços</a>
                 <a href="#diferenciais" class="hover:text-primary transition-colors">Diferenciais</a>
                 <a href="#avaliacoes" class="hover:text-primary transition-colors">Avaliações</a>
                 <a href="#localizacao" class="hover:text-primary transition-colors">Localização</a>
             </nav>
-            <div class="flex items-center gap-4">
-                <a href="tel:{clean_phone}" class="hidden sm:flex items-center gap-2 text-xs font-semibold px-4 py-2 border border-outline-variant rounded-lg hover:border-primary transition-colors">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <a href="tel:{clean_phone}" class="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 border border-outline-variant rounded-lg hover:border-primary transition-colors">
                     <span class="material-symbols-outlined text-primary text-base">call</span>
-                    {phone}
+                    <span>{phone}</span>
                 </a>
-                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg shadow-lg hover:opacity-90 transition-opacity flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-base">chat</span>
-                    {cta_label}
+                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-bold text-[11px] sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-md hover:opacity-95 active:scale-95 transition-all inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <span class="material-symbols-outlined text-sm sm:text-base">chat</span>
+                    <span>{cta_label}</span>
                 </a>
             </div>
         </div>
     </header>
 
     <!-- HERO SECTION -->
-    <section class="py-20 md:py-28 relative overflow-hidden">
-        <div class="max-w-[1320px] mx-auto px-6 relative z-10">
+    <section class="py-12 sm:py-20 md:py-28 relative overflow-hidden">
+        <div class="max-w-[1320px] mx-auto px-4 sm:px-6 relative z-10">
             <div class="max-w-4xl mx-auto text-center flex flex-col items-center">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container border border-primary/30 mb-6 text-xs text-primary font-bold tracking-wider uppercase shadow-sm">
-                    <span class="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-                    {hero_badge}
+                <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container border border-primary/30 mb-5 text-[11px] sm:text-xs text-primary font-bold tracking-wider uppercase shadow-sm max-w-full">
+                    <span class="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0"></span>
+                    <span class="truncate">{hero_badge}</span>
                 </div>
-                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6 text-on-surface">
+                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight sm:leading-tight mb-5 text-on-surface">
                     {headline}
                 </h1>
-                <p class="text-base md:text-xl text-on-surface/80 max-w-2xl mb-10 leading-relaxed font-normal">
+                <p class="text-sm sm:text-base md:text-lg text-on-surface/80 max-w-2xl mb-8 sm:mb-10 leading-relaxed font-normal">
                     {subheadline}
                 </p>
-                <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
-                    <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-extrabold px-8 py-4 rounded-xl shadow-xl hover:scale-105 transition-all flex items-center justify-center gap-2 text-sm uppercase tracking-wider">
-                        <span class="material-symbols-outlined text-xl">chat</span>
-                        {cta_label}
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md sm:max-w-none sm:w-auto justify-center items-stretch sm:items-center">
+                    <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="w-full sm:w-auto bg-primary text-background font-extrabold px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider text-center">
+                        <span class="material-symbols-outlined text-lg sm:text-xl">chat</span>
+                        <span>{cta_label}</span>
                     </a>
-                    <a href="tel:{clean_phone}" class="px-6 py-4 rounded-xl border border-outline-variant bg-surface-container hover:border-primary/50 transition-colors flex items-center justify-center gap-2 text-sm font-bold text-on-surface">
-                        <span class="material-symbols-outlined text-lg text-primary">call</span>
-                        Ligue Agora: {phone}
+                    <a href="tel:{clean_phone}" class="w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-xl border border-outline-variant bg-surface-container hover:border-primary/50 transition-colors inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-bold text-on-surface text-center">
+                        <span class="material-symbols-outlined text-base sm:text-lg text-primary">call</span>
+                        <span>Ligue: {phone}</span>
                     </a>
                 </div>
                 <!-- SOCIAL PROOF BADGE -->
-                <div class="mt-12 inline-flex items-center gap-3 px-4 py-2 rounded-full bg-surface-container border border-outline-variant text-xs text-on-surface/80">
-                    <div class="flex text-amber-400 text-sm">
+                <div class="mt-8 sm:mt-12 inline-flex items-center gap-2 sm:gap-3 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-surface-container border border-outline-variant text-[11px] sm:text-xs text-on-surface/80">
+                    <div class="flex text-amber-400 text-xs sm:text-sm tracking-tighter">
                         ★★★★★
                     </div>
                     <span><strong>{rating} de 5.0 estrelas</strong> no Google ({reviews_count}+ avaliações reais)</span>
@@ -377,15 +384,15 @@ class SiteGeneratorService:
         </div>
     </footer>
 
-    <!-- STICKY FLOATING WHATSAPP BUTTON -->
-    <div class="fixed bottom-6 right-6 z-50">
-        <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20ba59] text-gray-950 font-extrabold px-5 py-3.5 rounded-full shadow-2xl transition-all duration-300 hover:scale-110">
-            <span class="relative flex h-3.5 w-3.5">
+    <!-- STICKY FLOATING WHATSAPP BUTTON (COMPACTO NO MOBILE / EXPANDIDO NO DESKTOP) -->
+    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
+        <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="flex items-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-gray-950 font-extrabold p-3 sm:px-4 sm:py-3 rounded-full shadow-[0_4px_25px_rgba(37,211,102,0.4)] transition-all duration-300 hover:scale-110 active:scale-95" title="Falar no WhatsApp">
+            <span class="relative flex h-3 w-3">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-white"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
             </span>
-            <span class="material-symbols-outlined text-2xl">chat</span>
-            <span class="text-xs uppercase tracking-wider pr-1">Atendimento WhatsApp</span>
+            <span class="material-symbols-outlined text-2xl sm:text-xl">chat</span>
+            <span class="hidden sm:inline text-xs uppercase tracking-wider pr-1">Atendimento WhatsApp</span>
         </a>
     </div>
 </body>

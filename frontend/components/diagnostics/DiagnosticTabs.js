@@ -13,11 +13,21 @@ const tabs = [
   { key: 'stitch', label: 'Landing Page Sob Medida 🚀', icon: <Sparkles size={16} /> },
 ];
 
+const ARCHETYPES = [
+  { id: 'auto', name: 'Automático', tag: 'Inteligente p/ Nicho', icon: '✨' },
+  { id: 'cro_high_impact', name: 'Moderno Alto Impacto', tag: 'Dark CRO & Ação', icon: '⚡' },
+  { id: 'showcase_catalog', name: 'Vitrine & Cotação', tag: 'Varejo & Catálogo', icon: '📦' },
+  { id: 'split_dynamic', name: 'Split Hero Dinâmico', tag: '2 Colunas & Expresso', icon: '🚀' },
+  { id: 'authority_proof', name: 'Máxima Autoridade', tag: 'Prova Social & Confiança', icon: '🏆' },
+  { id: 'clean_editorial', name: 'Editorial Clean', tag: 'Minimalista & Elegante', icon: '📰' },
+];
+
 export default function DiagnosticTabs({ diagnostic = {} }) {
   const [activeTab, setActiveTab] = useState('panel');
   const [copiedTab, setCopiedTab] = useState(null);
   const [isGeneratingSite, setIsGeneratingSite] = useState(false);
   const [siteData, setSiteData] = useState(diagnostic);
+  const [selectedArchetype, setSelectedArchetype] = useState('auto');
   const [viewMode, setViewMode] = useState('desktop');
   const [generationError, setGenerationError] = useState(null);
   const [showPromptCode, setShowPromptCode] = useState(false);
@@ -368,6 +378,7 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
         try {
           const jsonResp = await fetchApi(`/leads/${currentLeadId}/generate-lp`, {
             method: 'POST',
+            body: JSON.stringify({ archetype_id: selectedArchetype }),
           });
           setSiteData(jsonResp.data);
           if (diagnostic) {
@@ -445,6 +456,38 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
                   )}
                 </div>
               )}
+              {/* Seletor de Modelos de Inspiração (Arquétipos) */}
+              <div className="mt-4 pt-3 border-t border-gray-700/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wand2 size={13} className="text-cyan-400" />
+                  <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">
+                    Modelo de Inspiração Visual / Arquitetura:
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                  {ARCHETYPES.map((arch) => {
+                    const isSelected = selectedArchetype === arch.id;
+                    return (
+                      <button
+                        key={arch.id}
+                        type="button"
+                        onClick={() => setSelectedArchetype(arch.id)}
+                        className={`p-2 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-[0_0_12px_rgba(6,182,212,0.3)] ring-1 ring-cyan-400'
+                            : 'bg-gray-900/60 border-gray-700/70 text-gray-400 hover:border-gray-500 hover:text-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 text-xs font-bold truncate">
+                          <span>{arch.icon}</span>
+                          <span className="truncate">{arch.name}</span>
+                        </div>
+                        <span className="text-[10px] text-gray-400 truncate block mt-0.5">{arch.tag}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {generationError && (
                 <div className="mt-3 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-lg">

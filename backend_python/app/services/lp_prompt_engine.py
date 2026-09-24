@@ -1,3 +1,4 @@
+from app.services.design_archetypes import DesignArchetypes
 import json
 from typing import Dict, Any, Optional, List
 
@@ -266,6 +267,7 @@ class LPPromptEngine:
         owners_info: Optional[List[Dict[str, str]]] = None,
         logo_url: Optional[str] = None,
         gallery_urls: Optional[List[str]] = None,
+        archetype_id: Optional[str] = None,
     ) -> str:
         """
         Gera o prompt em inglês ultra-específico e contextual para a IA / Google Stitch,
@@ -274,6 +276,7 @@ class LPPromptEngine:
         lead_name = lead_data.get("name", "Empresa")
         niche_key = cls.detect_niche(lead_name, lead_data.get("category"))
         rules = cls.NICHE_RULES.get(niche_key, cls.NICHE_RULES["geral"])
+        archetype = DesignArchetypes.get_archetype(archetype_id)
 
         # Cores detectadas ou padrão
         colors = brand_colors or rules["default_colors"]
@@ -314,6 +317,9 @@ class LPPromptEngine:
         gallery_spec = f"Use realistic local photos: {gallery_urls}." if gallery_urls else f"Use high-quality commercial photography strictly matching {rules['name']}."
 
         prompt = f"""Create an exceptional, high-converting, mobile-first website for '{lead_name}', operating strictly in the '{rules['name']}' industry.
+
+### ARCHITECTURAL INSPIRATION MODEL & DESIGN PATTERN ({archetype['name']} - {archetype['tag']}):
+{archetype['prompt_spec']}
 
 ### CRITICAL INDUSTRY & BUSINESS CONSTRAINTS:
 - Industry Segment: {rules['name']}
