@@ -311,6 +311,20 @@ class LPPromptEngine:
         approach = diagnostic_data.get("sales_approach") or "Direct instant WhatsApp quote and consultation"
         whatsapp = lead_data.get("phone") or "(11) 99999-9999"
         address = lead_data.get("address") or lead_data.get("city") or "Brasil"
+        niche_insights = diagnostic_data.get("niche_insights") or ""
+
+        # Gafes comerciais detectadas (contextualização para o gerador)
+        blunders_context = ""
+        blunders_list = diagnostic_data.get("critical_blunders") or []
+        if blunders_list:
+            blunder_lines = []
+            for b in blunders_list:
+                if isinstance(b, dict):
+                    blunder_lines.append(
+                        f"  - BLUNDER [{b.get('severity', 'HIGH')}]: {b.get('title', '')} → "
+                        f"LP MUST solve this by: {b.get('lp_solution', '')}"
+                    )
+            blunders_context = "\n".join(blunder_lines)
 
         # Fotos e Logo
         logo_spec = f"Logo: Use official logo at '{logo_url}'." if logo_url else "Logo: Clean modern typographic brand badge."
@@ -345,18 +359,24 @@ class LPPromptEngine:
 - Direct WhatsApp Contact: {whatsapp}
 - Physical Location: {address}
 {owners_clause}
+### CRITICAL BUSINESS BLUNDERS DETECTED (The LP MUST address these):
+{blunders_context or '  No critical blunders detected — focus on maximum conversion and trust.'}
+
+### NICHE-SPECIFIC STRATEGIC INSIGHT:
+{niche_insights or f'Focus on what differentiates {lead_name} from competitors in the {rules["name"]} segment.'}
+
 ### MANDATORY PAGE ARCHITECTURE (CRO OPTIMIZED):
 1. Sticky Header: Logo, navigation anchor links (Soluções, Diferenciais, Avaliações, Contato), phone number badge, and '{rules['cta_label']}' button.
 2. High-Impact Hero Section:
    - Badge with pulsing green or accent dot: '{rules['hero_badge']}'
-   - Powerful H1 Headline: Tailored to {lead_name} and {rules['name']} (e.g. '{rules['headline']}').
+   - Powerful H1 Headline: Tailored to {lead_name} and {rules['name']}. MUST directly address the #1 blunder detected (e.g. if 'invisible catalog' → headline about complete product showcase).
    - Descriptive Subheadline addressing customer pains and advantages.
    - Dual CTAs: Primary prominent WhatsApp button + secondary phone or catalog action.
    - Google Rating & Social Proof badge with 5 golden stars.
-3. Solutions / Products Grid: 4 high-converting product/service categories specific to {rules['name']}.
-4. Trust & Authority Section: Highlighting Google reviews, fast local delivery or service, and founding leadership.
+3. Solutions / Products Grid: 4 high-converting product/service categories specific to {rules['name']}. Each card MUST have a direct WhatsApp quote button.
+4. Trust & Authority Section: Highlighting Google reviews, fast local delivery or service, and founding leadership. MUST include trust badges (Garantia, Pronta-Entrega, Empresa Verificada).
 5. Location & Map CTA: Physical address, opening hours, and direct call-to-action.
 6. Footer: Copyright 2026 {lead_name}, address, and contact information.
-7. Fixed Floating WhatsApp Button: Pulsing bottom-right button for instant conversions.
+7. Fixed Floating WhatsApp Button: Pulsing bottom-right button for instant conversions — ZERO friction contact.
 """
         return prompt

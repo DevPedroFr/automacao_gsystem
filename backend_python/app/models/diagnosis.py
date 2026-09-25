@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class RecommendationItem(BaseModel):
@@ -29,6 +29,40 @@ class DiagnosticInference(BaseModel):
     text: str
 
 
+class CriticalBlunder(BaseModel):
+    """Uma gafe comercial crítica identificada que custa clientes e dinheiro."""
+    id: str                     # ex: "search_leak", "contact_friction"
+    title: str                  # ex: "Vazamento de Busca Local"
+    icon: str                   # Material Symbol icon name
+    severity: str               # "CRITICAL", "HIGH", "MEDIUM"
+    description: str            # Explicação geral da gafe
+    detected_reason: str        # Motivo específico detectado neste lead
+    financial_impact: str       # Impacto financeiro estimado
+    lp_solution: str            # Como a Landing Page resolve
+
+
+class TransformationItem(BaseModel):
+    """Item da Matriz de Transformação: problema → impacto → solução → ganho."""
+    problem: str
+    detected_detail: str
+    financial_impact: str
+    lp_solution: str
+    expected_gain: str
+
+
+class RevenueLeak(BaseModel):
+    """Estimativa de vazamento financeiro de oportunidades perdidas."""
+    city_size: str
+    monthly_searches: Dict[str, int]
+    estimated_visitors: Dict[str, int]
+    lost_leads_per_month: Dict[str, int]
+    estimated_revenue_lost: Dict[str, int]
+    avg_ticket_range: Dict[str, int]
+    blunders_detected: int
+    loss_severity: str
+    summary: str
+
+
 class DiagnosisResult(BaseModel):
     lead_name: str
     overall_summary: str
@@ -42,6 +76,11 @@ class DiagnosisResult(BaseModel):
     facts: Optional[List[DiagnosticFact]] = None
     inferences: Optional[List[DiagnosticInference]] = None
     sales_recommendation: Optional[SalesRecommendation] = None
+    # ========== NOVOS CAMPOS DO DIAGNÓSTICO CONSULTIVO 360° ==========
+    critical_blunders: Optional[List[CriticalBlunder]] = None
+    transformation_matrix: Optional[List[TransformationItem]] = None
+    revenue_leak: Optional[RevenueLeak] = None
+    niche_insights: Optional[str] = None  # Insight estratégico específico do nicho
 
 
 class StitchPromptResult(BaseModel):
@@ -49,4 +88,3 @@ class StitchPromptResult(BaseModel):
     stitch_prompt: str
     suggested_components: List[str]
     brand_identity: Optional[str] = None
-

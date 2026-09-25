@@ -662,7 +662,156 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
         {/* Tab body content */}
         <div className="pt-8">
           {activeTab === 'panel' 
-            ? renderDashboardPanel(categories) 
+            ? (
+              <div className="space-y-8">
+                {/* Dashboard de Pilares existente */}
+                {renderDashboardPanel(categories)}
+
+                {/* ===== GAFES CRÍTICAS ENCONTRADAS ===== */}
+                {diagnostic.critical_blunders && diagnostic.critical_blunders.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="text-xl">🚨</span>
+                      <h3 className="text-sm font-extrabold uppercase tracking-wider text-rose-400">
+                        Gafes Críticas Encontradas ({diagnostic.critical_blunders.length})
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {diagnostic.critical_blunders.map((blunder, idx) => {
+                        const severityStyles = {
+                          CRITICAL: 'border-rose-500/40 bg-rose-500/10',
+                          HIGH: 'border-amber-500/40 bg-amber-500/10',
+                          MEDIUM: 'border-yellow-500/30 bg-yellow-500/5',
+                        };
+                        const severityBadge = {
+                          CRITICAL: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+                          HIGH: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                          MEDIUM: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                        };
+                        return (
+                          <div key={idx} className={`p-4 rounded-xl border ${severityStyles[blunder.severity] || severityStyles.MEDIUM} transition-all hover:scale-[1.01]`}>
+                            <div className="flex items-start gap-3">
+                              <span className="material-symbols-outlined text-xl text-gray-300 mt-0.5" style={{fontVariationSettings: "'FILL' 0, 'wght' 400"}}>{blunder.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                  <h4 className="text-xs font-bold text-gray-100">{blunder.title}</h4>
+                                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded border ${severityBadge[blunder.severity] || severityBadge.MEDIUM}`}>
+                                    {blunder.severity}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-gray-300 leading-relaxed mb-2">{blunder.detected_reason}</p>
+                                <div className="text-[10px] text-gray-500 flex items-start gap-1">
+                                  <span className="shrink-0">📉</span>
+                                  <span>{blunder.financial_impact}</span>
+                                </div>
+                                <div className="text-[10px] text-emerald-400/80 flex items-start gap-1 mt-1">
+                                  <span className="shrink-0">✅</span>
+                                  <span className="font-medium">Solução LP: {blunder.lp_solution}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== VAZAMENTO FINANCEIRO ESTIMADO ===== */}
+                {diagnostic.revenue_leak && (
+                  <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-500/10 via-amber-500/5 to-transparent border border-rose-500/25">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="text-xl">💸</span>
+                      <h3 className="text-sm font-extrabold uppercase tracking-wider text-rose-400">
+                        Vazamento Financeiro Estimado
+                      </h3>
+                      <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${
+                        diagnostic.revenue_leak.loss_severity === 'CRÍTICO' 
+                          ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                          : diagnostic.revenue_leak.loss_severity === 'ALTO'
+                            ? 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                            : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      }`}>
+                        {diagnostic.revenue_leak.loss_severity}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-200 leading-relaxed mb-4 font-medium">
+                      {diagnostic.revenue_leak.summary}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3 rounded-xl bg-gray-900/60 border border-gray-700/50 text-center">
+                        <p className="text-lg font-extrabold text-cyan-400">
+                          {diagnostic.revenue_leak.monthly_searches?.low}-{diagnostic.revenue_leak.monthly_searches?.high}
+                        </p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Buscas/mês</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-gray-900/60 border border-gray-700/50 text-center">
+                        <p className="text-lg font-extrabold text-amber-400">
+                          {diagnostic.revenue_leak.lost_leads_per_month?.low}-{diagnostic.revenue_leak.lost_leads_per_month?.high}
+                        </p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Leads perdidos/mês</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-gray-900/60 border border-gray-700/50 text-center">
+                        <p className="text-lg font-extrabold text-rose-400">
+                          R$ {(diagnostic.revenue_leak.estimated_revenue_lost?.low || 0).toLocaleString('pt-BR')}
+                        </p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Perda mínima/mês</p>
+                      </div>
+                      <div className="p-3 rounded-xl bg-gray-900/60 border border-gray-700/50 text-center">
+                        <p className="text-lg font-extrabold text-rose-400">
+                          R$ {(diagnostic.revenue_leak.estimated_revenue_lost?.high || 0).toLocaleString('pt-BR')}
+                        </p>
+                        <p className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Perda máxima/mês</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== MATRIZ DE TRANSFORMAÇÃO DA LP ===== */}
+                {diagnostic.transformation_matrix && diagnostic.transformation_matrix.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <span className="text-xl">🔄</span>
+                      <h3 className="text-sm font-extrabold uppercase tracking-wider text-emerald-400">
+                        O Que a Landing Page Resolve
+                      </h3>
+                    </div>
+                    <div className="space-y-3">
+                      {diagnostic.transformation_matrix.map((item, idx) => (
+                        <div key={idx} className="p-4 rounded-xl bg-gray-900/60 border border-gray-700/40 hover:border-emerald-500/30 transition-all">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-rose-400 text-xs font-bold">❌ Problema:</span>
+                            <span className="text-xs text-gray-200 font-semibold">{item.problem}</span>
+                          </div>
+                          <p className="text-[11px] text-gray-400 mb-2 pl-5">{item.detected_detail}</p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-emerald-400 text-xs font-bold">✅ Solução LP:</span>
+                            <span className="text-[11px] text-gray-300">{item.lp_solution}</span>
+                          </div>
+                          <div className="flex items-center gap-2 pl-5 mt-1">
+                            <span className="text-cyan-400 text-[10px] font-bold">📈 Ganho:</span>
+                            <span className="text-[10px] text-gray-400">{item.expected_gain}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== INSIGHT ESTRATÉGICO DO NICHO ===== */}
+                {diagnostic.niche_insights && (
+                  <div className="p-4 rounded-xl bg-purple-500/10 border border-purple-500/25">
+                    <div className="flex items-start gap-3">
+                      <span className="text-lg">🧠</span>
+                      <div>
+                        <h4 className="text-xs font-extrabold uppercase tracking-wider text-purple-400 mb-1.5">Insight Estratégico do Setor</h4>
+                        <p className="text-xs text-gray-300 leading-relaxed">{formatBoldText(diagnostic.niche_insights)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
             : activeTab === 'recommendations'
               ? renderSalesRecommendations()
               : renderFormattedContent(contentMap[activeTab], activeTab)}

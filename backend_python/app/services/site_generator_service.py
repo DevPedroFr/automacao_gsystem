@@ -126,6 +126,8 @@ class SiteGeneratorService:
         hero_badge = niche_rules.get("hero_badge", "Excelência & Atendimento Especializado")
         headline = niche_rules.get("headline", f"{name} — Soluções Completas para Você")
         subheadline = niche_rules.get("subheadline", f"Qualidade, garantia e atendimento com quem entende do assunto em {address}.")
+        if diagnostic_data and diagnostic_data.get("value_proposition"):
+            subheadline = f"{diagnostic_data['value_proposition']} Qualidade garantida e atendimento especializado em {address}."
         cta_label = niche_rules.get("cta_label", "Falar no WhatsApp")
         whatsapp_msg = niche_rules.get("whatsapp_msg", f"Olá! Vim pelo site da {name} e gostaria de mais informações.")
         encoded_whatsapp_msg = urllib.parse.quote(whatsapp_msg)

@@ -110,6 +110,11 @@ class Diagnostic(Base):
     owners_info = Column(Text, nullable=True)          # JSON com dados dos sócios/fundadores
     logo_url = Column(String, nullable=True)           # URL ou path da logo
     generated_site_html = Column(Text, nullable=True)  # Código HTML da Landing Page gerada
+    # Diagnóstico Consultivo 360°
+    critical_blunders = Column(Text, nullable=True)    # JSON com gafes comerciais detectadas
+    transformation_matrix = Column(Text, nullable=True) # JSON com matriz de transformação da LP
+    revenue_leak = Column(Text, nullable=True)          # JSON com estimativa de vazamento financeiro
+    niche_insights = Column(Text, nullable=True)        # Insight estratégico do nicho
     diagnostic_status = Column(String, default="completed")
     error_message = Column(Text, nullable=True)
     generated_at = Column(DateTime, default=datetime.utcnow)

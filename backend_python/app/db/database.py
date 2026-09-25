@@ -83,6 +83,10 @@ def _apply_migrations(target_engine):
         ("diagnostics", "instagram_draft", "TEXT"),
         ("diagnostics", "diagnostic_status", "VARCHAR(50) DEFAULT 'completed'"),
         ("diagnostics", "error_message", "TEXT"),
+        ("diagnostics", "critical_blunders", "TEXT"),
+        ("diagnostics", "transformation_matrix", "TEXT"),
+        ("diagnostics", "revenue_leak", "TEXT"),
+        ("diagnostics", "niche_insights", "TEXT"),
     ]
 
     try:

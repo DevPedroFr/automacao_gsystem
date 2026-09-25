@@ -41,6 +41,28 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         except Exception:
             pass
 
+    # Diagnóstico Consultivo 360°
+    blunders_parsed = None
+    if getattr(d, "critical_blunders", None):
+        try:
+            blunders_parsed = json.loads(d.critical_blunders)
+        except Exception:
+            pass
+
+    matrix_parsed = None
+    if getattr(d, "transformation_matrix", None):
+        try:
+            matrix_parsed = json.loads(d.transformation_matrix)
+        except Exception:
+            pass
+
+    revenue_parsed = None
+    if getattr(d, "revenue_leak", None):
+        try:
+            revenue_parsed = json.loads(d.revenue_leak)
+        except Exception:
+            pass
+
     has_site = bool(getattr(d, "generated_site_html", None))
 
     return {
@@ -59,6 +81,11 @@ def _diag_to_dict(d: Diagnostic) -> dict:
         "whatsapp_draft": d.whatsapp_draft,
         "instagram_draft": d.instagram_draft,
         "stitch_prompt": d.stitch_prompt,
+        # Diagnóstico Consultivo 360°
+        "critical_blunders": blunders_parsed,
+        "transformation_matrix": matrix_parsed,
+        "revenue_leak": revenue_parsed,
+        "niche_insights": getattr(d, "niche_insights", None),
         # Landing Page & Ativos
         "brand_colors": brand_colors_parsed,
         "owners_info": owners_info_parsed,
@@ -176,6 +203,19 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         talking_points_text = "\n".join(f"- {t}" for t in sales.talking_points) if sales else None
         value_prop = sales.value_proposition if sales else None
 
+        # Serializar novos campos do Diagnóstico Consultivo 360°
+        blunders_json = None
+        if diagnosis_res.critical_blunders:
+            blunders_json = json.dumps([b.model_dump() for b in diagnosis_res.critical_blunders], ensure_ascii=False)
+
+        matrix_json = None
+        if diagnosis_res.transformation_matrix:
+            matrix_json = json.dumps([t.model_dump() for t in diagnosis_res.transformation_matrix], ensure_ascii=False)
+
+        revenue_json = None
+        if diagnosis_res.revenue_leak:
+            revenue_json = json.dumps(diagnosis_res.revenue_leak.model_dump(), ensure_ascii=False)
+
         diagnostic = Diagnostic(
             id=diag_id,
             lead_id=lead_id,
@@ -190,6 +230,10 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
             whatsapp_draft=diagnosis_res.whatsapp_draft,
             instagram_draft=diagnosis_res.instagram_draft,
             stitch_prompt=stitch_prompt_res.stitch_prompt if stitch_prompt_res else None,
+            critical_blunders=blunders_json,
+            transformation_matrix=matrix_json,
+            revenue_leak=revenue_json,
+            niche_insights=diagnosis_res.niche_insights,
             diagnostic_status="completed",
             generated_at=datetime.utcnow(),
         )
@@ -314,7 +358,18 @@ async def generate_landing_page(
             "value_proposition": diagnostic.value_proposition,
             "sales_approach": diagnostic.sales_approach,
             "talking_points": diagnostic.talking_points,
+            "niche_insights": getattr(diagnostic, "niche_insights", None),
         }
+
+        # Injetar gafes detectadas no contexto do gerador de LP
+        blunders_parsed = None
+        if getattr(diagnostic, "critical_blunders", None):
+            try:
+                blunders_parsed = json.loads(diagnostic.critical_blunders)
+            except Exception:
+                pass
+        if blunders_parsed:
+            diagnostic_dict["critical_blunders"] = blunders_parsed
 
         # Determina o arquétipo visual (modelo de inspiração)
         chosen_archetype = (payload.archetype_id if payload else None) or archetype
