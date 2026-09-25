@@ -6,14 +6,16 @@ const AUTH_TOKEN = 'authenticated_gp_2026_secure_token';
 export function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // 1. Rotas públicas liberadas sem autenticação
+  // 1. Rotas públicas liberadas sem autenticação (para clientes visualizarem sites gerados)
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
     pathname.includes('/lp-preview') || // Permite que leads visualizem a LP gerada
+    pathname.startsWith('/site/') ||    // Páginas públicas de clientes
+    pathname.startsWith('/p/') ||       // Páginas públicas de clientes
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|css|js)$/)
+    pathname.match(/\.(png|jpg|jpeg|svg|webp|ico|css|js|html)$/)
   ) {
     // Se já estiver logado e tentar acessar /login, manda pro dashboard
     if (pathname === '/login') {
