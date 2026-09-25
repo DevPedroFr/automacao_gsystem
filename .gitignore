@@ -16,6 +16,7 @@ backend_python/__pycache__/
 backend_python/**/__pycache__/
 backend_python/*.db
 backend_python/*.sqlite3
+!backend_python/database.sqlite
 
 # Environment variables
 .env
