@@ -532,76 +532,128 @@ REGRAS OBRIGATÓRIAS:
             niche_insights=data.get("niche_insights"),
         )
 
-    def _detect_segment(self, name: str) -> str:
-        n = name.lower()
-        if any(w in n for w in ["advog", "jurid", "direito", "associados", "oab"]):
-            return "escritório jurídico de advocacia — foco em autoridade, discrição, conformidade OAB e agendamento de consultas"
-        if any(w in n for w in ["odonto", "dent", "implant", "sorriso", "orto"]):
-            return "clínica odontológica — foco em estética do sorriso, antes/depois, tecnologia e agendamento rápido via WhatsApp"
-        if any(w in n for w in ["clinic", "medic", "doutor", "dr.", "saude", "oftalm", "dermato"]):
-            return "clínica médica de saúde — foco em especialidades, corpo clínico qualificado, humanização e agendamento"
-        if any(w in n for w in ["restaurante", "pizz", "burger", "bistr", "cafe", "culin"]):
-            return "restaurante gastronômico — cardápio visual interativo, fotos atraentes, delivery e reserva de mesas"
-        if any(w in n for w in ["salao", "beleza", "barbearia", "estetica", "spa", "hair"]):
-            return "centro de beleza e estética — portfólio visual, serviços em destaque e agendamento de horários"
-        if any(w in n for w in ["academia", "fitness", "crossfit", "treino", "personal"]):
-            return "academia e fitness — planos, modalidades, tour da estrutura e aula experimental grátis"
-        return "negócio local profissional — foco em credibilidade, diferenciais competitivos e captação de clientes via WhatsApp"
+    def _detect_segment(self, name: str, category: Optional[str] = None, address: Optional[str] = None) -> str:
+        from app.services.niche_profiles import detect_niche_profile
+        profile = detect_niche_profile(name, category, address)
+        return f"{profile['niche_pt']} ({profile['industry_en']}) — Foco em {profile['target_audience']}"
 
     async def generate_stitch_prompt(
         self, report: FullTriageReport, diagnosis: DiagnosisResult
     ) -> StitchPromptResult:
+        from app.services.niche_profiles import (
+            detect_niche_profile,
+            build_impeccable_site_prompt,
+            build_brand_identity_summary,
+        )
+
         lead = report.lead
-        segment = self._detect_segment(lead.name)
-        rating_info = f"{lead.rating}★ com {lead.user_rating_count or 0} avaliações no Google" if lead.rating else "negócio bem avaliado"
+        category = getattr(lead, "category", None)
+        profile = detect_niche_profile(lead.name, category, lead.formatted_address)
 
-        prompt = f"""Você é um engenheiro sênior especialista em prompts de UI para o Google Stitch AI.
-Crie um prompt em INGLÊS ultra-detalhado, modular e personalizado para o Stitch gerar a landing page perfeita para:
+        rating_info = (
+            f"Nota {lead.rating}/5.0 baseada em {lead.user_rating_count or 0} avaliações reais verificadas no Google Maps"
+            if lead.rating
+            else "Negócio com reputação local em consolidação"
+        )
 
-Negócio: {lead.name}
-Nicho / Segmento: {segment}
-Localização: {lead.formatted_address or 'Brasil'}
-WhatsApp / Telefone: {lead.national_phone_number or 'Disponível na página'}
-Reputação Google: {rating_info}
-Diagnóstico: {diagnosis.overall_summary}
+        sales = diagnosis.sales_recommendation
+        val_prop = sales.value_proposition if sales and sales.value_proposition else profile["sample_headline"]
+        pain_points_txt = ", ".join(sales.pain_points) if sales and sales.pain_points else ", ".join(profile["pain_points"])
+        talking_points_txt = ", ".join(sales.talking_points) if sales and sales.talking_points else ", ".join(profile["value_triggers"])
 
-Retorne estritamente um JSON com a estrutura:
+        prompt = f"""Você é o Arquiteto Líder de UI/UX e Especialista Sênior em Otimização de Conversão (CRO) da Google e Stitch AI.
+Sua missão é gerar uma ESPECIFICAÇÃO DE PROMPT COMPLETA, CIRÚRGICA E ULTRA-DETALHADA em INGLÊS para gerar a Landing Page definitiva do negócio abaixo.
+O prompt NÃO pode ser genérico. Ele deve conter os dados reais, o tom de voz do nicho, cores com códigos HEX exatos, títulos chamativos (copywriting de resposta direta), dores específicas dos clientes e componentes de alta conversão.
+
+[DADOS REAIS DA EMPRESA]:
+- Nome Oficial da Marca: {lead.name}
+- Nicho / Segmento Específico: {profile['niche_pt']} ({profile['industry_en']})
+- Público-Alvo: {profile['target_audience']}
+- Localização: {lead.formatted_address or lead.city or 'Brasil'}
+- WhatsApp / Contato Direto: {lead.national_phone_number or 'Disponível no botão'}
+- Reputação Google Maps: {rating_info}
+- Proposta de Valor Central: {val_prop}
+- Dores Reais do Consumidor deste Nicho: {pain_points_txt}
+- Diferenciais e Argumentos de Venda: {talking_points_txt}
+- Diagnóstico Técnico Atual: {diagnosis.overall_summary}
+- Paleta Cromática Sugerida: {profile['color_palette']}
+- Tipografia Recomendada: {profile['typography']}
+
+[ESTRUTURA OBRIGATÓRIA QUE O SEU STITCH_PROMPT DEVE CONTER EM INGLÊS]:
+O campo "stitch_prompt" deve ser um documento técnico de alto padrão formatado com Markdown contendo minuciosamente:
+1. PROJECT SPECIFICATION & ART DIRECTION: Identidade de marca ({lead.name}), atmosfera visual, paleta cromática completa com códigos HEX ({profile['color_palette']['primary']}, {profile['color_palette']['secondary']}, {profile['color_palette']['accent']}), tipografia ({profile['typography']['headings']} e {profile['typography']['body']}) e layout espaçoso sem poluição visual.
+2. HERO SECTION (ABOVE THE FOLD): Headline irresistível com promessa concreta sem clichês, subheadline resolvendo a maior dor do cliente, botão primário CTA com micro-copy persuasivo apontando para WhatsApp, e 3 Badges de Autoridade (estrelas reais do Google Maps, atendimento rápido, localização).
+3. SPECIALIZED SERVICES GRID: 4 a 6 serviços reais do nicho ({profile['core_services']}) com nomes específicos, benefício claro e botão individual de consulta.
+4. COMPETITIVE DIFFERENTIALS (WHY CHOOSE US): 3 a 4 pilares operacionais que resolvem as dores dos clientes e demonstram excelência.
+5. GOOGLE REPUTATION & REAL SOCIAL PROOF: Destaque da nota {lead.rating or 5.0}★ do Google Maps com 3 depoimentos autênticos contextualizados para este nicho.
+6. LOCATION CONVENIENCE & INTERACTIVE MAP: Endereço completo ({lead.formatted_address or 'Localidade'}), mapa incorporado, horários de atendimento e instruções de acesso/estacionamento.
+7. STICKY MOBILE CONVERSION BAR: Barra flutuante inferior fixa para dispositivos móveis com botão de ligar e botão pulsante de WhatsApp com link pronto.
+8. TECHNICAL EXCELLENCE: 100% responsivo, PageSpeed 95+, First Contentful Paint < 1.0s, sem elementos que causem Cumulative Layout Shift (CLS).
+
+Retorne ESTRITAMENTE um JSON no seguinte formato:
 {{
-  "stitch_prompt": "Prompt em inglês completo com especificações de seções, paleta de cores, tipografia, micro-interações e CTAs de alta conversão",
-  "suggested_components": ["HeroBanner", "ValueProposition", "ServicesGrid", "GoogleReviewsSection", "LocationMap", "WhatsAppFloatingCTA", "Footer"],
-  "brand_identity": "Descrição em português da identidade de marca sugerida (cores, tom de voz, estilo visual)"
+  "stitch_prompt": "O prompt técnico completo em inglês com todas as 8 seções minuciosamente detalhadas",
+  "suggested_components": [
+    "HeroSectionWithSplitLayout",
+    "TrustBadgesRow",
+    "ServicesGridWithIconBadges",
+    "CompetitiveEdgeMatrix",
+    "GoogleReputationShowcase",
+    "InteractiveLocalMapAndHours",
+    "StickyMobileWhatsAppBar",
+    "CleanFooterWithLegalInfo"
+  ],
+  "brand_identity": "Resumo executivo em português da identidade da marca (paleta HEX, tom de voz, tipografia e proposta de valor)"
 }}
 """
 
         try:
-            response_text = await self._call_gemini(prompt, max_tokens=2000)
+            response_text = await self._call_gemini(prompt, max_tokens=3000)
             data = self._extract_json(response_text)
-            logger.info(f"Stitch prompt gerado com sucesso via Gemini para {lead.name}")
-        except Exception as e:
-            logger.error(f"Falha na geração do Stitch prompt via Gemini ({e}). Usando fallback rico.")
-            rating_str = f" Include a dedicated Google Reviews showcase displaying {lead.rating}/5.0 stars and testimonials from real clients." if lead.rating else ""
+            stitch_prompt_val = data.get("stitch_prompt", "").strip()
+
+            # Se o retorno for pequeno ou incompleto, complementa com o construtor avançado
+            if not stitch_prompt_val or len(stitch_prompt_val) < 250:
+                logger.warning(f"Stitch prompt gerado via Gemini ficou muito curto ({len(stitch_prompt_val)} chars). Usando construtor especializado.")
+                stitch_prompt_val = build_impeccable_site_prompt(lead, profile, diagnosis)
+
+            brand_id_val = data.get("brand_identity") or build_brand_identity_summary(lead, profile, diagnosis)
+            components_val = data.get("suggested_components") or [
+                "HeroSectionWithSplitLayout",
+                "TrustBadgesRow",
+                "ServicesGridWithIconBadges",
+                "CompetitiveEdgeMatrix",
+                "GoogleReputationShowcase",
+                "InteractiveLocalMapAndHours",
+                "StickyMobileWhatsAppBar",
+                "CleanFooterWithLegalInfo"
+            ]
+
+            logger.info(f"Stitch prompt ultra-personalizado gerado com sucesso via Gemini para {lead.name} (Nicho: {profile['niche_pt']})")
             return StitchPromptResult(
                 lead_name=lead.name,
-                stitch_prompt=(
-                    f"Create a high-converting, mobile-first website for '{lead.name}', specialized as {segment}. "
-                    f"Location: {lead.formatted_address or 'Brasil'}. Phone/WhatsApp: {lead.national_phone_number or 'Contact via button'}. "
-                    f"Design style: Modern, dark mode luxury aesthetic with clean typography, smooth gradients, and high-contrast CTA buttons. "
-                    f"Structure: 1) Hero section with strong value proposition, professional imagery, and instant WhatsApp booking CTA. "
-                    f"2) Highlights and Trust Badges demonstrating market leadership. "
-                    f"3) Interactive Services & Solutions Grid with detailed cards and icon badges. "
-                    f"4) Social Proof & Reputation section.{rating_str} "
-                    f"5) Location & Hours section with embedded Google Maps interactive view. "
-                    f"6) Sticky bottom WhatsApp floating contact button for maximum mobile conversion. "
-                    f"7) Clean footer with address, contact numbers, and professional credentials. "
-                    f"Technical requirements: 100% responsive, optimized for PageSpeed 95+, accessible WCAG AA standards."
-                ),
-                suggested_components=["HeroBanner", "TrustBadges", "ServicesGrid", "SocialProof", "GoogleReviews", "LocationMap", "WhatsAppCTA", "Footer"],
-                brand_identity=f"Sofisticado, moderno e focado em alta conversão para {lead.name}",
+                stitch_prompt=stitch_prompt_val,
+                suggested_components=components_val,
+                brand_identity=brand_id_val,
             )
 
-        return StitchPromptResult(
-            lead_name=lead.name,
-            stitch_prompt=data.get("stitch_prompt", ""),
-            suggested_components=data.get("suggested_components", []),
-            brand_identity=data.get("brand_identity"),
-        )
+        except Exception as e:
+            logger.error(f"Falha na geração do Stitch prompt via Gemini ({e}). Usando gerador arquitetural especializado.")
+            fallback_prompt = build_impeccable_site_prompt(lead, profile, diagnosis)
+            fallback_brand = build_brand_identity_summary(lead, profile, diagnosis)
+            return StitchPromptResult(
+                lead_name=lead.name,
+                stitch_prompt=fallback_prompt,
+                suggested_components=[
+                    "HeroSectionWithSplitLayout",
+                    "TrustBadgesRow",
+                    "ServicesGridWithIconBadges",
+                    "CompetitiveEdgeMatrix",
+                    "GoogleReputationShowcase",
+                    "InteractiveLocalMapAndHours",
+                    "StickyMobileWhatsAppBar",
+                    "CleanFooterWithLegalInfo"
+                ],
+                brand_identity=fallback_brand,
+            )
+

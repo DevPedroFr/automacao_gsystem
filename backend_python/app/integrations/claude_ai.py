@@ -171,60 +171,127 @@ class ClaudeAIIntegration(LLMService):
     async def generate_stitch_prompt(
         self, report: FullTriageReport, diagnosis: DiagnosisResult
     ) -> StitchPromptResult:
+        from app.services.niche_profiles import (
+            detect_niche_profile,
+            build_impeccable_site_prompt,
+            build_brand_identity_summary,
+        )
+
+        lead = report.lead
+        category = getattr(lead, "category", None)
+        profile = detect_niche_profile(lead.name, category, lead.formatted_address)
+
         if not self.client:
+            fallback_prompt = build_impeccable_site_prompt(lead, profile, diagnosis)
+            fallback_brand = build_brand_identity_summary(lead, profile, diagnosis)
             return StitchPromptResult(
-                lead_name=report.lead.name,
-                stitch_prompt=(
-                    f"Create a high-converting, modern landing page for '{report.lead.name}'. "
-                    f"Location: {report.lead.formatted_address or 'Brasil'}. "
-                    f"Include hero section, service overview, customer testimonials, and direct WhatsApp contact CTA. "
-                    f"Style: Ultra sleek dark mode with vibrant accent colors."
-                ),
-                suggested_components=["Hero", "ServicesGrid", "Testimonials", "ContactForm", "Footer"],
-                brand_identity=f"Profissional e moderno para {report.lead.name}",
+                lead_name=lead.name,
+                stitch_prompt=fallback_prompt,
+                suggested_components=[
+                    "HeroSectionWithSplitLayout",
+                    "TrustBadgesRow",
+                    "ServicesGridWithIconBadges",
+                    "CompetitiveEdgeMatrix",
+                    "GoogleReputationShowcase",
+                    "InteractiveLocalMapAndHours",
+                    "StickyMobileWhatsAppBar",
+                    "CleanFooterWithLegalInfo"
+                ],
+                brand_identity=fallback_brand,
             )
 
+        rating_info = (
+            f"Nota {lead.rating}/5.0 baseada em {lead.user_rating_count or 0} avaliações reais verificadas no Google Maps"
+            if lead.rating
+            else "Negócio com reputação local em consolidação"
+        )
+        sales = diagnosis.sales_recommendation
+        val_prop = sales.value_proposition if sales and sales.value_proposition else profile["sample_headline"]
+        pain_points_txt = ", ".join(sales.pain_points) if sales and sales.pain_points else ", ".join(profile["pain_points"])
+        talking_points_txt = ", ".join(sales.talking_points) if sales and sales.talking_points else ", ".join(profile["value_triggers"])
+
         system_prompt = (
-            "Você é um engenheiro especialista em geração de UI via Google Stitch. "
-            "Crie um prompt detalhado e estruturado para o Google Stitch criar um site incrível para o lead. "
-            "Retorne um JSON com a estrutura:\n"
+            "Você é o Arquiteto Líder de UI/UX e Especialista Sênior em Otimização de Conversão (CRO) da Google e Stitch AI. "
+            "Sua missão é gerar uma ESPECIFICAÇÃO DE PROMPT COMPLETA, CIRÚRGICA E ULTRA-DETALHADA em INGLÊS para gerar a Landing Page definitiva do negócio. "
+            "O prompt NÃO pode ser genérico. Ele deve conter dados reais, paleta de cores HEX exatas, tipografia, seções modulares e botões de WhatsApp.\n\n"
+            "Retorne estritamente um JSON no seguinte formato:\n"
             "{\n"
-            '  "stitch_prompt": "...",\n'
-            '  "suggested_components": ["..."],\n'
-            '  "brand_identity": "..."\n'
+            '  "stitch_prompt": "O prompt técnico completo em inglês com todas as seções (Hero, Services, Differentials, Google Reviews, Map, Sticky WhatsApp) minuciosamente detalhadas",\n'
+            '  "suggested_components": ["HeroSectionWithSplitLayout", "TrustBadgesRow", "ServicesGridWithIconBadges", "CompetitiveEdgeMatrix", "GoogleReputationShowcase", "InteractiveLocalMapAndHours", "StickyMobileWhatsAppBar", "CleanFooterWithLegalInfo"],\n'
+            '  "brand_identity": "Resumo executivo em português da identidade da marca (paleta HEX, tom de voz, tipografia e proposta de valor)"\n'
             "}"
         )
 
         user_content = (
-            f"Lead: {report.lead.name}\n"
-            f"Endereço: {report.lead.formatted_address}\n"
-            f"Telefone: {report.lead.national_phone_number}\n"
-            f"Diagnóstico: {diagnosis.overall_summary}\n"
+            f"Nome da Empresa: {lead.name}\n"
+            f"Segmento de Atuação: {profile['niche_pt']} ({profile['industry_en']})\n"
+            f"Público-Alvo: {profile['target_audience']}\n"
+            f"Localização: {lead.formatted_address or lead.city or 'Brasil'}\n"
+            f"WhatsApp / Telefone: {lead.national_phone_number or 'Disponível no botão'}\n"
+            f"Reputação Google: {rating_info}\n"
+            f"Proposta de Valor: {val_prop}\n"
+            f"Dores do Consumidor: {pain_points_txt}\n"
+            f"Diferenciais da Empresa: {talking_points_txt}\n"
+            f"Diagnóstico Técnico: {diagnosis.overall_summary}\n"
+            f"Paleta de Cores Recomendada: {profile['color_palette']}\n"
+            f"Tipografia: {profile['typography']}\n"
         )
 
         try:
             response = await self.client.messages.create(
                 model=self.model,
-                max_tokens=1200,
+                max_tokens=3000,
                 system=system_prompt,
                 messages=[{"role": "user", "content": user_content}],
             )
-            data = json.loads(response.content[0].text)
-        except Exception:
+            raw_text = response.content[0].text
+            clean_text = raw_text.strip()
+            if clean_text.startswith("```json"):
+                clean_text = clean_text[7:]
+            if clean_text.startswith("```"):
+                clean_text = clean_text[3:]
+            if clean_text.endswith("```"):
+                clean_text = clean_text[:-3]
+
+            data = json.loads(clean_text.strip())
+            stitch_val = data.get("stitch_prompt", "").strip()
+            if not stitch_val or len(stitch_val) < 250:
+                stitch_val = build_impeccable_site_prompt(lead, profile, diagnosis)
+
+            brand_val = data.get("brand_identity") or build_brand_identity_summary(lead, profile, diagnosis)
+            components_val = data.get("suggested_components") or [
+                "HeroSectionWithSplitLayout",
+                "TrustBadgesRow",
+                "ServicesGridWithIconBadges",
+                "CompetitiveEdgeMatrix",
+                "GoogleReputationShowcase",
+                "InteractiveLocalMapAndHours",
+                "StickyMobileWhatsAppBar",
+                "CleanFooterWithLegalInfo"
+            ]
+
             return StitchPromptResult(
-                lead_name=report.lead.name,
-                stitch_prompt=(
-                    f"Create a high-converting, modern landing page for '{report.lead.name}'. "
-                    f"Location: {report.lead.formatted_address or 'Brasil'}. "
-                    f"Include hero section, service overview, customer testimonials, and direct WhatsApp contact CTA."
-                ),
-                suggested_components=["Hero", "ServicesGrid", "Testimonials", "ContactForm", "Footer"],
-                brand_identity=f"Profissional e moderno para {report.lead.name}",
+                lead_name=lead.name,
+                stitch_prompt=stitch_val,
+                suggested_components=components_val,
+                brand_identity=brand_val,
+            )
+        except Exception:
+            fallback_prompt = build_impeccable_site_prompt(lead, profile, diagnosis)
+            fallback_brand = build_brand_identity_summary(lead, profile, diagnosis)
+            return StitchPromptResult(
+                lead_name=lead.name,
+                stitch_prompt=fallback_prompt,
+                suggested_components=[
+                    "HeroSectionWithSplitLayout",
+                    "TrustBadgesRow",
+                    "ServicesGridWithIconBadges",
+                    "CompetitiveEdgeMatrix",
+                    "GoogleReputationShowcase",
+                    "InteractiveLocalMapAndHours",
+                    "StickyMobileWhatsAppBar",
+                    "CleanFooterWithLegalInfo"
+                ],
+                brand_identity=fallback_brand,
             )
 
-        return StitchPromptResult(
-            lead_name=report.lead.name,
-            stitch_prompt=data.get("stitch_prompt", ""),
-            suggested_components=data.get("suggested_components", []),
-            brand_identity=data.get("brand_identity"),
-        )

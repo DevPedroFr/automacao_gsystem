@@ -21,3 +21,6 @@ class LeadResult(BaseModel):
     business_status: Optional[str] = None
     image_url: Optional[str] = None
     image_urls: Optional[List[str]] = None
+    category: Optional[str] = None
+    city: Optional[str] = None
+

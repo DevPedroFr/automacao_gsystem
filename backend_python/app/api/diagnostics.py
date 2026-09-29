@@ -124,7 +124,10 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         website_uri=lead.website,
         rating=lead.google_rating,
         user_rating_count=lead.google_reviews_count,
+        category=lead.category,
+        city=lead.city,
     )
+
 
     try:
         from app.services.diagnosis_service import DiagnosisService
