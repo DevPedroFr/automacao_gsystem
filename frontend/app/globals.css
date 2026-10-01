@@ -75,13 +75,19 @@ body {
    Estilos de Impressão (Nativos para exportação em PDF de alta qualidade)
    ========================================================================== */
 @page {
-  size: A4;
-  margin: 10mm 12mm; /* Suprime cabeçalho e rodapé automáticos com URLs do navegador */
+  size: A4 portrait;
+  margin: 0 !important; /* Margem zero elimina cabeçalho (data/título) e rodapé (URL do sistema) impressos pelo navegador */
 }
 
 @media print {
-  /* Impede que o navegador imprima a URL ao lado de qualquer link */
-  a[href]:after {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+
+  /* Impede que o navegador imprima a URL ao lado ou abaixo de qualquer link */
+  a[href]:after,
+  a[href]:before {
     content: none !important;
   }
 

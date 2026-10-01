@@ -146,20 +146,34 @@ export default function PrintReport({ lead, diagnostic }) {
   const leadReviews = lead.google_reviews_count ?? lead.user_rating_count ?? 0;
 
   return (
-    <div className="print-only bg-white text-slate-900 font-sans p-2">
+    <div className="print-only bg-white text-slate-900 font-sans p-6 print:p-8">
       <style dangerouslySetInnerHTML={{ __html: `
         @page {
-          size: A4;
-          margin: 8mm 10mm !important;
+          size: A4 portrait;
+          margin: 0 !important;
         }
         @media print {
-          a[href]:after {
+          @page {
+            size: A4 portrait;
+            margin: 0 !important;
+          }
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: #ffffff !important;
+          }
+          /* Suprime qualquer link ou URL impresso pelo navegador */
+          a[href]:after,
+          a[href]:before {
             content: none !important;
+          }
+          /* Oculta cabeçalhos e rodapés do navegador e elementos de sistema */
+          header, footer, nav, aside, .no-print {
+            display: none !important;
           }
           body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            background-color: #ffffff !important;
           }
           .break-inside-avoid {
             page-break-inside: avoid !important;
@@ -736,6 +750,12 @@ export default function PrintReport({ lead, diagnostic }) {
         <p className="text-[7.5px] leading-relaxed text-justify">
           <strong>Aviso de Conformidade:</strong> As métricas técnicas de performance e SEO apresentadas neste relatório foram obtidas diretamente através da <strong>API Oficial do Google Lighthouse / PageSpeed Insights</strong>. Os dados de reputação refletem o estado público indexado via <strong>Google Places API (Google Maps)</strong> na data de emissão. A correlação de impacto financeiro e análise de mercado foi processada por modelos de inteligência artificial de ponta (Gemini AI) com base em métricas reais do mercado local.
         </p>
+      </div>
+
+      {/* Rodapé Executivo White-label */}
+      <div className="mt-4 pt-2 border-t border-slate-200/80 flex justify-between items-center text-[8px] text-slate-400 font-semibold uppercase tracking-wider break-inside-avoid">
+        <span>CONSULTINGS APD • Auditoria de Presença Digital & Performance</span>
+        <span>Documento emitido para uso exclusivo de {lead.name}</span>
       </div>
 
     </div>

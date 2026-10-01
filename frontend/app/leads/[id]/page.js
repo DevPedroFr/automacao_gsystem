@@ -187,6 +187,15 @@ export default function LeadDetailPage() {
 
   const priorityConf = PRIORITY_CONFIG[lead.priority] || {};
 
+  const handleExportPdf = () => {
+    const originalTitle = document.title;
+    document.title = lead?.name ? `Diagnóstico - ${lead.name}` : 'Diagnóstico Comercial';
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1500);
+  };
+
   return (
     <div className="animate-fade-in">
       {/* O relatório de impressão fica invisível na tela e visível apenas no print */}
@@ -215,7 +224,7 @@ export default function LeadDetailPage() {
         {/* Botão de Exportar para PDF (escondido na impressão) */}
         {diagnostic && diagnostic.diagnostic_status !== 'ai_validation_failed' && (
           <Button
-            onClick={() => window.print()}
+            onClick={handleExportPdf}
             variant="secondary"
             className="flex items-center gap-2 no-print bg-gray-800 hover:bg-gray-700 text-gray-200 border-gray-700"
           >
