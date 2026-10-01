@@ -222,6 +222,14 @@ class ClaudeAIIntegration(LLMService):
             "}"
         )
 
+        photos = getattr(lead, "image_urls", None) or []
+        hero_photo = getattr(lead, "image_url", None) or (photos[0] if photos else None)
+        photos_info = (
+            f"Foto Principal Hero: '{hero_photo}' | Galeria Pública do Google Places: {photos[:4]}"
+            if (hero_photo or photos)
+            else "Nenhuma foto pública anexada"
+        )
+
         user_content = (
             f"Nome da Empresa: {lead.name}\n"
             f"Segmento de Atuação: {profile['niche_pt']} ({profile['industry_en']})\n"
@@ -229,6 +237,7 @@ class ClaudeAIIntegration(LLMService):
             f"Localização: {lead.formatted_address or lead.city or 'Brasil'}\n"
             f"WhatsApp / Telefone: {lead.national_phone_number or 'Disponível no botão'}\n"
             f"Reputação Google: {rating_info}\n"
+            f"Fotos Públicas Reais do Google: {photos_info}\n"
             f"Proposta de Valor: {val_prop}\n"
             f"Dores do Consumidor: {pain_points_txt}\n"
             f"Diferenciais da Empresa: {talking_points_txt}\n"

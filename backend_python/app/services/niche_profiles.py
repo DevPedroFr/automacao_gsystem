@@ -530,6 +530,22 @@ def build_impeccable_site_prompt(
     palette = profile["color_palette"]
     typo = profile["typography"]
 
+    # Fotos reais públicas do Google
+    photos = getattr(lead, "image_urls", None) or []
+    hero_photo = getattr(lead, "image_url", None) or (photos[0] if photos else None)
+    if hero_photo or photos:
+        photos_lines = []
+        for idx, p_url in enumerate(photos[:4], 1):
+            photos_lines.append(f"  - Public Gallery Photo {idx}: '{p_url}'")
+        gallery_formatted = "\n".join(photos_lines)
+        photo_spec_md = f"""- **Real Business Photography (Verified Google Places Public Photos):**
+  - Primary Hero Cover: '{hero_photo}' (Use in split hero layout or background banner with dark gradient overlay)
+  - Authentic Atmosphere & Facility Photos:
+{gallery_formatted}
+  - CRITICAL INSTRUCTION: Use these exact authentic CDN image URLs in <img> src attributes for the hero section and facilities showcase. Do NOT replace them with generic stock images."""
+    else:
+        photo_spec_md = f"- **Imagery Standard:** High-converting commercial photography strictly representing {profile['industry_en']} with modern lighting."
+
     prompt = f"""# UI/UX GENERATION PROMPT: HIGH-CONVERTING LANDING PAGE FOR {lead.name.upper()}
 
 ## 1. PROJECT SPECIFICATION & ART DIRECTION
@@ -552,6 +568,7 @@ def build_impeccable_site_prompt(
 
 ## 2. HERO SECTION (ABOVE THE FOLD - MAXIMUM PERSUASION)
 - **Visual Composition:** Two-column split layout (desktop) / Stacked with instant visual anchor (mobile).
+{photo_spec_md}
 - **High-Impact Headline:** "{headline_txt}"
 - **Persuasive Subheadline:** "{subheadline_txt}"
 - **Primary Hero CTA Button:**

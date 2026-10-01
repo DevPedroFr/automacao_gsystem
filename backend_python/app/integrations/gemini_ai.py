@@ -561,6 +561,14 @@ REGRAS OBRIGATÓRIAS:
         pain_points_txt = ", ".join(sales.pain_points) if sales and sales.pain_points else ", ".join(profile["pain_points"])
         talking_points_txt = ", ".join(sales.talking_points) if sales and sales.talking_points else ", ".join(profile["value_triggers"])
 
+        photos = getattr(lead, "image_urls", None) or []
+        hero_photo = getattr(lead, "image_url", None) or (photos[0] if photos else None)
+        photos_info = (
+            f"Foto Principal Hero: '{hero_photo}' | Galeria Pública do Google Places: {photos[:4]}"
+            if (hero_photo or photos)
+            else "Nenhuma foto pública anexada (usar direção de arte fotográfica do nicho)"
+        )
+
         prompt = f"""Você é o Arquiteto Líder de UI/UX e Especialista Sênior em Otimização de Conversão (CRO) da Google e Stitch AI.
 Sua missão é gerar uma ESPECIFICAÇÃO DE PROMPT COMPLETA, CIRÚRGICA E ULTRA-DETALHADA em INGLÊS para gerar a Landing Page definitiva do negócio abaixo.
 O prompt NÃO pode ser genérico. Ele deve conter os dados reais, o tom de voz do nicho, cores com códigos HEX exatos, títulos chamativos (copywriting de resposta direta), dores específicas dos clientes e componentes de alta conversão.
@@ -572,6 +580,7 @@ O prompt NÃO pode ser genérico. Ele deve conter os dados reais, o tom de voz d
 - Localização: {lead.formatted_address or lead.city or 'Brasil'}
 - WhatsApp / Contato Direto: {lead.national_phone_number or 'Disponível no botão'}
 - Reputação Google Maps: {rating_info}
+- Fotos Públicas Reais do Google Places: {photos_info}
 - Proposta de Valor Central: {val_prop}
 - Dores Reais do Consumidor deste Nicho: {pain_points_txt}
 - Diferenciais e Argumentos de Venda: {talking_points_txt}
@@ -582,7 +591,7 @@ O prompt NÃO pode ser genérico. Ele deve conter os dados reais, o tom de voz d
 [ESTRUTURA OBRIGATÓRIA QUE O SEU STITCH_PROMPT DEVE CONTER EM INGLÊS]:
 O campo "stitch_prompt" deve ser um documento técnico de alto padrão formatado com Markdown contendo minuciosamente:
 1. PROJECT SPECIFICATION & ART DIRECTION: Identidade de marca ({lead.name}), atmosfera visual, paleta cromática completa com códigos HEX ({profile['color_palette']['primary']}, {profile['color_palette']['secondary']}, {profile['color_palette']['accent']}), tipografia ({profile['typography']['headings']} e {profile['typography']['body']}) e layout espaçoso sem poluição visual.
-2. HERO SECTION (ABOVE THE FOLD): Headline irresistível com promessa concreta sem clichês, subheadline resolvendo a maior dor do cliente, botão primário CTA com micro-copy persuasivo apontando para WhatsApp, e 3 Badges de Autoridade (estrelas reais do Google Maps, atendimento rápido, localização).
+2. HERO SECTION & REAL IMAGERY: Headline irresistível com promessa concreta sem clichês, subheadline resolvendo a maior dor do cliente, botão primário CTA com micro-copy persuasivo apontando para WhatsApp, e 3 Badges de Autoridade (estrelas reais do Google Maps, atendimento rápido, localização). SE HOUVER FOTOS REAIS DO GOOGLE, instruir explicitamente o uso da foto pública real ({hero_photo}) no hero split layout / fundo e fotos da galeria no showcase.
 3. SPECIALIZED SERVICES GRID: 4 a 6 serviços reais do nicho ({profile['core_services']}) com nomes específicos, benefício claro e botão individual de consulta.
 4. COMPETITIVE DIFFERENTIALS (WHY CHOOSE US): 3 a 4 pilares operacionais que resolvem as dores dos clientes e demonstram excelência.
 5. GOOGLE REPUTATION & REAL SOCIAL PROOF: Destaque da nota {lead.rating or 5.0}★ do Google Maps com 3 depoimentos autênticos contextualizados para este nicho.

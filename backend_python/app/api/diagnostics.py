@@ -116,6 +116,30 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         db.delete(existing)
         db.commit()
 
+    # Coleta de fotos públicas sob demanda do Google se ainda não existirem
+    gallery_list = []
+    if lead.gallery_urls:
+        try:
+            gallery_list = json.loads(lead.gallery_urls)
+        except Exception:
+            gallery_list = []
+
+    if not gallery_list:
+        try:
+            from app.integrations.google_places import GooglePlacesIntegration
+            places_client = GooglePlacesIntegration()
+            query_search = f"{lead.name} {lead.address or lead.city or ''}".strip()
+            fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=4)
+            if fetched_photos:
+                gallery_list = fetched_photos
+                lead.gallery_urls = json.dumps(fetched_photos)
+                if not lead.image_url:
+                    lead.image_url = fetched_photos[0]
+                db.commit()
+                db.refresh(lead)
+        except Exception as photo_err:
+            logger.warning(f"Não foi possível buscar fotos públicas do Google para {lead.name}: {photo_err}")
+
     lead_result = LeadResult(
         place_id=lead.id,
         name=lead.name,
@@ -126,6 +150,8 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         user_rating_count=lead.google_reviews_count,
         category=lead.category,
         city=lead.city,
+        image_url=lead.image_url or (gallery_list[0] if gallery_list else None),
+        image_urls=gallery_list,
     )
 
 
@@ -389,12 +415,37 @@ async def generate_landing_page(
             else:
                 chosen_archetype = "cro_high_impact"
 
+        # 2.1 Coleta ou carrega fotos públicas reais da empresa
+        gallery_list = []
+        if lead.gallery_urls:
+            try:
+                gallery_list = json.loads(lead.gallery_urls)
+            except Exception:
+                gallery_list = []
+
+        if not gallery_list:
+            try:
+                from app.integrations.google_places import GooglePlacesIntegration
+                places_client = GooglePlacesIntegration()
+                query_search = f"{lead.name} {lead.address or lead.city or ''}".strip()
+                fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=4)
+                if fetched_photos:
+                    gallery_list = fetched_photos
+                    lead.gallery_urls = json.dumps(fetched_photos)
+                    if not lead.image_url:
+                        lead.image_url = fetched_photos[0]
+                    db.commit()
+                    db.refresh(lead)
+            except Exception as photo_err:
+                logger.warning(f"Não foi possível buscar fotos públicas do Google para {lead.name}: {photo_err}")
+
         custom_prompt = LPPromptEngine.build_custom_prompt(
             lead_data=lead_dict,
             diagnostic_data=diagnostic_dict,
             brand_colors=brand_colors,
             owners_info=owners,
             logo_url=lead.logo_url or lead.image_url,
+            gallery_urls=gallery_list,
             archetype_id=chosen_archetype,
         )
 
