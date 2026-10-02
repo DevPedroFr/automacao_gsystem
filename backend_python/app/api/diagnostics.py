@@ -24,7 +24,12 @@ router = APIRouter(tags=["Diagnósticos"])
 
 
 import json
-from fastapi.responses import HTMLResponse
+import io
+import zipfile
+import asyncio
+import re
+import httpx
+from fastapi.responses import HTMLResponse, Response
 
 def _diag_to_dict(d: Diagnostic) -> dict:
     brand_colors_parsed = None
@@ -514,5 +519,154 @@ def preview_landing_page(lead_id: str, db: Session = Depends(get_db)):
         )
 
     return HTMLResponse(content=diagnostic.generated_site_html, status_code=200)
+
+
+@router.get("/api/leads/{lead_id}/download-images", summary="Download de arquivo ZIP com todas as imagens extraídas do lead")
+@router.get("/leads/{lead_id}/download-images", include_in_schema=False)
+async def download_lead_images(lead_id: str, db: Session = Depends(get_db)):
+    """
+    GET /api/leads/:leadId/download-images
+    Gera dinamicamente e faz streaming de um arquivo ZIP contendo todas as imagens
+    públicas extraídas da empresa (Google Places / Fachada / Logo), além do prompt
+    completo e instruções para uso externo (ex: Google Stitch, Lovable, Cursor, v0).
+    """
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
+
+    # 1. Recupera lista de URLs já salvas
+    gallery_list: List[str] = []
+    if lead.gallery_urls:
+        try:
+            gallery_list = json.loads(lead.gallery_urls)
+            if not isinstance(gallery_list, list):
+                gallery_list = []
+        except Exception:
+            gallery_list = []
+
+    # 2. Se não houver fotos salvas, busca sob demanda no Google Places
+    if not gallery_list or len(gallery_list) <= 1:
+        try:
+            from app.integrations.google_places import GooglePlacesIntegration
+            places_client = GooglePlacesIntegration()
+            query_search = f"{lead.name} {lead.address or lead.city or ''}".strip()
+            fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=8)
+            if fetched_photos and len(fetched_photos) > len(gallery_list):
+                gallery_list = fetched_photos
+                lead.gallery_urls = json.dumps(fetched_photos)
+                if not lead.image_url:
+                    lead.image_url = fetched_photos[0]
+                db.commit()
+                db.refresh(lead)
+        except Exception as photo_err:
+            logger.warning(f"Não foi possível buscar fotos sob demanda para ZIP de {lead.name}: {photo_err}")
+
+    # 3. Consolidação de todas as imagens únicas
+    all_urls: List[str] = []
+    for u in gallery_list:
+        if u and isinstance(u, str) and u.strip() and u not in all_urls:
+            all_urls.append(u.strip())
+
+    if lead.image_url and lead.image_url not in all_urls:
+        all_urls.append(lead.image_url)
+
+    if lead.logo_url and lead.logo_url not in all_urls:
+        all_urls.insert(0, lead.logo_url)
+
+    if not all_urls:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "no_images", "message": f"Nenhuma imagem pública foi encontrada para a empresa {lead.name}."}
+        )
+
+    # 4. Download concorrente das imagens e montagem do arquivo ZIP em memória
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zip_file:
+        async with httpx.AsyncClient(timeout=15.0, follow_redirects=True) as client:
+            tasks = [client.get(u) for u in all_urls]
+            responses = await asyncio.gather(*tasks, return_exceptions=True)
+
+            img_count = 0
+            for u, resp in zip(all_urls, responses):
+                if isinstance(resp, Exception) or getattr(resp, "status_code", 0) != 200:
+                    logger.warning(f"Não foi possível baixar foto {u}: {resp}")
+                    continue
+
+                content_type = resp.headers.get("content-type", "").lower()
+                ext = ".jpg"
+                if "png" in content_type or u.lower().endswith(".png"):
+                    ext = ".png"
+                elif "webp" in content_type or u.lower().endswith(".webp"):
+                    ext = ".webp"
+                elif "svg" in content_type or u.lower().endswith(".svg"):
+                    ext = ".svg"
+
+                if u == lead.logo_url and "lh3.googleusercontent" not in u:
+                    fname = f"00_logo_oficial{ext}"
+                elif img_count == 0:
+                    fname = f"01_hero_destaque{ext}"
+                elif img_count == 1:
+                    fname = f"02_fachada_localizacao{ext}"
+                else:
+                    fname = f"{img_count + 1:02d}_ambiente_servico_{img_count - 1}{ext}"
+
+                zip_file.writestr(f"imagens/{fname}", resp.content)
+                img_count += 1
+
+        # 5. Adiciona arquivo de instruções e o prompt copiado
+        prompt_txt = (diagnostic.stitch_prompt if diagnostic else "") or ""
+        all_links_txt = "\n".join(f"- {u}" for u in all_urls)
+        readme_content = f"""================================================================================
+PACOTE DE ATIVOS VISUAIS & PROMPT PARA DESENVOLVIMENTO EXTERNO
+================================================================================
+
+EMPRESA: {lead.name}
+NICHO / RAMO: {lead.category or 'Geral'}
+CIDADE: {lead.city or 'Brasil'}
+ENDEREÇO: {lead.address or 'Não informado'}
+TELEFONE / WHATSAPP: {lead.phone or 'Não informado'}
+AVALIAÇÃO GOOGLE: {lead.google_rating or 'N/A'} estrelas ({lead.google_reviews_count or 0} avaliações)
+TOTAL DE FOTOS EXTRAÍDAS: {img_count}
+
+--------------------------------------------------------------------------------
+COMO UTILIZAR ESTE PACOTE FORA DA AUTOMAÇÃO (Stitch / Lovable / Cursor / v0):
+--------------------------------------------------------------------------------
+1. Abra o arquivo 'prompt_para_desenvolvimento.txt' contido neste ZIP e copie todo o seu texto.
+2. Acesse a plataforma de desenvolvimento desejada (Google Stitch, Lovable, Cursor, Bolt, ChatGPT, Claude, etc).
+3. Cole o prompt e ANEXE as imagens da pasta 'imagens/' diretamente na mensagem/prompt.
+4. A IA utilizará as fotos reais da empresa (fachada, ambiente e produtos) na construção da Landing Page, garantindo máxima autoridade e credibilidade.
+
+ORGANIZAÇÃO DOS ARQUIVOS NA PASTA 'imagens/':
+- 01_hero_destaque: Foto de maior impacto para o Hero / topo da página
+- 02_fachada_localizacao: Foto da fachada ou entrada da unidade para a seção de localização
+- 03 em diante: Fotos reais dos ambientes internos, instalações, equipamentos ou catálogo
+- 00_logo_oficial: Logotipo oficial (quando detectado)
+
+LINKS DIRETOS DAS FOTOS EXTRAÍDAS:
+{all_links_txt}
+
+================================================================================
+Gerado automaticamente pela Automação de Diagnósticos e Landing Pages.
+================================================================================
+"""
+        zip_file.writestr("LEIA-ME_COMO_USAR.txt", readme_content)
+        if prompt_txt:
+            zip_file.writestr("prompt_para_desenvolvimento.txt", prompt_txt)
+
+    zip_bytes = zip_buffer.getvalue()
+    safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', lead.name).strip('_').lower() or 'lead'
+    zip_filename = f"imagens_{safe_slug}.zip"
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"',
+            "Content-Length": str(len(zip_bytes)),
+            "Access-Control-Expose-Headers": "Content-Disposition",
+        },
+    )
 
 

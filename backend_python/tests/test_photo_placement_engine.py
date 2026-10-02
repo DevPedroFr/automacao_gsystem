@@ -162,6 +162,60 @@ class PhotoPlacementEngineTests(unittest.TestCase):
         self.assertIn("bg-primary/10 border border-primary/30", html)
         self.assertIn("text-primary", html)
 
+    def test_download_lead_images_zip_generation(self):
+        import json
+        import zipfile
+        import io
+        from app.api.diagnostics import download_lead_images
+        from unittest.mock import MagicMock, AsyncMock, patch
+
+        mock_db = MagicMock()
+        mock_lead = MagicMock()
+        mock_lead.id = "lead-test-123"
+        mock_lead.name = "Clínica Teste"
+        mock_lead.category = "Estética"
+        mock_lead.phone = "(11) 99999-9999"
+        mock_lead.address = "Rua Teste, 100"
+        mock_lead.city = "São Paulo"
+        mock_lead.google_rating = 4.9
+        mock_lead.google_reviews_count = 120
+        mock_lead.gallery_urls = json.dumps(["https://fake.url/img1.jpg", "https://fake.url/img2.jpg"])
+        mock_lead.image_url = "https://fake.url/img1.jpg"
+        mock_lead.logo_url = None
+
+        mock_diag = MagicMock()
+        mock_diag.stitch_prompt = "PROMPT DE TESTE ELITE CRO"
+
+        mock_db.query.return_value.filter.return_value.first.side_effect = [mock_lead, mock_diag]
+
+        fake_resp = MagicMock()
+        fake_resp.status_code = 200
+        fake_resp.headers = {"content-type": "image/jpeg"}
+        fake_resp.content = b"FAKE_JPEG_BYTES"
+
+        async def run_test():
+            with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
+                mock_get.return_value = fake_resp
+                response = await download_lead_images(lead_id="lead-test-123", db=mock_db)
+                self.assertEqual(response.media_type, "application/zip")
+                self.assertIn("attachment; filename=", response.headers.get("Content-Disposition", ""))
+
+                # Verificar conteúdo do ZIP em memória
+                body = response.body
+                with zipfile.ZipFile(io.BytesIO(body)) as zf:
+                    namelist = zf.namelist()
+                    self.assertIn("LEIA-ME_COMO_USAR.txt", namelist)
+                    self.assertIn("prompt_para_desenvolvimento.txt", namelist)
+                    self.assertTrue(any(name.startswith("imagens/") for name in namelist))
+
+                    readme = zf.read("LEIA-ME_COMO_USAR.txt").decode("utf-8")
+                    self.assertIn("CLÍNICA TESTE", readme.upper())
+
+                    prompt = zf.read("prompt_para_desenvolvimento.txt").decode("utf-8")
+                    self.assertEqual(prompt, "PROMPT DE TESTE ELITE CRO")
+
+        asyncio.run(run_test())
+
 
 if __name__ == "__main__":
     unittest.main()

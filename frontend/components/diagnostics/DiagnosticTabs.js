@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { fetchApi, getApiUrl } from '@/lib/api';
 import { 
-  LayoutDashboard, Target, Wand2, Copy, Check, 
+  LayoutDashboard, Target, Wand2, Copy, Check, Download, 
   Globe, ExternalLink, Smartphone, Monitor, RefreshCw, Sparkles, Palette, Users 
 } from 'lucide-react';
 
@@ -31,6 +31,53 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
   const [viewMode, setViewMode] = useState('desktop');
   const [generationError, setGenerationError] = useState(null);
   const [showPromptCode, setShowPromptCode] = useState(false);
+  const [isDownloadingImages, setIsDownloadingImages] = useState(false);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  /**
+   * Baixa a pasta ZIP com todas as imagens reais extraídas do lead
+   * para que o desenvolvedor anexe no prompt fora da automação (Google Stitch, Lovable, Cursor, etc).
+   */
+  const handleDownloadImages = async () => {
+    const currentLeadId = siteData?.lead_id || diagnostic?.lead_id;
+    if (!currentLeadId) return;
+    try {
+      setIsDownloadingImages(true);
+      const downloadUrl = getApiUrl(`/leads/${currentLeadId}/download-images`);
+      const res = await fetch(downloadUrl);
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson.detail?.message || errJson.message || 'Erro ao gerar o arquivo ZIP com as imagens.');
+      }
+
+      const blob = await res.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+
+      const disposition = res.headers.get('content-disposition');
+      let filename = `imagens_lead_${currentLeadId}.zip`;
+      if (disposition && disposition.includes('filename=')) {
+        const matches = disposition.match(/filename="?([^"]+)"?/);
+        if (matches && matches[1]) {
+          filename = matches[1];
+        }
+      }
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    } catch (err) {
+      console.error('Erro no download das imagens:', err);
+      alert('Não foi possível baixar as imagens: ' + (err.message || 'Erro de conexão com o servidor.'));
+    } finally {
+      setIsDownloadingImages(false);
+    }
+  };
 
   /**
    * Converte marcações simples de **negrito** do Markdown para tags HTML strong
@@ -553,7 +600,34 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleDownloadImages}
+                    disabled={isDownloadingImages}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold transition-all ${
+                      downloadSuccess 
+                        ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-400' 
+                        : 'bg-indigo-950/70 hover:bg-indigo-900 border-indigo-700/60 text-indigo-300 hover:text-white'
+                    }`}
+                    title="Baixar pasta ZIP com todas as imagens públicas reais da empresa para usar no prompt externamente"
+                  >
+                    {isDownloadingImages ? (
+                      <>
+                        <RefreshCw size={13} className="animate-spin text-cyan-400" />
+                        <span>Baixando ZIP...</span>
+                      </>
+                    ) : downloadSuccess ? (
+                      <>
+                        <Check size={13} className="text-emerald-400" />
+                        <span>Imagens Baixadas!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download size={13} className="text-cyan-400" />
+                        <span>Baixar Imagens (ZIP)</span>
+                      </>
+                    )}
+                  </button>
                   <button
                     onClick={handleCopyShareLink}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-xs font-semibold text-gray-300 hover:text-white rounded-lg transition-all"
@@ -588,17 +662,42 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
 
           {/* Collapsible Prompt Specification */}
           {(showPromptCode || !hasGeneratedSite) && (
-            <div className="space-y-2 bg-gray-900/50 border border-gray-700/50 rounded-xl p-5 relative shadow-inner">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 mb-3 flex items-center justify-between">
-                <span>Meta-Prompt de Elite Estruturado (CRO & Nicho)</span>
-                <button
-                  onClick={() => navigator.clipboard.writeText(promptText)}
-                  className="text-gray-400 hover:text-white flex items-center gap-1"
-                >
-                  <Copy size={12} /> Copiar Prompt
-                </button>
+            <div className="space-y-3 bg-gray-900/50 border border-gray-700/50 rounded-xl p-5 relative shadow-inner">
+              <div className="text-[10px] uppercase font-bold tracking-wider text-cyan-400 mb-2 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Wand2 size={14} className="text-cyan-400" />
+                  <span>Meta-Prompt de Elite Estruturado (CRO & Nicho)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadImages}
+                    disabled={isDownloadingImages}
+                    className="text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900/90 border border-cyan-700/50 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                    title="Baixar arquivo ZIP com todas as fotos extraídas da empresa para anexar a este prompt no Stitch / Lovable / Cursor"
+                  >
+                    {isDownloadingImages ? (
+                      <RefreshCw size={13} className="animate-spin text-cyan-400" />
+                    ) : (
+                      <Download size={13} className="text-cyan-400" />
+                    )}
+                    <span>Baixar Imagens (ZIP)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(promptText);
+                      alert('Prompt copiado com sucesso! Agora você pode colar na ferramenta externa de sua escolha.');
+                    }}
+                    className="text-gray-200 hover:text-white bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <Copy size={13} /> Copiar Prompt
+                  </button>
+                </div>
               </div>
-              <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-all max-h-64 overflow-y-auto pr-2">
+              <div className="p-2.5 bg-indigo-950/30 border border-indigo-500/20 rounded-lg text-xs text-indigo-300 flex items-center gap-2">
+                <span className="font-semibold text-cyan-400">💡 Dica para uso externo:</span>
+                <span>Copie o prompt e baixe o ZIP de imagens acima para anexar diretamente no Google Stitch, Lovable, Cursor, Bolt ou v0.</span>
+              </div>
+              <pre className="text-xs font-mono text-gray-300 whitespace-pre-wrap leading-relaxed select-all max-h-72 overflow-y-auto pr-2 bg-gray-950/60 p-3 rounded-lg border border-gray-800">
                 {promptText}
               </pre>
             </div>
@@ -635,8 +734,37 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
 
       {/* Tab content (com botão de cópia na tela) */}
       <div className="relative border border-gray-700/50 rounded-b-2xl rounded-tr-2xl p-6 bg-gray-900/40 backdrop-blur-md shadow-xl transition-shadow duration-200 no-print" key={activeTab}>
-        {/* Copy button */}
-        <div className="absolute top-4 right-4 z-10">
+        {/* Action buttons (Download Images & Copy) */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          {activeTab === 'stitch' && (
+            <button
+              onClick={handleDownloadImages}
+              disabled={isDownloadingImages}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-300 shadow-sm ${
+                downloadSuccess
+                  ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                  : 'bg-indigo-950/70 border-indigo-700/60 text-indigo-300 hover:bg-indigo-900/90 hover:text-white hover:border-indigo-500'
+              }`}
+              title="Baixar pasta ZIP com todas as imagens reais extraídas para usar no prompt externamente"
+            >
+              {isDownloadingImages ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin text-cyan-400" />
+                  <span>Baixando ZIP...</span>
+                </>
+              ) : downloadSuccess ? (
+                <>
+                  <Check size={13} className="text-emerald-400" />
+                  <span>ZIP Baixado!</span>
+                </>
+              ) : (
+                <>
+                  <Download size={13} className="text-cyan-400" />
+                  <span>Baixar Imagens (ZIP)</span>
+                </>
+              )}
+            </button>
+          )}
           <button
             onClick={() => handleCopy(activeTab)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-300 shadow-sm ${
