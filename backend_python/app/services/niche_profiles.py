@@ -530,19 +530,28 @@ def build_impeccable_site_prompt(
     palette = profile["color_palette"]
     typo = profile["typography"]
 
-    # Fotos reais públicas do Google
+    # Fotos reais públicas do Google com alocação arquitetural estratégica
+    from app.services.lp_prompt_engine import LPPromptEngine
     photos = getattr(lead, "image_urls", None) or []
-    hero_photo = getattr(lead, "image_url", None) or (photos[0] if photos else None)
-    if hero_photo or photos:
-        photos_lines = []
-        for idx, p_url in enumerate(photos[:4], 1):
-            photos_lines.append(f"  - Public Gallery Photo {idx}: '{p_url}'")
-        gallery_formatted = "\n".join(photos_lines)
-        photo_spec_md = f"""- **Real Business Photography (Verified Google Places Public Photos):**
-  - Primary Hero Cover: '{hero_photo}' (Use in split hero layout or background banner with dark gradient overlay)
-  - Authentic Atmosphere & Facility Photos:
-{gallery_formatted}
-  - CRITICAL INSTRUCTION: Use these exact authentic CDN image URLs in <img> src attributes for the hero section and facilities showcase. Do NOT replace them with generic stock images."""
+    hero_candidate = getattr(lead, "image_url", None)
+    if hero_candidate and hero_candidate not in photos:
+        photos = [hero_candidate] + photos
+    photo_plan = LPPromptEngine.allocate_photos(photos)
+
+    if photo_plan["count"] > 0:
+        photos_lines = [
+            "- **Real Business Photography Blueprint (Verified Google Places Public Photos):**",
+            f"  - Hero Featured Cover: '{photo_plan['hero']}' (Use in split hero layout with subtle rounded container)",
+        ]
+        if photo_plan["services"]:
+            for s_idx, s_url in enumerate(photo_plan["services"], 1):
+                photos_lines.append(f"  - Service Card {s_idx} Header: '{s_url}' (Embed inside service card #{s_idx})")
+        if photo_plan["structure_gallery"]:
+            photos_lines.append(f"  - Structure & Atmosphere Gallery: {photo_plan['structure_gallery']} (Dedicated 3-column photo showcase)")
+        if photo_plan["facade"]:
+            photos_lines.append(f"  - Facade & Location Anchor: '{photo_plan['facade']}' (Embed in Visite Nossa Unidade / Location section)")
+        photos_lines.append("  - CRITICAL LOGO RULE: NEVER use establishment photos as navbar logo. Render a clean typographic brand badge.")
+        photo_spec_md = "\n".join(photos_lines)
     else:
         photo_spec_md = f"- **Imagery Standard:** High-converting commercial photography strictly representing {profile['industry_en']} with modern lighting."
 

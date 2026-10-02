@@ -116,7 +116,7 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         db.delete(existing)
         db.commit()
 
-    # Coleta de fotos públicas sob demanda do Google se ainda não existirem
+    # Coleta de fotos públicas sob demanda do Google se ainda não existirem ou se houver apenas 1
     gallery_list = []
     if lead.gallery_urls:
         try:
@@ -124,13 +124,13 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
         except Exception:
             gallery_list = []
 
-    if not gallery_list:
+    if not gallery_list or len(gallery_list) <= 1:
         try:
             from app.integrations.google_places import GooglePlacesIntegration
             places_client = GooglePlacesIntegration()
             query_search = f"{lead.name} {lead.address or lead.city or ''}".strip()
-            fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=4)
-            if fetched_photos:
+            fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=8)
+            if fetched_photos and len(fetched_photos) > len(gallery_list):
                 gallery_list = fetched_photos
                 lead.gallery_urls = json.dumps(fetched_photos)
                 if not lead.image_url:
@@ -423,13 +423,13 @@ async def generate_landing_page(
             except Exception:
                 gallery_list = []
 
-        if not gallery_list:
+        if not gallery_list or len(gallery_list) <= 1:
             try:
                 from app.integrations.google_places import GooglePlacesIntegration
                 places_client = GooglePlacesIntegration()
                 query_search = f"{lead.name} {lead.address or lead.city or ''}".strip()
-                fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=4)
-                if fetched_photos:
+                fetched_photos = await places_client.fetch_place_photos_by_query(query_search, max_photos=8)
+                if fetched_photos and len(fetched_photos) > len(gallery_list):
                     gallery_list = fetched_photos
                     lead.gallery_urls = json.dumps(fetched_photos)
                     if not lead.image_url:
@@ -439,12 +439,17 @@ async def generate_landing_page(
             except Exception as photo_err:
                 logger.warning(f"Não foi possível buscar fotos públicas do Google para {lead.name}: {photo_err}")
 
+        # Sanitização do Logotipo: fotos reais do Google Places (fachada/local) NUNCA devem ser usadas como logotipo
+        clean_logo = lead.logo_url
+        if clean_logo and ("lh3.googleusercontent.com" in clean_logo or clean_logo in gallery_list):
+            clean_logo = None
+
         custom_prompt = LPPromptEngine.build_custom_prompt(
             lead_data=lead_dict,
             diagnostic_data=diagnostic_dict,
             brand_colors=brand_colors,
             owners_info=owners,
-            logo_url=lead.logo_url or lead.image_url,
+            logo_url=clean_logo,
             gallery_urls=gallery_list,
             archetype_id=chosen_archetype,
         )
@@ -461,7 +466,8 @@ async def generate_landing_page(
             lead_data=lead_dict,
             brand_colors=brand_colors,
             owners=owners,
-            logo_url=lead.logo_url or lead.image_url,
+            logo_url=clean_logo,
+            gallery_urls=gallery_list,
             diagnostic_data=diagnostic_dict,
             archetype_id=chosen_archetype,
         )

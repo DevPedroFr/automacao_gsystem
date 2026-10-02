@@ -259,6 +259,97 @@ class LPPromptEngine:
         return "geral"
 
     @classmethod
+    def allocate_photos(cls, gallery_urls: Optional[List[str]]) -> Dict[str, Any]:
+        """
+        Analisa e distribui estrategicamente as fotos públicas reais coletadas do Google Places
+        para posições de alto impacto e conversão (CRO) na Landing Page:
+        - hero: Foto principal (visão geral, fachada moderna ou destaque da empresa)
+        - services: Lista de fotos para os cards de produtos/serviços
+        - structure_gallery: Coleção de fotos para a seção dedicada 'Conheça Nossa Estrutura & Ambientes'
+        - facade: Foto da fachada/local para a seção de localização 'Visite Nossa Unidade'
+        """
+        urls = [u for u in (gallery_urls or []) if u and isinstance(u, str) and u.strip()]
+        if not urls:
+            return {
+                "hero": None,
+                "services": [],
+                "structure_gallery": [],
+                "facade": None,
+                "all_photos": [],
+                "count": 0,
+            }
+
+        total = len(urls)
+        if total == 1:
+            return {
+                "hero": urls[0],
+                "services": [],
+                "structure_gallery": [],
+                "facade": urls[0],
+                "all_photos": urls,
+                "count": 1,
+            }
+
+        if total == 2:
+            return {
+                "hero": urls[0],
+                "services": [urls[1]],
+                "structure_gallery": [urls[0], urls[1]],
+                "facade": urls[1],
+                "all_photos": urls,
+                "count": 2,
+            }
+
+        if total == 3:
+            return {
+                "hero": urls[0],
+                "services": [urls[1]],
+                "structure_gallery": [urls[1], urls[2]],
+                "facade": urls[2],
+                "all_photos": urls,
+                "count": 3,
+            }
+
+        if total == 4:
+            return {
+                "hero": urls[0],
+                "services": [urls[1], urls[2]],
+                "structure_gallery": [urls[1], urls[2], urls[3]],
+                "facade": urls[3],
+                "all_photos": urls,
+                "count": 4,
+            }
+
+        # 5 a 8+ fotos: hero (0), serviços (1 a 3), galeria completa (1 até 7), fachada (foto 4 ou última)
+        return {
+            "hero": urls[0],
+            "services": urls[1:4],
+            "structure_gallery": urls[1:min(total, 7)],
+            "facade": urls[min(4, total - 1)],
+            "all_photos": urls,
+            "count": total,
+        }
+
+    @classmethod
+    def get_photo_token_map(cls, gallery_urls: Optional[List[str]]) -> Dict[str, str]:
+        """
+        Retorna um dicionário mapeando tokens seguros para LLM (ex: '__PHOTO_HERO__')
+        para as URLs exatas da CDN do Google Places. Isso impede que o modelo alucine
+        ou corrompa hashes de 180 caracteres na geração de código HTML.
+        """
+        plan = cls.allocate_photos(gallery_urls)
+        tokens = {}
+        if plan["hero"]:
+            tokens["__PHOTO_HERO__"] = plan["hero"]
+        if plan["facade"]:
+            tokens["__PHOTO_FACADE__"] = plan["facade"]
+        for idx, s_url in enumerate(plan["services"], start=1):
+            tokens[f"__PHOTO_SERVICE_{idx}__"] = s_url
+        for idx, g_url in enumerate(plan["structure_gallery"], start=1):
+            tokens[f"__PHOTO_GALLERY_{idx}__"] = g_url
+        return tokens
+
+    @classmethod
     def build_custom_prompt(
         cls,
         lead_data: Dict[str, Any],
@@ -326,9 +417,39 @@ class LPPromptEngine:
                     )
             blunders_context = "\n".join(blunder_lines)
 
-        # Fotos e Logo
-        logo_spec = f"Logo: Use official logo at '{logo_url}'." if logo_url else "Logo: Clean modern typographic brand badge."
-        gallery_spec = f"Use realistic local photos: {gallery_urls}." if gallery_urls else f"Use high-quality commercial photography strictly matching {rules['name']}."
+        # Alocação inteligente de fotos na LP
+        photo_plan = cls.allocate_photos(gallery_urls)
+
+        # Sanatização de Logo: Nunca use foto de fachada/loja como logotipo na navbar
+        clean_logo = logo_url if (logo_url and "lh3.googleusercontent.com" not in logo_url and logo_url not in photo_plan["all_photos"]) else None
+        logo_spec = f"Logo: Use official brand logo at '{clean_logo}'." if clean_logo else f"Logo: Render a modern typographic brand badge with niche icon."
+
+        if photo_plan["count"] > 0:
+            photo_spec_lines = [
+                f"### STRATEGIC PHOTO PLACEMENT & VISUAL ARCHITECTURE BLUEPRINT (MANDATORY):",
+                f"We gathered {photo_plan['count']} verified, high-resolution public photos of this business from Google Places.",
+                f"You MUST distribute them across the landing page with visual intention to maximize credibility and conversion.",
+                f"CRITICAL INSTRUCTION: To prevent CDN hash truncation errors, use the exact token placeholders in your <img> src attributes:",
+                f"- HERO SHOWCASE IMAGE: Use src=\"__PHOTO_HERO__\" in the Split Hero layout (right column of desktop hero or featured media container with rounded-3xl border, glassmorphism badge 'Estrutura Completa & Atendimento Local', and soft glow).",
+            ]
+            if photo_plan["services"]:
+                for s_idx in range(1, len(photo_plan["services"]) + 1):
+                    photo_spec_lines.append(f"- SERVICE CARD {s_idx} IMAGE: Use src=\"__PHOTO_SERVICE_{s_idx}__\" as a visual header inside Solution Card #{s_idx}.")
+            if photo_plan["structure_gallery"]:
+                tokens_list = [f'src="__PHOTO_GALLERY_{g_idx}__"' for g_idx in range(1, len(photo_plan["structure_gallery"]) + 1)]
+                photo_spec_lines.append(
+                    f"- DEDICATED STRUCTURE & ATMOSPHERE GALLERY SECTION: Create a dedicated 3-column photo grid section ('Conheça Nossa Estrutura & Ambientes') featuring: {', '.join(tokens_list)}. Each card must have rounded-2xl corners, hover-zoom effect (group-hover:scale-105 transition-transform), and a caption matching {rules['name']}."
+                )
+            if photo_plan["facade"]:
+                photo_spec_lines.append(
+                    f"- LOCATION & FACADE SHOWCASE: Use src=\"__PHOTO_FACADE__\" in the 'Visite Nossa Unidade' section, positioned side-by-side with the physical address, opening hours, and Google Maps directions button."
+                )
+            photo_spec_lines.append(
+                f"- CRITICAL LOGO RULE: NEVER use establishment photos as the navbar logo! Navbar MUST display a clean typographic brand badge."
+            )
+            gallery_spec = "\n".join(photo_spec_lines)
+        else:
+            gallery_spec = f"Use high-quality commercial photography strictly matching {rules['name']}."
 
         prompt = f"""Create an exceptional, high-converting, mobile-first website for '{lead_name}', operating strictly in the '{rules['name']}' industry.
 
@@ -348,7 +469,8 @@ class LPPromptEngine:
 - Secondary / Container Surfaces: {secondary_color}
 - High-Contrast Text: {text_color}
 - {logo_spec}
-- {gallery_spec}
+
+{gallery_spec}
 
 ### BUSINESS INTELLIGENCE & DIAGNOSTIC CONTEXT:
 - Business Name: {lead_name}
@@ -366,17 +488,19 @@ class LPPromptEngine:
 {niche_insights or f'Focus on what differentiates {lead_name} from competitors in the {rules["name"]} segment.'}
 
 ### MANDATORY PAGE ARCHITECTURE (CRO OPTIMIZED):
-1. Sticky Header: Logo, navigation anchor links (Soluções, Diferenciais, Avaliações, Contato), phone number badge, and '{rules['cta_label']}' button.
-2. High-Impact Hero Section:
+1. Sticky Header: Logo (typographic brand badge or official logo, NEVER a building photo), navigation anchor links (Soluções, Diferenciais, Avaliações, Contato), phone number badge, and '{rules['cta_label']}' button.
+2. High-Impact Split Hero Section:
    - Badge with pulsing green or accent dot: '{rules['hero_badge']}'
-   - Powerful H1 Headline: Tailored to {lead_name} and {rules['name']}. MUST directly address the #1 blunder detected (e.g. if 'invisible catalog' → headline about complete product showcase).
+   - Powerful H1 Headline: Tailored to {lead_name} and {rules['name']}. MUST directly address the #1 blunder detected.
    - Descriptive Subheadline addressing customer pains and advantages.
    - Dual CTAs: Primary prominent WhatsApp button + secondary phone or catalog action.
    - Google Rating & Social Proof badge with 5 golden stars.
-3. Solutions / Products Grid: 4 high-converting product/service categories specific to {rules['name']}. Each card MUST have a direct WhatsApp quote button.
-4. Trust & Authority Section: Highlighting Google reviews, fast local delivery or service, and founding leadership. MUST include trust badges (Garantia, Pronta-Entrega, Empresa Verificada).
-5. Location & Map CTA: Physical address, opening hours, and direct call-to-action.
-6. Footer: Copyright 2026 {lead_name}, address, and contact information.
-7. Fixed Floating WhatsApp Button: Pulsing bottom-right button for instant conversions — ZERO friction contact.
+   - Visual Showcase: Featured photo card with rounded corners and border.
+3. Solutions / Products Grid: 4 high-converting product/service categories specific to {rules['name']}. Real photos embedded as card headers when available. Each card MUST have a direct WhatsApp quote button.
+4. Dedicated Structure & Facility Showcase: Responsive 3-column photo gallery of the physical store/space with Google Places photos and niche captions.
+5. Trust & Authority Section: Highlighting Google reviews, fast local delivery or service, and founding leadership. MUST include trust badges (Garantia, Pronta-Entrega, Empresa Verificada).
+6. Location & Map CTA: Split layout with physical facade photo, address, opening hours, and direct call-to-action.
+7. Footer: Copyright 2026 {lead_name}, address, and contact information.
+8. Fixed Floating WhatsApp Button: Pulsing bottom-right button for instant conversions — ZERO friction contact.
 """
         return prompt

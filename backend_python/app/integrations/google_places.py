@@ -231,9 +231,10 @@ class GooglePlacesIntegration(BaseHTTPClient, LeadSearchProvider):
             business_status=data.get("businessStatus"),
         )
 
-    async def fetch_place_photos_by_place_id(self, place_id: str, max_photos: int = 4) -> List[str]:
+    async def fetch_place_photos_by_place_id(self, place_id: str, max_photos: int = 8) -> List[str]:
         """
         Coleta fotos públicas do Google Places a partir de um place_id já conhecido.
+        Retorna até max_photos URLs diretas de alta resolução da CDN do Google.
         """
         if not self.api_key or not place_id:
             return []
@@ -251,9 +252,10 @@ class GooglePlacesIntegration(BaseHTTPClient, LeadSearchProvider):
             self.logger.warning(f"Erro ao buscar fotos por place_id '{place_id}': {e}")
             return []
 
-    async def fetch_place_photos_by_query(self, query: str, max_photos: int = 4) -> List[str]:
+    async def fetch_place_photos_by_query(self, query: str, max_photos: int = 8) -> List[str]:
         """
         Coleta sob demanda fotos públicas do Google Places usando o nome e cidade/endereço da empresa.
+        Se o searchText retornar poucas fotos, consulta Place Details completo para obter o catálogo real.
         Retorna URLs diretas de alta resolução da CDN do Google (lh3.googleusercontent.com).
         """
         if not self.api_key or not query.strip():
@@ -275,7 +277,29 @@ class GooglePlacesIntegration(BaseHTTPClient, LeadSearchProvider):
             if not places:
                 return []
 
-            raw_photos = places[0].get("photos", [])[:max_photos]
+            first_place = places[0]
+            place_id = first_place.get("id")
+            raw_photos = first_place.get("photos", [])
+
+            # No Google Places API (New), searchText frequentemente devolve apenas 1 foto de capa.
+            # Se tivermos place_id e menos fotos que o desejado, consultamos Place Details para pegar até 10 fotos.
+            if place_id and len(raw_photos) < max_photos:
+                try:
+                    details_data = await self._request(
+                        "GET",
+                        f"/places/{place_id}",
+                        headers={
+                            "X-Goog-Api-Key": self.api_key,
+                            "X-Goog-FieldMask": "id,photos",
+                        },
+                    )
+                    details_photos = details_data.get("photos", [])
+                    if details_photos and len(details_photos) > len(raw_photos):
+                        raw_photos = details_photos
+                except Exception as det_err:
+                    self.logger.debug(f"Place Details fallback falhou para {place_id}: {det_err}")
+
+            raw_photos = raw_photos[:max_photos]
             return await self._resolve_photo_media_uris(raw_photos)
         except Exception as e:
             self.logger.warning(f"Erro ao buscar fotos por query '{query}': {e}")
@@ -283,32 +307,41 @@ class GooglePlacesIntegration(BaseHTTPClient, LeadSearchProvider):
 
     async def _resolve_photo_media_uris(self, raw_photos: List[dict]) -> List[str]:
         """
-        Resolve os nomes das fotos do Google Places para URLs públicas diretas da CDN.
+        Resolve os nomes das fotos do Google Places para URLs públicas diretas da CDN de forma concorrente.
         """
         if not raw_photos:
             return []
 
+        import asyncio
+
+        async def _fetch_one_photo(client: httpx.AsyncClient, photo: dict) -> Optional[str]:
+            photo_name = photo.get("name")
+            if not photo_name:
+                return None
+            media_url = f"{self.base_url}/{photo_name}/media"
+            params = {
+                "maxHeightPx": 900,
+                "maxWidthPx": 1400,
+                "skipHttpRedirect": "true",
+                "key": self.api_key,
+            }
+            try:
+                resp = await client.get(media_url, params=params)
+                if resp.status_code == 200:
+                    cdn_url = resp.json().get("photoUri")
+                    if cdn_url:
+                        return cdn_url
+            except Exception as err:
+                self.logger.debug(f"Falha ao resolver CDN para foto {photo_name}: {err}")
+            return None
+
         photo_urls = []
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            for photo in raw_photos:
-                photo_name = photo.get("name")
-                if not photo_name:
-                    continue
-                media_url = f"{self.base_url}/{photo_name}/media"
-                params = {
-                    "maxHeightPx": 800,
-                    "maxWidthPx": 1200,
-                    "skipHttpRedirect": "true",
-                    "key": self.api_key,
-                }
-                try:
-                    resp = await client.get(media_url, params=params)
-                    if resp.status_code == 200:
-                        cdn_url = resp.json().get("photoUri")
-                        if cdn_url:
-                            photo_urls.append(cdn_url)
-                except Exception as err:
-                    self.logger.debug(f"Falha ao resolver CDN para foto {photo_name}: {err}")
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            tasks = [_fetch_one_photo(client, p) for p in raw_photos]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            for res in results:
+                if isinstance(res, str) and res:
+                    photo_urls.append(res)
 
         return photo_urls
 
