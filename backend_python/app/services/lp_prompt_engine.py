@@ -32,7 +32,7 @@ class LPPromptEngine:
                 {"title": "Acabamento & Tintas", "desc": "Argamassas, rejuntes, tintas imobiliárias, impermeabilizantes, vernizes e pincéis.", "icon": "format_paint"},
                 {"title": "Ferramentas & Acessórios", "desc": "Ferramentas manuais e elétricas, discos de corte, pás, carrinhos e fixadores.", "icon": "construction"}
             ],
-            "default_colors": {"background": "#0F172A", "primary": "#F97316", "secondary": "#1E293B", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0F172A", "primary": "#F97316", "secondary": "#1E293B", "text": "#FFFFFF", "on_primary": "#FFFFFF"}
         },
         "automotivo": {
             "name": "Centro Automotivo, Oficina Mecânica & Auto Peças",
@@ -55,7 +55,7 @@ class LPPromptEngine:
                 {"title": "Injeção & Motor", "desc": "Diagnóstico via scanner, limpeza de bicos, correias e retífica especializada.", "icon": "precision_manufacturing"},
                 {"title": "Ar Condicionado & Elétrica", "desc": "Higienização de ar condicionado, baterias, alternadores e iluminação.", "icon": "ac_unit"}
             ],
-            "default_colors": {"background": "#090D16", "primary": "#EF4444", "secondary": "#1E293B", "text": "#FFFFFF"}
+            "default_colors": {"background": "#090D16", "primary": "#EF4444", "secondary": "#161F30", "text": "#FFFFFF", "on_primary": "#FFFFFF"}
         },
         "odontologia": {
             "name": "Clínica Odontológica & Estética do Sorriso",
@@ -78,7 +78,7 @@ class LPPromptEngine:
                 {"title": "Estética do Sorriso", "desc": "Clareamento a laser, facetas de resina e lentes de contato dental.", "icon": "sparkles"},
                 {"title": "Clínica Geral & Prevenção", "desc": "Limpeza profunda, profilaxia, tratamento de canal e restaurações estéticas.", "icon": "health_and_safety"}
             ],
-            "default_colors": {"background": "#0C1B2A", "primary": "#2DD4BF", "secondary": "#134E4A", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0C1B2A", "primary": "#14B8A6", "secondary": "#132D42", "text": "#FFFFFF", "on_primary": "#090D16"}
         },
         "medicina": {
             "name": "Clínica Médica & Saúde Especializada",
@@ -101,7 +101,7 @@ class LPPromptEngine:
                 {"title": "Check-up Preventivo", "desc": "Avaliações completas de saúde personalizadas para cada fase da vida.", "icon": "fact_check"},
                 {"title": "Telemedicina & Retornos", "desc": "Acompanhamento contínuo e consultas online com envio de receitas digitais.", "icon": "devices"}
             ],
-            "default_colors": {"background": "#0B1528", "primary": "#38BDF8", "secondary": "#1E293B", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0B1528", "primary": "#38BDF8", "secondary": "#162544", "text": "#FFFFFF", "on_primary": "#090D16"}
         },
         "estetica": {
             "name": "Clínica de Estética & Harmonização Facial",
@@ -124,7 +124,7 @@ class LPPromptEngine:
                 {"title": "Depilação a Laser", "desc": "Laser de alta tecnologia, indolor e com resultados visíveis desde a 1ª sessão.", "icon": "flare"},
                 {"title": "Estética Corporal", "desc": "Drenagem linfática, massagem modeladora, criomodelagem e tratamento de celulite.", "icon": "spa"}
             ],
-            "default_colors": {"background": "#1A1215", "primary": "#F59E0B", "secondary": "#2D1B22", "text": "#FFFFFF"}
+            "default_colors": {"background": "#140D11", "primary": "#F59E0B", "secondary": "#261720", "text": "#FFFFFF", "on_primary": "#090D16"}
         },
         "gastronomia": {
             "name": "Restaurante, Gastronomia & Experiência Culinária",
@@ -147,7 +147,7 @@ class LPPromptEngine:
                 {"title": "Carta de Bebidas & Drinks", "desc": "Vinhos selecionados, cervejas artesanais e coquetéis autorais exclusivos.", "icon": "local_bar"},
                 {"title": "Sobremesas Artesanais", "desc": "Doces frescos feitos diariamente para fechar sua refeição com perfeição.", "icon": "icecream"}
             ],
-            "default_colors": {"background": "#1C100B", "primary": "#F97316", "secondary": "#381A10", "text": "#FFFFFF"}
+            "default_colors": {"background": "#1C100B", "primary": "#F97316", "secondary": "#331E15", "text": "#FFFFFF", "on_primary": "#FFFFFF"}
         },
         "advocacia": {
             "name": "Escritório de Advocacia & Consultoria Jurídica",
@@ -170,7 +170,7 @@ class LPPromptEngine:
                 {"title": "Direito Trabalhista Patronal", "desc": "Defesa corporativa em reclamatórias trabalhistas e conformidade com a CLT.", "icon": "badge"},
                 {"title": "Consultoria Tributária & Fiscal", "desc": "Recuperação de créditos tributários e planejamento fiscal estratégico.", "icon": "payments"}
             ],
-            "default_colors": {"background": "#3E0B15", "primary": "#D4AF37", "secondary": "#551320", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0B0F17", "primary": "#D4AF37", "secondary": "#18202F", "text": "#FFFFFF", "on_primary": "#090D16"}
         },
         "imobiliaria": {
             "name": "Imobiliária, Corretores & Gestão de Imóveis",
@@ -193,7 +193,7 @@ class LPPromptEngine:
                 {"title": "Imóveis Comerciais & Galpões", "desc": "Salas, pontos comerciais e áreas industriais para impulsionar seu negócio.", "icon": "domain"},
                 {"title": "Avaliação de Imóveis", "desc": "Laudo técnico preciso com valor real de mercado para compra, venda ou partilha.", "icon": "calculate"}
             ],
-            "default_colors": {"background": "#0B132B", "primary": "#3B82F6", "secondary": "#1C2541", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0B132B", "primary": "#3B82F6", "secondary": "#1C2541", "text": "#FFFFFF", "on_primary": "#FFFFFF"}
         },
         "geral": {
             "name": "Empresa & Prestação de Serviços de Excelência",
@@ -216,9 +216,40 @@ class LPPromptEngine:
                 {"title": "Pronta-Entrega & Agilidade", "desc": "Processos otimizados para garantir rapidez no fornecimento e execução.", "icon": "local_shipping"},
                 {"title": "Condições Especiais", "desc": "Pagamento facilitado e negociação transparente para fechar o melhor negócio.", "icon": "credit_card"}
             ],
-            "default_colors": {"background": "#0F131C", "primary": "#3B82F6", "secondary": "#1E293B", "text": "#FFFFFF"}
+            "default_colors": {"background": "#0F131C", "primary": "#3B82F6", "secondary": "#1E293B", "text": "#FFFFFF", "on_primary": "#FFFFFF"}
         }
     }
+
+    @classmethod
+    def get_relative_luminance(cls, hex_color: str) -> float:
+        """Calcula a luminância relativa WCAG (0.0 a 1.0) de uma cor HEX."""
+        if not hex_color or not isinstance(hex_color, str):
+            return 0.5
+        hex_clean = hex_color.lstrip("#")
+        if len(hex_clean) == 3:
+            hex_clean = "".join(c * 2 for c in hex_clean)
+        if len(hex_clean) != 6:
+            return 0.5
+        try:
+            r = int(hex_clean[0:2], 16) / 255.0
+            g = int(hex_clean[2:4], 16) / 255.0
+            b = int(hex_clean[4:6], 16) / 255.0
+        except ValueError:
+            return 0.5
+
+        def adjust(c):
+            return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+        return 0.2126 * adjust(r) + 0.7152 * adjust(g) + 0.0722 * adjust(b)
+
+    @classmethod
+    def get_contrast_text_color(cls, bg_hex: str) -> str:
+        """
+        Retorna '#090D16' (escuro) ou '#FFFFFF' (claro) para garantir conformidade WCAG AA/AAA.
+        Se a cor de fundo tiver luminância > 0.40, texto escuro é obrigatório para legibilidade.
+        """
+        lum = cls.get_relative_luminance(bg_hex)
+        return "#090D16" if lum > 0.40 else "#FFFFFF"
 
     @classmethod
     def detect_niche(cls, name: str, category: Optional[str] = None) -> str:
@@ -236,17 +267,17 @@ class LPPromptEngine:
         if any(w in text for w in ["advog", "jurid", "juríd", "direito", "oab", "associados", "tributar", "trabalhista", "previdenc", "civel", "cível"]) and not any(w in text for w in ["material", "deposito", "constru"]):
             return "advocacia"
 
-        # 4. Odontologia
-        if any(w in text for w in ["odonto", "dentist", "sorriso", "implant", "orto", "clareamento", "protese", "prótese"]):
+        # 4. Estética, beleza, salões, estética corporal/facial (PRECEDE medicina para evitar falso-positivo em 'clínica')
+        if any(w in text for w in ["estet", "estét", "beleza", "salao", "salão", "hair", "spa", "laser", "harmoniz", "botox", "barbearia", "barber", "depila", "sobrancelha", "unha", "esmalt", "micropigment", "cilios", "cílios", "podolog"]):
+            return "estetica"
+
+        # 5. Odontologia e dentistas (PRECEDE medicina para evitar falso-positivo em 'clínica')
+        if any(w in text for w in ["odonto", "dentist", "sorriso", "implant", "orto", "clareamento", "protese", "prótese", "endodont", "periodont"]):
             return "odontologia"
 
-        # 5. Medicina e saúde
-        if any(w in text for w in ["medic", "clinic", "clínica", "dr.", "doutor", "saude", "saúde", "oftalm", "dermato", "pediatr", "cardiolog", "ortoped", "fisioter", "psicolog"]):
+        # 6. Medicina e saúde especializada
+        if any(w in text for w in ["medic", "médic", "hospital", "dr.", "dra.", "doutor", "doutora", "saude", "saúde", "oftalm", "dermato", "pediatr", "cardiolog", "ortoped", "fisioter", "psicolog", "ginecolog", "urolog", "neurolog", "endocrino", "consulta", "exame", "ultrassom", "laborator", "laboratór"]):
             return "medicina"
-
-        # 6. Estética, beleza, salões
-        if any(w in text for w in ["estet", "estét", "beleza", "salao", "salão", "hair", "spa", "laser", "harmoniz", "barbearia", "depila", "sobrancelha", "unha", "esmalt"]):
-            return "estetica"
 
         # 7. Gastronomia, restaurantes, bares
         if any(w in text for w in ["restaurante", "pizz", "burger", "lanche", "bistr", "cafe", "café", "culin", "gastron", "churrasc", "sushi", "padaria", "confeitaria", "bar ", "choperia"]):
@@ -255,6 +286,10 @@ class LPPromptEngine:
         # 8. Imobiliária
         if any(w in text for w in ["imobil", "imóveis", "imoveis", "corretor", "creci", "locacao", "locação", "loteamento"]):
             return "imobiliaria"
+
+        # 9. Fallback clínico: se tiver 'clínica' sem qualificador específico
+        if any(w in text for w in ["clinic", "clínica"]):
+            return "medicina"
 
         return "geral"
 
@@ -375,6 +410,7 @@ class LPPromptEngine:
         primary_color = colors.get("primary", "#F97316")
         secondary_color = colors.get("secondary", "#1E293B")
         text_color = colors.get("text", "#FFFFFF")
+        on_primary_color = colors.get("on_primary") or cls.get_contrast_text_color(primary_color)
 
         # Dados de Reputação
         rating = lead_data.get("google_rating")
@@ -463,11 +499,13 @@ class LPPromptEngine:
 - Aesthetics & Visual Theme: {rules['style']}
 - Primary CTA: '{rules['cta_label']}' (Linking to WhatsApp)
 
-### CRITICAL BRAND IDENTITY & VISUAL SYSTEM (MUST STRICTLY FOLLOW):
+### CRITICAL BRAND IDENTITY & VISUAL SYSTEM (WCAG ACCESSIBILITY & CRO COMPLIANT):
 - Foundation / Background: {bg_color}
 - Primary Accent & Action Elements: {primary_color}
-- Secondary / Container Surfaces: {secondary_color}
+- Primary Action Text Color (on-primary): {on_primary_color} (MANDATORY: text on {primary_color} buttons MUST use {on_primary_color} — NEVER use background color or low-contrast text!)
+- Secondary / Container Surfaces (Cards): {secondary_color} (MUST be a distinct container surface with crystal-clear contrast against text {text_color} — cards and text must NEVER share the same color!)
 - High-Contrast Text: {text_color}
+- Badges & Pills: Always use bg-primary/10 border border-primary/30 text-primary (NEVER unreadable solid low-contrast badges!)
 - {logo_spec}
 
 {gallery_spec}

@@ -28,13 +28,18 @@ class EnrichmentService:
     """
 
     @staticmethod
-    def extract_brand_colors(image_bytes_or_path: Any) -> Dict[str, Any]:
+    def extract_brand_colors(image_bytes_or_path: Any) -> Optional[Dict[str, Any]]:
         """
-        Analisa uma imagem de logotipo ou foto do estabelecimento e extrai
-        a paleta de cores dominante (Fundo, Primária, Secundária e Contraste).
+        Analisa uma imagem de logotipo e extrai a cor primária de destaque da marca.
+        Fotos de estabelecimentos/rua (Google Places) são rejeitadas para evitar paletas incoerentes.
         """
         if not HAS_PILLOW or not image_bytes_or_path:
-            return EnrichmentService._default_palette()
+            return None
+
+        # Rejeitar fotos do Google Places (lh3/googleusercontent) pois são fotos de rua/fachada
+        if isinstance(image_bytes_or_path, str) and ("lh3.googleusercontent.com" in image_bytes_or_path or "googleusercontent" in image_bytes_or_path):
+            return None
+
         try:
             if isinstance(image_bytes_or_path, str) and (image_bytes_or_path.startswith("http://") or image_bytes_or_path.startswith("https://")):
                 with httpx.Client(timeout=8.0) as client:
@@ -46,52 +51,57 @@ class EnrichmentService:
             else:
                 img = Image.open(image_bytes_or_path)
 
-            img = img.convert("RGB")
-            img = img.resize((120, 120))
+            img = img.convert("RGBA")
+            img = img.resize((100, 100))
             pixels = list(img.getdata())
-            counts = Counter(pixels)
 
-            if not counts:
-                return EnrichmentService._default_palette()
-
-            # Cor de fundo / mais frequente
-            bg_rgb = counts.most_common(1)[0][0]
-
-            def color_dist(c1, c2):
-                return math.sqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 + (c1[2] - c2[2]) ** 2)
+            # Filtrar pixels transparentes, muito pretos, muito brancos ou cinzas neutros
+            colored_pixels = []
+            for r, g, b, a in pixels:
+                if a < 128:
+                    continue  # Transparente
+                if (r < 30 and g < 30 and b < 30) or (r > 235 and g > 235 and b > 235):
+                    continue  # Preto e branco puro
+                max_c = max(r, g, b)
+                min_c = min(r, g, b)
+                if (max_c - min_c) < 25:
+                    continue  # Tons de cinza
+                colored_pixels.append((r, g, b))
 
             def to_hex(c):
                 return "#{:02x}{:02x}{:02x}".format(c[0], c[1], c[2])
 
-            # Procurar cores com bom contraste em relação ao fundo
-            candidates = [c for c in counts.most_common(40) if color_dist(c[0], bg_rgb) > 75]
+            if not colored_pixels:
+                return None
 
-            bg_hex = to_hex(bg_rgb)
-            primary_hex = to_hex(candidates[0][0]) if candidates else ("#ffffff" if bg_rgb[0] < 128 else "#0B0F17")
-            secondary_hex = to_hex(candidates[1][0]) if len(candidates) > 1 else ("#d4af37" if bg_rgb[0] < 128 else "#1e293b")
-            
-            # Ajuste de brilho para garantir legibilidade
-            is_dark_bg = (bg_rgb[0] * 0.299 + bg_rgb[1] * 0.587 + bg_rgb[2] * 0.114) < 130
-            text_color = "#ffffff" if is_dark_bg else "#0B0F17"
+            counts = Counter(colored_pixels)
+            dominant_rgb = counts.most_common(1)[0][0]
+            primary_hex = to_hex(dominant_rgb)
+
+            # Luminância relativa para contraste do texto do botão primário
+            lum = (dominant_rgb[0] * 0.299 + dominant_rgb[1] * 0.587 + dominant_rgb[2] * 0.114) / 255.0
+            on_primary = "#090D16" if lum > 0.40 else "#FFFFFF"
 
             return {
-                "background": bg_hex,
+                "background": "#0B101E",
                 "primary": primary_hex,
-                "secondary": secondary_hex,
-                "text": text_color,
-                "is_dark_theme": is_dark_bg,
+                "secondary": "#141D30",
+                "text": "#FFFFFF",
+                "on_primary": on_primary,
+                "is_dark_theme": True,
             }
         except Exception as e:
             logger.warning(f"Erro ao extrair paleta de cores via Pillow: {e}")
-            return EnrichmentService._default_palette()
+            return None
 
     @staticmethod
     def _default_palette() -> Dict[str, Any]:
         return {
             "background": "#0F131C",
-            "primary": "#d4af37",
+            "primary": "#3B82F6",
             "secondary": "#1E293B",
-            "text": "#ffffff",
+            "text": "#FFFFFF",
+            "on_primary": "#FFFFFF",
             "is_dark_theme": True,
         }
 
@@ -215,6 +225,6 @@ class EnrichmentService:
 
         return {
             "cnpj": found_cnpj,
-            "brand_colors": brand_colors or EnrichmentService._default_palette(),
+            "brand_colors": brand_colors,
             "owners": partners,
         }

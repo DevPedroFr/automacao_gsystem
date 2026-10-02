@@ -352,17 +352,22 @@ async def generate_landing_page(
         )
 
     try:
+        # Sanitização prévia do Logotipo (nunca usar fotos do Google Places ou fachada para extrair cores)
+        clean_logo = lead.logo_url
+        if clean_logo and ("lh3.googleusercontent.com" in clean_logo or "googleusercontent" in clean_logo):
+            clean_logo = None
+
         # 1. Enriquecimento de Dados (Cores, Sócios, Logo)
         enrichment = await EnrichmentService.enrich_lead_data(
             lead_name=lead.name,
             city=lead.city or "",
             website_url=lead.website,
             instagram_bio=lead.name,
-            logo_url_or_path=lead.logo_url or lead.image_url,
+            logo_url_or_path=clean_logo,
             reviews_text=diagnostic.observed_facts,
         )
 
-        brand_colors = enrichment["brand_colors"]
+        brand_colors = enrichment.get("brand_colors")
         owners = enrichment["owners"]
         cnpj = enrichment["cnpj"]
 
@@ -456,7 +461,7 @@ async def generate_landing_page(
 
         # Salva o prompt customizado
         diagnostic.stitch_prompt = custom_prompt
-        diagnostic.brand_colors = json.dumps(brand_colors)
+        diagnostic.brand_colors = json.dumps(brand_colors) if brand_colors else None
         if owners:
             diagnostic.owners_info = json.dumps(owners)
 

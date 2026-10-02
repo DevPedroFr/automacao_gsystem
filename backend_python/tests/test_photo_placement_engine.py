@@ -98,6 +98,70 @@ class PhotoPlacementEngineTests(unittest.TestCase):
         header_part = html.split("</header>")[0]
         self.assertNotIn("lh3.googleusercontent.com", header_part)
 
+    def test_niche_detection_estetica_vs_medicina(self):
+        # Virtuosa Clínica de Estética DEVE ser detectada como estetica, NÃO medicina
+        niche = LPPromptEngine.detect_niche("Virtuosa Clínica de Estética", "Clínica de Estética")
+        self.assertEqual(niche, "estetica")
+
+        # Clínica Médica deve ser detectada como medicina
+        niche_med = LPPromptEngine.detect_niche("Clínica Médica Integrada Santa Clara", "Saúde e Medicina")
+        self.assertEqual(niche_med, "medicina")
+
+        # Odonto deve ser odontologia
+        niche_odonto = LPPromptEngine.detect_niche("Clínica Odontológica Sorriso Perfeito", "Dentista")
+        self.assertEqual(niche_odonto, "odontologia")
+
+    def test_contrast_text_color_calculations(self):
+        # Cores claras exigem texto escuro (#090D16)
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#38BDF8"), "#090D16")  # Azul céu claro
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#F59E0B"), "#090D16")  # Âmbar/Dourado claro
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#FFFFFF"), "#090D16")  # Branco
+
+        # Cores escuras ou saturadas exigem texto claro (#FFFFFF)
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#EF4444"), "#FFFFFF")  # Vermelho
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#1E3A8A"), "#FFFFFF")  # Azul marinho escuro
+        self.assertEqual(LPPromptEngine.get_contrast_text_color("#0F172A"), "#FFFFFF")  # Slate escuro
+
+    def test_street_photo_rejection_in_brand_colors(self):
+        from app.services.enrichment_service import EnrichmentService
+        # Fotos do Google Places (rua/fachada) NUNCA devem ter cores extraídas pelo Pillow
+        street_url = "https://lh3.googleusercontent.com/places/AAkxkeL123=s1600"
+        colors = EnrichmentService.extract_brand_colors(street_url)
+        self.assertIsNone(colors)
+
+    def test_landing_page_wcag_color_contrast_and_badges(self):
+        lead_data = {
+            "name": "Virtuosa Clínica de Estética",
+            "category": "Clínica de Estética",
+            "phone": "(11) 98581-9552",
+            "address": "R. Dr. Ricardo Vilela, 1380 - Centro, Mogi das Cruzes - SP",
+            "google_rating": 4.8,
+            "google_reviews_count": 344,
+        }
+
+        html = SiteGeneratorService._build_semantic_landing_page(
+            lead_data=lead_data,
+            brand_colors={},
+            owners=[],
+            logo_url=None,
+            gallery_urls=self.sample_photos,
+        )
+
+        # 1. Nicho correto: Estética (não medicina)
+        self.assertIn("Estética Avançada & Bem-Estar", html)
+        self.assertNotIn("Medicina Integrada & Consultas Especializadas", html)
+
+        # 2. Tailwind Config deve conter on-primary
+        self.assertIn('"on-primary":', html)
+
+        # 3. Botões primários NUNCA devem ter classe 'text-background'
+        self.assertNotIn("bg-primary text-background", html)
+        self.assertIn("bg-primary text-on-primary", html)
+
+        # 4. Hero Badge deve usar bg-primary/10 e text-primary (nunca bg-surface-container)
+        self.assertIn("bg-primary/10 border border-primary/30", html)
+        self.assertIn("text-primary", html)
+
 
 if __name__ == "__main__":
     unittest.main()

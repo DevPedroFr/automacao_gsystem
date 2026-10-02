@@ -144,12 +144,22 @@ class SiteGeneratorService:
         niche_key = LPPromptEngine.detect_niche(name, category)
         niche_rules = LPPromptEngine.NICHE_RULES.get(niche_key, LPPromptEngine.NICHE_RULES["geral"])
 
-        # Cores (detectadas ou padrão do nicho)
+        # Cores (detectadas ou padrão do nicho) com garantia estrita de WCAG AA/AAA
         colors = brand_colors or niche_rules.get("default_colors", {})
         bg = colors.get("background") or niche_rules["default_colors"]["background"]
         primary = colors.get("primary") or niche_rules["default_colors"]["primary"]
         secondary = colors.get("secondary") or niche_rules["default_colors"]["secondary"]
         text_color = colors.get("text") or niche_rules["default_colors"]["text"]
+        on_primary = colors.get("on_primary") or LPPromptEngine.get_contrast_text_color(primary)
+
+        # Blindagem de contraste: O card (surface-container) e o texto (on-surface) NUNCA podem ter cores iguais
+        card_lum = LPPromptEngine.get_relative_luminance(secondary)
+        text_lum = LPPromptEngine.get_relative_luminance(text_color)
+        contrast_ratio = (max(card_lum, text_lum) + 0.05) / (min(card_lum, text_lum) + 0.05)
+        if contrast_ratio < 4.5:
+            # Se o contraste entre card e texto for insuficiente, restaurar superfície calibrada do nicho
+            secondary = niche_rules["default_colors"]["secondary"]
+            text_color = niche_rules["default_colors"]["text"]
 
         # Textos e CTAs do nicho
         hero_badge = niche_rules.get("hero_badge", "Excelência & Atendimento Especializado")
@@ -197,7 +207,7 @@ class SiteGeneratorService:
                     <h4 class="text-lg sm:text-xl font-bold text-on-surface mb-2">{card.get('title')}</h4>
                     <p class="text-xs sm:text-sm text-on-surface/70 leading-relaxed mb-5">{card.get('desc')}</p>
                 </div>
-                <a href="https://wa.me/{clean_phone}?text={urllib.parse.quote(f'Olá! Gostaria de um orçamento sobre {card.get("title")}.')}" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-background font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all text-center mt-auto">
+                <a href="https://wa.me/{clean_phone}?text={urllib.parse.quote(f'Olá! Gostaria de um orçamento sobre {card.get("title")}.')}" target="_blank" class="w-full py-2.5 px-3 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all text-center mt-auto">
                     <span>Pedir Cotação</span>
                     <span class="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
@@ -288,7 +298,7 @@ class SiteGeneratorService:
                 <div class="max-w-[1320px] mx-auto px-4 sm:px-6 relative z-10">
                     <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
                         <div class="lg:col-span-7 flex flex-col items-start text-left">
-                            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container border border-primary/30 mb-5 text-[11px] sm:text-xs text-primary font-bold tracking-wider uppercase shadow-sm">
+                            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/30 mb-5 text-[11px] sm:text-xs text-primary font-bold tracking-wider uppercase shadow-sm backdrop-blur-sm">
                                 <span class="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0"></span>
                                 <span>{hero_badge}</span>
                             </div>
@@ -299,7 +309,7 @@ class SiteGeneratorService:
                                 {subheadline}
                             </p>
                             <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="w-full sm:w-auto bg-primary text-background font-extrabold px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider text-center">
+                                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="w-full sm:w-auto bg-primary text-on-primary font-extrabold px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider text-center">
                                     <span class="material-symbols-outlined text-lg sm:text-xl">chat</span>
                                     <span>{cta_label}</span>
                                 </a>
@@ -339,7 +349,7 @@ class SiteGeneratorService:
             <section class="py-12 sm:py-20 md:py-28 relative overflow-hidden">
                 <div class="max-w-[1320px] mx-auto px-4 sm:px-6 relative z-10">
                     <div class="max-w-4xl mx-auto text-center flex flex-col items-center">
-                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-surface-container border border-primary/30 mb-5 text-[11px] sm:text-xs text-primary font-bold tracking-wider uppercase shadow-sm max-w-full">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 border border-primary/30 mb-5 text-[11px] sm:text-xs text-primary font-bold tracking-wider uppercase shadow-sm max-w-full backdrop-blur-sm">
                             <span class="h-2 w-2 rounded-full bg-primary animate-pulse shrink-0"></span>
                             <span class="truncate">{hero_badge}</span>
                         </div>
@@ -350,7 +360,7 @@ class SiteGeneratorService:
                             {subheadline}
                         </p>
                         <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md sm:max-w-none sm:w-auto justify-center items-stretch sm:items-center">
-                            <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="w-full sm:w-auto bg-primary text-background font-extrabold px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider text-center">
+                            <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="w-full sm:w-auto bg-primary text-on-primary font-extrabold px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center justify-center gap-2 text-xs sm:text-sm uppercase tracking-wider text-center">
                                 <span class="material-symbols-outlined text-lg sm:text-xl">chat</span>
                                 <span>{cta_label}</span>
                             </a>
@@ -407,7 +417,7 @@ class SiteGeneratorService:
                                     <span class="material-symbols-outlined text-primary text-base">map</span>
                                     Abrir no Google Maps
                                 </a>
-                                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-on-primary px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
                                     <span class="material-symbols-outlined text-base">chat</span>
                                     Chamar no WhatsApp
                                 </a>
@@ -434,7 +444,7 @@ class SiteGeneratorService:
                                 <span class="material-symbols-outlined text-primary text-base">map</span>
                                 Abrir no Google Maps
                             </a>
-                            <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                            <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-on-primary px-6 py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined text-base">chat</span>
                                 Chamar no WhatsApp
                             </a>
@@ -482,6 +492,7 @@ class SiteGeneratorService:
                         "surface": "{bg}",
                         "surface-container": "{secondary}",
                         "primary": "{primary}",
+                        "on-primary": "{on_primary}",
                         "on-surface": "{text_color}",
                         "outline-variant": "rgba(255,255,255,0.12)"
                     }},
@@ -493,7 +504,7 @@ class SiteGeneratorService:
         }};
     </script>
 </head>
-<body class="bg-background text-on-surface font-sans antialiased selection:bg-primary selection:text-background">
+<body class="bg-background text-on-surface font-sans antialiased selection:bg-primary selection:text-on-primary">
     <!-- TOP NAVIGATION (100% RESPONSIVA) -->
     <header class="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-outline-variant">
         <div class="max-w-[1320px] mx-auto px-4 sm:px-6 h-16 sm:h-20 flex justify-between items-center gap-2">
@@ -512,7 +523,7 @@ class SiteGeneratorService:
                     <span class="material-symbols-outlined text-primary text-base">call</span>
                     <span>{phone}</span>
                 </a>
-                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-background font-bold text-[11px] sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-md hover:opacity-95 active:scale-95 transition-all inline-flex items-center gap-1.5 whitespace-nowrap">
+                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="bg-primary text-on-primary font-bold text-[11px] sm:text-xs uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg shadow-md hover:opacity-95 active:scale-95 transition-all inline-flex items-center gap-1.5 whitespace-nowrap">
                     <span class="material-symbols-outlined text-sm sm:text-base">chat</span>
                     <span>{cta_label}</span>
                 </a>
@@ -589,7 +600,7 @@ class SiteGeneratorService:
                     <p class="text-sm text-on-surface font-semibold">Avaliação consolidada no Google Business</p>
                     <p class="text-xs text-on-surface/60 mt-1">Mais de {reviews_count} clientes satisfeitos com atendimento, preço e qualidade.</p>
                 </div>
-                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="shrink-0 bg-primary text-background font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2">
+                <a href="https://wa.me/{clean_phone}?text={encoded_whatsapp_msg}" target="_blank" class="shrink-0 bg-primary text-on-primary font-bold text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-lg hover:scale-105 transition-transform flex items-center gap-2">
                     <span class="material-symbols-outlined text-lg">chat</span>
                     Solicitar Atendimento VIP
                 </a>
