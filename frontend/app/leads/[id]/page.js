@@ -647,7 +647,7 @@ export default function LeadDetailPage() {
                 {diagLoading ? 'Processando IA...' : '🔄 Regenerar Diagnóstico'}
               </Button>
             </div>
-            <DiagnosticTabs diagnostic={diagnostic} />
+            <DiagnosticTabs diagnostic={diagnostic} lead={lead} leadId={leadId} />
           </Card>
         </>
       )}

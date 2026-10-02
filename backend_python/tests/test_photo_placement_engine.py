@@ -216,6 +216,52 @@ class PhotoPlacementEngineTests(unittest.TestCase):
 
         asyncio.run(run_test())
 
+    def test_download_lead_images_zip_when_no_photos_available(self):
+        """Valida que leads sem fotos no Google Places ainda baixam ZIP com prompt e aviso (nunca 404)."""
+        import io
+        import zipfile
+        import asyncio
+        from unittest.mock import MagicMock, AsyncMock, patch
+        from app.api.diagnostics import download_lead_images
+
+        mock_db = MagicMock()
+        mock_lead = MagicMock()
+        mock_lead.id = "lead-sem-fotos-456"
+        mock_lead.name = "Consultoria Sem Fotos"
+        mock_lead.category = "Consultoria"
+        mock_lead.phone = "(11) 98888-8888"
+        mock_lead.address = "Av Paulista, 1000"
+        mock_lead.city = "São Paulo"
+        mock_lead.google_rating = 5.0
+        mock_lead.google_reviews_count = 5
+        mock_lead.gallery_urls = None
+        mock_lead.image_url = None
+        mock_lead.logo_url = None
+
+        mock_diag = MagicMock()
+        mock_diag.stitch_prompt = "PROMPT DE TESTE CONSULTORIA CRO"
+
+        mock_db.query.return_value.filter.return_value.first.side_effect = [mock_lead, mock_diag]
+
+        async def run_test():
+            with patch("app.integrations.google_places.GooglePlacesIntegration.fetch_place_photos_by_query", new_callable=AsyncMock) as mock_fetch:
+                mock_fetch.return_value = []
+                response = await download_lead_images(lead_id="lead-sem-fotos-456", db=mock_db)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.media_type, "application/zip")
+
+                body = response.body
+                with zipfile.ZipFile(io.BytesIO(body)) as zf:
+                    namelist = zf.namelist()
+                    self.assertIn("LEIA-ME_COMO_USAR.txt", namelist)
+                    self.assertIn("prompt_para_desenvolvimento.txt", namelist)
+                    self.assertIn("AVISO_FOTOS.txt", namelist)
+
+                    aviso = zf.read("AVISO_FOTOS.txt").decode("utf-8")
+                    self.assertIn("CONSULTORIA SEM FOTOS", aviso.upper())
+
+        asyncio.run(run_test())
+
 
 if __name__ == "__main__":
     unittest.main()

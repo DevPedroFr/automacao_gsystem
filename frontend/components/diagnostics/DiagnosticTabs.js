@@ -22,7 +22,7 @@ const ARCHETYPES = [
   { id: 'clean_editorial', name: 'Editorial Clean', tag: 'Minimalista & Elegante', icon: '📰' },
 ];
 
-export default function DiagnosticTabs({ diagnostic = {} }) {
+export default function DiagnosticTabs({ diagnostic = {}, lead = null, leadId = null }) {
   const [activeTab, setActiveTab] = useState('panel');
   const [copiedTab, setCopiedTab] = useState(null);
   const [isGeneratingSite, setIsGeneratingSite] = useState(false);
@@ -39,15 +39,35 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
    * para que o desenvolvedor anexe no prompt fora da automação (Google Stitch, Lovable, Cursor, etc).
    */
   const handleDownloadImages = async () => {
-    const currentLeadId = siteData?.lead_id || diagnostic?.lead_id;
-    if (!currentLeadId) return;
+    const currentLeadId = leadId || lead?.id || siteData?.lead_id || diagnostic?.lead_id;
+    if (!currentLeadId) {
+      alert('Identificador do lead não encontrado para download.');
+      return;
+    }
+
+    const downloadUrl = getApiUrl(`/leads/${currentLeadId}/download-images`);
+
     try {
       setIsDownloadingImages(true);
-      const downloadUrl = getApiUrl(`/leads/${currentLeadId}/download-images`);
+
       const res = await fetch(downloadUrl);
       if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        throw new Error(errJson.detail?.message || errJson.message || 'Erro ao gerar o arquivo ZIP com as imagens.');
+        let errorMsg = `Erro ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (typeof errJson.detail === 'string') {
+            errorMsg = errJson.detail;
+          } else if (errJson.detail && typeof errJson.detail === 'object') {
+            errorMsg = errJson.detail.message || JSON.stringify(errJson.detail);
+          } else if (typeof errJson.message === 'string') {
+            errorMsg = errJson.message;
+          } else if (errJson.error) {
+            errorMsg = typeof errJson.error === 'string' ? errJson.error : JSON.stringify(errJson.error);
+          }
+        } catch {
+          errorMsg = `Erro ${res.status}: ${res.statusText || 'Falha na resposta do servidor'}`;
+        }
+        throw new Error(errorMsg);
       }
 
       const blob = await res.blob();
@@ -56,24 +76,40 @@ export default function DiagnosticTabs({ diagnostic = {} }) {
       link.href = blobUrl;
 
       const disposition = res.headers.get('content-disposition');
-      let filename = `imagens_lead_${currentLeadId}.zip`;
+      const leadNameSlug = (lead?.name || siteData?.name || diagnostic?.name || 'lead')
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '_');
+      let filename = `imagens_${leadNameSlug}.zip`;
       if (disposition && disposition.includes('filename=')) {
-        const matches = disposition.match(/filename="?([^"]+)"?/);
+        const matches = disposition.match(/filename="?([^";]+)"?/);
         if (matches && matches[1]) {
-          filename = matches[1];
+          filename = matches[1].trim();
         }
       }
       link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 10000);
 
       setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 3000);
+      setTimeout(() => setDownloadSuccess(false), 4000);
     } catch (err) {
       console.error('Erro no download das imagens:', err);
-      alert('Não foi possível baixar as imagens: ' + (err.message || 'Erro de conexão com o servidor.'));
+      // Se for erro de rede/CORS ou Failed to fetch, dispara o download nativo pelo navegador
+      const isNetworkOrCors = err.message && (
+        err.message.includes('fetch') ||
+        err.message.includes('network') ||
+        err.message.includes('CORS') ||
+        err.message.includes('Failed')
+      );
+      if (isNetworkOrCors) {
+        window.open(downloadUrl, '_blank');
+        setDownloadSuccess(true);
+        setTimeout(() => setDownloadSuccess(false), 4000);
+        return;
+      }
+      alert('Não foi possível baixar as imagens: ' + (err.message || 'Erro inesperado no servidor.'));
     } finally {
       setIsDownloadingImages(false);
     }
