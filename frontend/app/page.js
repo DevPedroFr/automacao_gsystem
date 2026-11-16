@@ -9,17 +9,12 @@ import StatCard from '@/components/ui/StatCard';
 import PriorityChart from '@/components/dashboard/PriorityChart';
 import CampaignTable from '@/components/dashboard/CampaignTable';
 import NewCampaignModal from '@/components/campaigns/NewCampaignModal';
-import { Users, BarChart3, ClipboardCheck, Rocket, Zap, Globe, Cpu } from 'lucide-react';
+import { Users, BarChart3, ClipboardCheck, Rocket } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState([]);
   const [stats, setStats] = useState({ totalLeads: 0, avgDms: 0, activeCampaigns: 0, totalDiagnostics: 0 });
-  const [apiUsage, setApiUsage] = useState({
-    apify: { used: 0, limit: 50, unit: 'pesquisas' },
-    gemini: { used: 0, limit: 1500, unit: 'requisições' },
-    pagespeed: { used: 0, limit: 25000, unit: 'auditorias' }
-  });
   const [priorityData, setPriorityData] = useState([]);
   const [barData, setBarData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +29,7 @@ export default function DashboardPage() {
       const campaignsList = campaignsData.data || campaignsData.campaigns || (Array.isArray(campaignsData) ? campaignsData : []);
       setCampaigns(campaignsList);
 
-      // 2. Busca estatísticas globais consolidadas do dashboard e consumo de APIs
+      // 2. Busca estatísticas globais consolidadas do dashboard
       const dashboardRes = await fetchApi('/dashboard/stats');
       const dashboardData = dashboardRes.data || {};
 
@@ -44,10 +39,6 @@ export default function DashboardPage() {
         activeCampaigns: dashboardData.activeCampaigns || 0,
         totalDiagnostics: dashboardData.totalDiagnostics || 0,
       });
-
-      if (dashboardData.apiUsage) {
-        setApiUsage(dashboardData.apiUsage);
-      }
 
       if (dashboardData.priorityDistribution) {
         setPriorityData(dashboardData.priorityDistribution);
@@ -159,82 +150,6 @@ export default function DashboardPage() {
           subtitle="Processamento em andamento"
         />
       </div>
-
-      {/* API Usage & Quotas (Limites Gratuitos) Premium */}
-      <Card className="relative group">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-2xl" />
-        
-        <div className="flex items-center gap-2 mb-6">
-          <div className="p-2 bg-gray-800 rounded-lg border border-gray-700 shadow-inner">
-            <Zap className="text-cyan-400" size={18} />
-          </div>
-          <h3 className="text-base font-semibold text-gray-200 tracking-wide">
-            Recursos do Sistema <span className="text-xs text-gray-500 font-normal ml-2">(Ciclo Atual)</span>
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-          {/* Apify */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-              <Globe size={16} className="text-blue-400" />
-              <span>Apify (Scraper)</span>
-            </div>
-            <div className="w-full bg-gray-900/80 rounded-full h-2.5 overflow-hidden border border-gray-700/50 shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-blue-600 to-cyan-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(6,182,212,0.6)]" 
-                style={{ width: `${Math.min(100, (apiUsage.apify.used / apiUsage.apify.limit) * 100)}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">{apiUsage.apify.used} / {apiUsage.apify.limit}</span>
-              <span className="text-cyan-400 font-bold bg-cyan-400/10 px-2 py-0.5 rounded-full border border-cyan-400/20">
-                {Math.max(0, apiUsage.apify.limit - apiUsage.apify.used)} restam
-              </span>
-            </div>
-          </div>
-
-          {/* Gemini */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-              <Cpu size={16} className="text-emerald-400" />
-              <span>Gemini 2.5 AI</span>
-            </div>
-            <div className="w-full bg-gray-900/80 rounded-full h-2.5 overflow-hidden border border-gray-700/50 shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(16,185,129,0.6)]" 
-                style={{ width: `${Math.min(100, (apiUsage.gemini.used / apiUsage.gemini.limit) * 100)}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">{apiUsage.gemini.used} / {apiUsage.gemini.limit}</span>
-              <span className="text-emerald-400 font-bold bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
-                {Math.max(0, apiUsage.gemini.limit - apiUsage.gemini.used)} restam
-              </span>
-            </div>
-          </div>
-
-          {/* PageSpeed */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-              <Zap size={16} className="text-purple-400" />
-              <span>Google PageSpeed</span>
-            </div>
-            <div className="w-full bg-gray-900/80 rounded-full h-2.5 overflow-hidden border border-gray-700/50 shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-purple-600 to-purple-400 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(167,139,250,0.6)]" 
-                style={{ width: `${Math.min(100, (apiUsage.pagespeed.used / apiUsage.pagespeed.limit) * 100)}%` }}
-              />
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-500 font-medium">{apiUsage.pagespeed.used} / {apiUsage.pagespeed.limit}</span>
-              <span className="text-purple-400 font-bold bg-purple-400/10 px-2 py-0.5 rounded-full border border-purple-400/20">
-                {Math.max(0, apiUsage.pagespeed.limit - apiUsage.pagespeed.used)} restam
-              </span>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
