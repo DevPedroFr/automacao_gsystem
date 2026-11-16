@@ -74,6 +74,16 @@ export default function DashboardPage() {
     loadData();
   }, [loadData]);
 
+  // Polling automático suave enquanto houver campanhas em execução
+  const hasProcessing = campaigns.some((c) => c.status === 'processing');
+  useEffect(() => {
+    if (!hasProcessing) return;
+    const interval = setInterval(() => {
+      loadData();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [hasProcessing, loadData]);
+
   const handleCampaignSuccess = (result) => {
     setShowModal(false);
     loadData();
@@ -288,10 +298,39 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Campaign Table */}
+      {/* Campaign Section */}
       <Card>
-        <h3 className="text-sm font-semibold text-gray-300 mb-4">Campanhas Recentes</h3>
-        <CampaignTable campaigns={campaigns} />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-gray-100">Campanhas de Prospecção</h3>
+              {hasProcessing && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  Automação Ativa
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-0.5">Monitore o radar de leads e ative novas automações sob medida</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/campaigns')}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/50 transition-all flex items-center gap-1"
+            >
+              <span>Gerenciar Campanhas ({campaigns.length})</span>
+              <span>→</span>
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+            >
+              <Rocket size={14} />
+              <span>⚡ Ativar Campanha</span>
+            </button>
+          </div>
+        </div>
+        <CampaignTable campaigns={campaigns} onRefresh={loadData} />
       </Card>
 
       {/* FAB */}

@@ -8,6 +8,7 @@ import uuid
 import logging
 from datetime import datetime
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -56,6 +57,16 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
             if index > 0:
                 await asyncio.sleep(1.0)  # 1s de delay entre leads
 
+            # Evita duplicar lead já existente nesta campanha ao reativar
+            existing_lead = db.query(Lead).filter(
+                Lead.campaign_id == campaign_id,
+                Lead.name == place_lead.name
+            ).first()
+            if existing_lead:
+                logger.info(f"   ⏩ Lead '{place_lead.name}' já cadastrado nesta campanha. Pulando...")
+                processed_count += 1
+                continue
+
             try:
                 lead_data = await _process_single_lead(place_lead, campaign_id, db)
                 db.add(lead_data)
@@ -70,11 +81,12 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
                 db.rollback()
                 # Continua processando os outros leads mesmo se um falhar
 
-        # 3. Marca campanha como concluída
+        # 3. Marca campanha como concluída e consolida total real de leads no banco
         campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
         if campaign and campaign.status == "processing":
+            total_in_db = db.query(func.count(Lead.id)).filter(Lead.campaign_id == campaign_id).scalar() or 0
             campaign.status = "completed"
-            campaign.total_leads = processed_count
+            campaign.total_leads = total_in_db
             campaign.updated_at = datetime.utcnow()
             db.commit()
 

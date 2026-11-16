@@ -9,7 +9,7 @@ import Button from '@/components/ui/Button';
 import LeadTable from '@/components/leads/LeadTable';
 import LeadFilters from '@/components/leads/LeadFilters';
 import { STATUS_CONFIG, PRIORITY_CONFIG } from '@/lib/constants';
-import { CircleStop } from 'lucide-react';
+import { CircleStop, Play, RotateCw, ChevronLeft } from 'lucide-react';
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -23,6 +23,7 @@ export default function CampaignDetailPage() {
   const [priorityFilter, setPriorityFilter] = useState('');
   const [exporting, setExporting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [activating, setActivating] = useState(false);
 
   const loadCampaign = useCallback(async () => {
     try {
@@ -84,6 +85,20 @@ export default function CampaignDetailPage() {
       loadLeads();
     }
   }, [searchValue, priorityFilter, loadLeads, loading]);
+
+  const handleActivateCampaign = async () => {
+    try {
+      setActivating(true);
+      const result = await fetchApi(`/campaigns/${campaignId}/activate`, { method: 'POST' });
+      setCampaign(result.data || result);
+      await loadLeads();
+    } catch (err) {
+      console.error('Erro ao ativar campanha:', err);
+      window.alert(err.message || 'Não foi possível ativar a campanha.');
+    } finally {
+      setActivating(false);
+    }
+  };
 
   const handleCancelCampaign = async () => {
     if (!window.confirm('Deseja parar esta campanha? Os leads já encontrados serão mantidos.')) return;
@@ -151,13 +166,11 @@ export default function CampaignDetailPage() {
     <div className="space-y-6 animate-fade-in">
       {/* Back button */}
       <button
-        onClick={() => router.push('/')}
-        className="flex items-center gap-2 text-sm text-gray-400 hover:text-cyan-400 font-medium transition-colors"
+        onClick={() => router.push('/campaigns')}
+        className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-cyan-400 font-medium transition-colors"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
-        Voltar ao Dashboard
+        <ChevronLeft size={16} />
+        Voltar para Campanhas
       </button>
 
       {/* Header */}
@@ -176,11 +189,24 @@ export default function CampaignDetailPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {campaign?.status === 'processing' && (
+        <div className="flex flex-wrap items-center gap-3">
+          {campaign?.status === 'processing' ? (
             <Button variant="danger" onClick={handleCancelCampaign} loading={cancelling}>
-              <CircleStop size={16} /> Parar campanha
+              <CircleStop size={16} /> Parar automação
             </Button>
+          ) : (
+            <button
+              onClick={handleActivateCampaign}
+              disabled={activating}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
+            >
+              {activating ? (
+                <RotateCw size={14} className="animate-spin text-white" />
+              ) : (
+                <Play size={14} className="fill-white text-white" />
+              )}
+              <span>{activating ? 'Ativando...' : '⚡ Ativar / Reexecutar Radar'}</span>
+            </button>
           )}
           <Button variant="secondary" onClick={handleExportCSV} loading={exporting} disabled={!leads.length}>
             📥 Exportar CSV
