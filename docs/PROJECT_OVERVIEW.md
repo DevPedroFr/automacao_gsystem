@@ -1,6 +1,6 @@
-# CONSULTINGS APD AUTOMATION — Visão Geral do Projeto
+# AUTOMAÇÃO DE LEADS — Visão Geral do Projeto
 
-A plataforma **CONSULTINGS APD AUTOMATION** é um sistema web B2B interno de prospecção consultiva e inteligência comercial focada no mercado brasileiro. A ferramenta foi projetada para apoiar times de vendas na identificação e priorização de potenciais clientes (leads) locais com base no nível de maturidade de sua presença digital.
+A plataforma **Automação de Leads** é um sistema web B2B interno de prospecção consultiva e inteligência comercial focada no mercado brasileiro. A ferramenta foi projetada para apoiar times de vendas na identificação e priorização de potenciais clientes (leads) locais com base no nível de maturidade de sua presença digital.
 
 ---
 

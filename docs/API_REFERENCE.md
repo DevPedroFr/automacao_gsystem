@@ -1,4 +1,4 @@
-# CONSULTINGS APD AUTOMATION — Referência da API REST
+# AUTOMAÇÃO DE LEADS — Referência da API REST
 
 A API do backend é estruturada sobre o Node.js e o Express. Por padrão, a API é exposta na porta `3001` (configurável via variável de ambiente `PORT` no arquivo `.env`) e todos os endpoints respondem sob o prefixo `/api`. 
 
@@ -16,6 +16,7 @@ Todas as respostas JSON bem-sucedidas são envelopadas em um objeto `{ data: ...
 | **GET** | `/api/campaigns/:id/stats` | Estatísticas acumuladas da campanha. |
 | **GET** | `/api/campaigns/:campaignId/leads` | Lista leads da campanha com filtros e ordenação. |
 | **GET** | `/api/leads/:id` | Detalhes de um lead (incluindo diagnóstico se houver). |
+| **POST** | `/api/leads/:id/research` | Pesquisa dados públicos da empresa com Gemini e retorna fontes. |
 | **GET** | `/api/campaigns/:campaignId/leads/export` | Exporta leads da campanha no formato CSV. |
 | **POST** | `/api/leads/:leadId/diagnostic` | Gera e salva o diagnóstico por IA para o lead. |
 | **GET** | `/api/leads/:leadId/diagnostic` | Retorna o diagnóstico gerado de um lead. |
@@ -180,6 +181,30 @@ Todas as respostas JSON bem-sucedidas são envelopadas em um objeto `{ data: ...
   }
   ```
 * **Uso no Frontend:** Chamado pela tela de detalhe de lead (`app/leads/[id]/page.js`) para alimentar os cards de PageSpeed, Google Rating, e Core Web Vitals.
+
+#### `POST /api/leads/:id/research`
+* **Descrição:** Pesquisa nome do responsável, cargo, telefone comercial publicado e data/ano de abertura usando Gemini Interactions com Google Search.
+* **Pré-requisito:** `GEMINI_API_KEY` configurada no ambiente do backend.
+* **Privacidade:** Retorna apenas telefone comercial publicado pela própria empresa; dados pessoais não publicados são omitidos.
+* **Resposta de Sucesso (200 OK):** Campos sem confirmação pública retornam `null`; `sources` contém URLs citadas pelo Gemini.
+* **Cache e limites:** Uma pesquisa concluída é reutilizada por 24 horas. O modelo vem de `GEMINI_MODEL`; Google Search grounding pela API requer o nível pago e cotas disponíveis no projeto vinculado à chave. Respostas `429` com `Retry-After` de até 60 segundos recebem no máximo uma nova tentativa; sem prazo de retry, erros de cota não são repetidos.
+  ```json
+  {
+    "data": {
+      "responsible_name": "Nome encontrado",
+      "responsible_role": "Diretor",
+      "public_business_phone": null,
+      "opening_date": "2012",
+      "sources": [
+        {
+          "title": "Página da empresa",
+          "url": "https://example.com/sobre"
+        }
+      ]
+    }
+  }
+  ```
+* **Uso no Frontend:** Executado ao abrir os dados do lead pelo botão “Obter dados”.
 
 #### `GET /api/campaigns/:campaignId/leads/export`
 * **Descrição:** Retorna os leads formatados como arquivo CSV para download direto.

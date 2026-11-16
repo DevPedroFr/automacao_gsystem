@@ -1,6 +1,6 @@
 # Guia de Onboarding para Desenvolvedores 🚀
 
-Bem-vindo ao projeto **Consultings APD**! Este guia foi feito para que o seu "Primeiro Dia" seja o mais rápido e indolor possível. Siga os passos abaixo para preparar a sua máquina.
+Bem-vindo ao projeto **Automação de Leads**! Este guia foi feito para que o seu "Primeiro Dia" seja o mais rápido e indolor possível. Siga os passos abaixo para preparar a sua máquina.
 
 ## 🛠️ 1. Pré-requisitos de Instalação
 Certifique-se de ter as seguintes ferramentas instaladas na sua máquina local:

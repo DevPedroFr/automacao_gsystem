@@ -74,8 +74,7 @@ export default function Sidebar() {
       <aside className="hidden md:flex w-64 min-h-screen bg-[#0F2744] flex-col shrink-0 print:hidden">
         {/* Logo */}
         <div className="px-6 py-8">
-          <h1 className="text-white font-bold text-xl tracking-wide">CONSULTINGS</h1>
-          <p className="text-cyan-400 text-xs mt-1 font-medium tracking-wider">APD Automation</p>
+          <h1 className="text-white font-bold text-xl tracking-wide">Automação de Leads</h1>
         </div>
 
         {/* Navigation */}
@@ -111,7 +110,7 @@ export default function Sidebar() {
             <span>Encerrar Sessão</span>
           </button>
           <div className="px-4 text-[10px] text-gray-500 font-mono">
-            CONSULTINGS APD v1.2
+            Automação de Leads v1.2
           </div>
         </div>
       </aside>

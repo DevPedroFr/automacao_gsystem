@@ -193,7 +193,7 @@ export default function PrintReport({ lead, diagnostic }) {
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-[#0F2744] tracking-tight">CONSULTINGS APD</h1>
+              <h1 className="text-2xl font-black text-[#0F2744] tracking-tight">Automação de Leads</h1>
               <span className="bg-[#0F2744] text-white text-[9px] font-extrabold px-2 py-0.5 rounded tracking-wider uppercase">
                 Auditoria Oficial
               </span>
@@ -754,7 +754,7 @@ export default function PrintReport({ lead, diagnostic }) {
 
       {/* Rodapé Executivo White-label */}
       <div className="mt-4 pt-2 border-t border-slate-200/80 flex justify-between items-center text-[8px] text-slate-400 font-semibold uppercase tracking-wider break-inside-avoid">
-        <span>CONSULTINGS APD • Auditoria de Presença Digital & Performance</span>
+        <span>Automação de Leads • Auditoria de Presença Digital & Performance</span>
         <span>Documento emitido para uso exclusivo de {lead.name}</span>
       </div>
 

@@ -1,4 +1,4 @@
-# CONSULTINGS APD AUTOMATION — Mapa de Mocks vs Realidade
+# AUTOMAÇÃO DE LEADS — Mapa de Mocks vs Realidade
 
 Esta documentação descreve o mapeamento completo dos mocks utilizados no MVP da plataforma, explicando o comportamento atual e as variáveis configuradas para futura integração com APIs de produção.
 

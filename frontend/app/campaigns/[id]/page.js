@@ -7,8 +7,7 @@ import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import LeadTable from '@/components/leads/LeadTable';
-import LeadFilters from '@/components/leads/LeadFilters';
-import { STATUS_CONFIG, PRIORITY_CONFIG } from '@/lib/constants';
+import { STATUS_CONFIG } from '@/lib/constants';
 import { CircleStop, Play, RotateCw, ChevronLeft } from 'lucide-react';
 
 export default function CampaignDetailPage() {
@@ -19,11 +18,10 @@ export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState(null);
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchValue, setSearchValue] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
   const [exporting, setExporting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [activating, setActivating] = useState(false);
+  const [addingLeadId, setAddingLeadId] = useState(null);
 
   const loadCampaign = useCallback(async () => {
     try {
@@ -39,17 +37,13 @@ export default function CampaignDetailPage() {
 
   const loadLeads = useCallback(async () => {
     try {
-      const queryParams = new URLSearchParams();
-      if (searchValue) queryParams.set('search', searchValue);
-      if (priorityFilter) queryParams.set('priority', priorityFilter);
-      const query = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const data = await fetchApi(`/campaigns/${campaignId}/leads${query}`);
+      const data = await fetchApi(`/campaigns/${campaignId}/leads?sort_by=name&sort_order=ASC`);
       const leadsList = data.data || data.leads || (Array.isArray(data) ? data : []);
       setLeads(leadsList);
     } catch (err) {
       console.error('Erro ao carregar leads:', err);
     }
-  }, [campaignId, searchValue, priorityFilter]);
+  }, [campaignId]);
 
   useEffect(() => {
     let interval;
@@ -79,12 +73,6 @@ export default function CampaignDetailPage() {
       if (interval) clearInterval(interval);
     };
   }, [loadCampaign, loadLeads]);
-
-  useEffect(() => {
-    if (!loading) {
-      loadLeads();
-    }
-  }, [searchValue, priorityFilter, loadLeads, loading]);
 
   const handleActivateCampaign = async () => {
     try {
@@ -134,17 +122,24 @@ export default function CampaignDetailPage() {
     }
   };
 
-  const handleViewDiagnostic = (leadId) => {
+  const handleGetLeadData = (leadId) => {
     router.push(`/leads/${leadId}`);
   };
 
-  const priorityCounts = leads.reduce(
-    (acc, lead) => {
-      if (lead.priority) acc[lead.priority] = (acc[lead.priority] || 0) + 1;
-      return acc;
-    },
-    {}
-  );
+  const handleAddLeadToCrm = async (leadId) => {
+    try {
+      setAddingLeadId(leadId);
+      await fetchApi(`/leads/${leadId}/crm`, { method: 'POST' });
+      setLeads((current) =>
+        current.map((lead) => lead.id === leadId ? { ...lead, in_crm: true } : lead)
+      );
+    } catch (err) {
+      console.error('Erro ao adicionar lead ao CRM:', err);
+      window.alert(err.message || 'Não foi possível adicionar o lead ao CRM.');
+    } finally {
+      setAddingLeadId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -221,7 +216,7 @@ export default function CampaignDetailPage() {
             <div className="animate-spin w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full" />
             <div>
               <p className="text-sm font-semibold text-cyan-300">Campanha em processamento...</p>
-              <p className="text-xs text-cyan-200/70 mt-0.5">Os leads estão sendo coletados e analisados. Atualizando automaticamente.</p>
+              <p className="text-xs text-cyan-200/70 mt-0.5">Os dados básicos dos leads estão sendo coletados. Atualizando automaticamente.</p>
             </div>
           </div>
         </Card>
@@ -252,27 +247,14 @@ export default function CampaignDetailPage() {
         </Card>
       )}
 
-      {/* Priority counters */}
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
-          <div key={key} className={`flex items-center gap-2 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm font-semibold ${config.bgClass}`}>
-            <span className={`w-2.5 h-2.5 rounded-full ${config.dotClass}`} />
-            <span className="text-sm">{config.label}: {priorityCounts[key] || 0}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <LeadFilters
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        priorityFilter={priorityFilter}
-        onFilterChange={setPriorityFilter}
-      />
-
       {/* Leads table */}
       <Card padding="p-0">
-        <LeadTable leads={leads} onViewDiagnostic={handleViewDiagnostic} />
+        <LeadTable
+          leads={leads}
+          onGetData={handleGetLeadData}
+          onAddToCrm={handleAddLeadToCrm}
+          addingLeadId={addingLeadId}
+        />
       </Card>
     </div>
   );

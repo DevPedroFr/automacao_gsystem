@@ -2,7 +2,7 @@ import './globals.css';
 import Sidebar from '@/components/ui/Sidebar';
 
 export const metadata = {
-  title: 'CONSULTINGS APD Automation',
+  title: 'Automação de Leads',
   description: 'Plataforma de prospecção consultiva e inteligência comercial',
 };
 

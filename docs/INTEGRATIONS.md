@@ -1,4 +1,4 @@
-# CONSULTINGS APD AUTOMATION — Manual de Integrações e Providers
+# AUTOMAÇÃO DE LEADS — Manual de Integrações e Providers
 
 Este documento explica a arquitetura de providers do sistema e como alternar entre o modo simulado (mocks) e futuros adaptadores de APIs reais de produção.
 

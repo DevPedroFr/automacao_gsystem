@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
-const VALID_USER = process.env.ADMIN_USER || 'Consultings@GP';
+const VALID_USER = process.env.ADMIN_USER || 'admin';
 const VALID_PASSWORD = process.env.ADMIN_PASSWORD || 'Gp@2026';
 const AUTH_COOKIE_NAME = 'apd_session';
 const AUTH_TOKEN = 'authenticated_gp_2026_secure_token';

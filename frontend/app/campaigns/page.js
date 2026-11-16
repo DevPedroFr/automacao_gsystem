@@ -10,7 +10,7 @@ import { STATUS_CONFIG } from '@/lib/constants';
 import {
   Rocket, Play, RotateCw, Pause, Trash2, Download, ExternalLink,
   Plus, Search, Filter, Sparkles, CheckCircle2, AlertCircle, Clock,
-  Globe, MapPin, Users, Flame, LayoutGrid, List, RefreshCw
+  MapPin, Users, LayoutGrid, List, RefreshCw
 } from 'lucide-react';
 
 export default function CampaignsPage() {
@@ -74,16 +74,12 @@ export default function CampaignsPage() {
     const processing = campaigns.filter((c) => c.status === 'processing').length;
     const completed = campaigns.filter((c) => c.status === 'completed').length;
     const totalLeads = campaigns.reduce((acc, c) => acc + (c.total_leads || 0), 0);
-    const totalPriorityA = campaigns.reduce((acc, c) => acc + (c.priority_a || 0), 0);
-    const totalWithoutWeb = campaigns.reduce((acc, c) => acc + (c.without_website || 0), 0);
 
     return {
       total,
       processing,
       completed,
       totalLeads,
-      totalPriorityA,
-      totalWithoutWeb,
     };
   }, [campaigns]);
 
@@ -222,7 +218,7 @@ export default function CampaignsPage() {
     loadCampaigns();
     setFeedback({
       type: 'success',
-      message: '🚀 Nova campanha criada e disparada! A triagem digital já está rodando em segundo plano.',
+      message: '🚀 Nova campanha criada! A coleta de leads está rodando em segundo plano.',
     });
     const id = result?.data?.id || result?.id;
     if (id) {
@@ -349,7 +345,7 @@ export default function CampaignsPage() {
       </div>
 
       {/* Grid de Métricas Consolidadas das Campanhas */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Campanhas */}
         <div className="bg-gray-900/70 border border-gray-800 rounded-2xl p-4 shadow-sm hover:border-gray-700 transition-colors">
           <div className="flex items-center justify-between text-gray-400 mb-2">
@@ -384,25 +380,6 @@ export default function CampaignsPage() {
           <div className="text-[11px] text-gray-500 mt-1">Captados no Google Places</div>
         </div>
 
-        {/* Prioridade A (Hot) */}
-        <div className="bg-amber-950/20 border border-amber-800/40 rounded-2xl p-4 shadow-sm hover:border-amber-700/60 transition-colors">
-          <div className="flex items-center justify-between text-amber-400 mb-2">
-            <span className="text-xs uppercase font-bold tracking-wider">Prioridade A (Hot)</span>
-            <Flame size={16} className="text-amber-400" />
-          </div>
-          <div className="text-2xl font-black text-amber-300">{summary.totalPriorityA}</div>
-          <div className="text-[11px] text-amber-400/80 mt-1">Alta urgência comercial</div>
-        </div>
-
-        {/* Sem Site (Oportunidade LP) */}
-        <div className="col-span-2 lg:col-span-1 bg-purple-950/20 border border-purple-800/40 rounded-2xl p-4 shadow-sm hover:border-purple-700/60 transition-colors">
-          <div className="flex items-center justify-between text-purple-400 mb-2">
-            <span className="text-xs uppercase font-bold tracking-wider">Sem Website</span>
-            <Globe size={16} className="text-purple-400" />
-          </div>
-          <div className="text-2xl font-black text-purple-300">{summary.totalWithoutWeb}</div>
-          <div className="text-[11px] text-purple-400/80 mt-1">Alvo direto para Landing Page</div>
-        </div>
       </div>
 
       {/* Barra de Filtros, Busca e Alternância de Visualização */}
@@ -512,12 +489,6 @@ export default function CampaignsPage() {
           {filteredCampaigns.map((camp) => {
             const isProcessing = camp.status === 'processing';
             const totalLeads = camp.total_leads || 0;
-            const pA = camp.priority_a || 0;
-            const pB = camp.priority_b || 0;
-            const pC = camp.priority_c || 0;
-            const withoutWeb = camp.without_website || 0;
-            const avgDms = camp.avg_dms || 0;
-            const avgCos = camp.avg_cos || 0;
             const actLoading = actionLoading[camp.id];
 
             return (
@@ -554,7 +525,7 @@ export default function CampaignsPage() {
                       <div className="flex items-center justify-between text-[11px] text-cyan-300 font-semibold">
                         <span className="flex items-center gap-1.5">
                           <RotateCw size={12} className="animate-spin text-cyan-400" />
-                          Buscando e qualificando leads...
+                          Buscando leads...
                         </span>
                         <span>{totalLeads} coletados</span>
                       </div>
@@ -565,8 +536,7 @@ export default function CampaignsPage() {
                   )}
 
                   {/* Bloco de Métricas Chave */}
-                  <div className="grid grid-cols-2 gap-2 my-4">
-                    {/* Total Leads */}
+                  <div className="my-4">
                     <div className="bg-gray-950/60 p-2.5 rounded-xl border border-gray-800/80">
                       <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
                         Total Leads
@@ -576,69 +546,7 @@ export default function CampaignsPage() {
                         <span className="text-[10px] font-normal text-gray-500">captados</span>
                       </div>
                     </div>
-
-                    {/* Prioridade A */}
-                    <div className="bg-amber-950/20 p-2.5 rounded-xl border border-amber-800/30">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400/90 flex items-center gap-1">
-                        <Flame size={11} className="text-amber-400" /> Hot (A)
-                      </div>
-                      <div className="text-lg font-black text-amber-300 mt-0.5 flex items-baseline gap-1">
-                        {pA}
-                        <span className="text-[10px] font-normal text-amber-400/70">
-                          {totalLeads > 0 ? `${Math.round((pA / totalLeads) * 100)}%` : '0%'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Sem Website */}
-                    <div className="bg-purple-950/20 p-2.5 rounded-xl border border-purple-800/30">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-purple-400/90 flex items-center gap-1">
-                        <Globe size={11} className="text-purple-400" /> Sem Site
-                      </div>
-                      <div className="text-lg font-black text-purple-300 mt-0.5 flex items-baseline gap-1">
-                        {withoutWeb}
-                        <span className="text-[10px] font-normal text-purple-400/70">alvos LP</span>
-                      </div>
-                    </div>
-
-                    {/* Scores DMS / COS */}
-                    <div className="bg-gray-950/60 p-2.5 rounded-xl border border-gray-800/80">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                        Oportunidade (COS)
-                      </div>
-                      <div className="text-lg font-black text-emerald-400 mt-0.5 flex items-baseline gap-1">
-                        {avgCos}
-                        <span className="text-[10px] font-normal text-gray-500">/100</span>
-                      </div>
-                    </div>
                   </div>
-
-                  {/* Barra de Distribuição de Prioridade (A, B, C) */}
-                  {totalLeads > 0 && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-[10px] text-gray-500 mb-1">
-                        <span>Qualificação de Leads:</span>
-                        <span>A: {pA} | B: {pB} | C: {pC}</span>
-                      </div>
-                      <div className="w-full bg-gray-950 h-2 rounded-full overflow-hidden flex border border-gray-800">
-                        <div
-                          style={{ width: `${(pA / totalLeads) * 100}%` }}
-                          className="bg-amber-400 h-full"
-                          title={`Prioridade A: ${pA} (${Math.round((pA / totalLeads) * 100)}%)`}
-                        />
-                        <div
-                          style={{ width: `${(pB / totalLeads) * 100}%` }}
-                          className="bg-blue-400 h-full"
-                          title={`Prioridade B: ${pB} (${Math.round((pB / totalLeads) * 100)}%)`}
-                        />
-                        <div
-                          style={{ width: `${(pC / totalLeads) * 100}%` }}
-                          className="bg-gray-600 h-full"
-                          title={`Prioridade C: ${pC} (${Math.round((pC / totalLeads) * 100)}%)`}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </div>
 
                 {/* Rodapé do Card: Data & Ações Rápidas */}
@@ -648,11 +556,6 @@ export default function CampaignsPage() {
                       <Clock size={12} />
                       {formatDate(camp.created_at)}
                     </span>
-                    {camp.diagnostics_count > 0 && (
-                      <span className="text-cyan-400/90 font-semibold">
-                        {camp.diagnostics_count} diagnósticos IA
-                      </span>
-                    )}
                   </div>
 
                   {/* Botões de Ação na Base */}
@@ -673,7 +576,7 @@ export default function CampaignsPage() {
                         onClick={(e) => handleActivateCampaign(camp.id, e)}
                         disabled={actLoading === 'activating'}
                         className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:border-cyan-500/60 rounded-xl text-xs font-bold transition-all"
-                        title="Ativar/Reexecutar busca e triagem de leads"
+                        title="Ativar/Reexecutar busca de leads"
                       >
                         {actLoading === 'activating' ? (
                           <RotateCw size={14} className="animate-spin text-cyan-400" />
@@ -733,9 +636,6 @@ export default function CampaignsPage() {
                   <th className="py-3.5 px-4">Localização</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4 text-center">Total Leads</th>
-                  <th className="py-3.5 px-4 text-center">Prioridade A</th>
-                  <th className="py-3.5 px-4 text-center">Sem Site</th>
-                  <th className="py-3.5 px-4 text-center">Média COS</th>
                   <th className="py-3.5 px-4">Data</th>
                   <th className="py-3.5 px-4 text-right">Ações</th>
                 </tr>
@@ -758,19 +658,6 @@ export default function CampaignsPage() {
                       <td className="py-3.5 px-4">{getStatusBadge(camp.status)}</td>
                       <td className="py-3.5 px-4 text-center font-extrabold text-white">
                         {camp.total_leads ?? 0}
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center gap-1 font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
-                          <Flame size={11} /> {camp.priority_a ?? 0}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center gap-1 font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-                          <Globe size={11} /> {camp.without_website ?? 0}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-center font-bold text-emerald-400">
-                        {camp.avg_cos ? `${camp.avg_cos}/100` : '—'}
                       </td>
                       <td className="py-3.5 px-4 text-gray-400 text-[11px]">
                         {formatDate(camp.created_at)}

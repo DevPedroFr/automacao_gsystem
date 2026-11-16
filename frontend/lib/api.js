@@ -13,7 +13,7 @@ export async function fetchApi(endpoint, options = {}) {
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || 'Erro na requisição');
+    throw new Error(error.message || error.detail?.message || 'Erro na requisição');
   }
   const ct = res.headers.get('content-type');
   if (ct && ct.includes('text/csv')) {

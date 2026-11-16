@@ -92,9 +92,23 @@ export default function CRMPage() {
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-100">CRM Vendas</h1>
-        <p className="text-sm text-gray-400">Acompanhe e movimente as oportunidades de todas as campanhas.</p>
+        <p className="text-sm text-gray-400">Acompanhe somente os leads adicionados ao CRM.</p>
       </div>
 
+      {leads.length === 0 ? (
+        <Card className="flex flex-col items-center justify-center min-h-64 text-center p-8">
+          <h2 className="text-lg font-semibold text-gray-200">Seu CRM está vazio</h2>
+          <p className="text-sm text-gray-400 mt-2 max-w-md">
+            Adicione somente os leads que deseja acompanhar usando o botão “Adicionar ao CRM” na lista da campanha.
+          </p>
+          <Link
+            href="/campaigns"
+            className="mt-5 px-4 py-2 rounded-lg bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 text-sm font-semibold transition-colors"
+          >
+            Ver campanhas
+          </Link>
+        </Card>
+      ) : (
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4 snap-x">
         {STATUS_COLUMNS.map(column => {
           const columnLeads = leads.filter(l => (l.commercial_status || 'new') === column.id);
@@ -190,6 +204,7 @@ export default function CRMPage() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

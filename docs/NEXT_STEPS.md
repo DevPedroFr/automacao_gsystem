@@ -1,4 +1,4 @@
-# CONSULTINGS APD AUTOMATION — Próximos Passos (Plano de Integração)
+# AUTOMAÇÃO DE LEADS — Próximos Passos (Plano de Integração)
 
 Esta documentação propõe a ordem estratégica recomendada e os detalhes de engenharia para migrar os mocks do MVP da plataforma para conexões reais com APIs externas de produção de forma segura e resiliente.
 
@@ -50,7 +50,7 @@ Configurar a chamada de chat completion definindo regras rígidas de retorno est
 * **Modelo Recomendado:** `gpt-4o-mini` (baixo custo e excelente desempenho analítico).
 * **Parâmetro Crucial:** Definir `response_format: { "type": "json_object" }` na chamada e solicitar no prompt os atributos exatos: `observed_facts`, `inferences`, `recommendations` e `email_draft`.
 * **Prompt Base:**
-  > *"Você é o arquiteto digital da plataforma CONSULTINGS APD. Analise as métricas reais fornecidas do lead: [Nome, Cidade, Site, PageSpeed, LCP, Instagram, Facebook, Nota Google] e devolva um JSON estruturado contendo a lista formatada de fatos, a inferência técnica das fraquezas digitais, recomendações práticas de consultoria de vendas e um template de email em português do Brasil convidando-o para uma call."*
+  > *"Você é o arquiteto digital da plataforma Automação de Leads. Analise as métricas reais fornecidas do lead: [Nome, Cidade, Site, PageSpeed, LCP, Instagram, Facebook, Nota Google] e devolva um JSON estruturado contendo a lista formatada de fatos, a inferência técnica das fraquezas digitais, recomendações práticas de consultoria de vendas e um template de email em português do Brasil convidando-o para uma call."*
 
 ### 🗺️ 3. Implementando Apify (Google Maps Scraper)
 Dado que a chamada real é de longa duração, devemos evitar que o Express trave esperando o término.

@@ -1,4 +1,4 @@
-# CONSULTINGS APD AUTOMATION — Arquitetura Atual do Sistema
+# AUTOMAÇÃO DE LEADS — Arquitetura Atual do Sistema
 
 O sistema é desenhado sob uma arquitetura de cliente-servidor desacoplada. O frontend (Next.js) comunica-se com o backend (Node.js/Express) por meio de requisições HTTP RESTful. O banco de dados SQLite é persistido localmente no backend.
 
@@ -19,7 +19,7 @@ graph LR
         D <--> F[Services e Motor Scoring]
         E <--> G[Wrapper sql.js SQLite]
         F <--> G
-        G <--> H[Arquivo consultings.db]
+        G <--> H[Arquivo SQLite]
     end
 ```
 

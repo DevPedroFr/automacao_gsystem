@@ -107,7 +107,7 @@ function LoginForm() {
       </form>
 
       <div className="mt-6 pt-5 border-t border-gray-800/80 text-center text-[11px] text-gray-500">
-        Ambiente seguro protegido por credenciais da Consultings.
+        Ambiente seguro protegido por credenciais de acesso.
       </div>
     </div>
   );
@@ -127,7 +127,7 @@ export default function LoginPage() {
             <ShieldCheck size={28} />
           </div>
           <h1 className="text-2xl font-extrabold text-white tracking-wide">
-            CONSULTINGS <span className="text-cyan-400">APD</span>
+            Automação <span className="text-cyan-400">de Leads</span>
           </h1>
           <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-semibold">
             Área de Acesso Restrito
