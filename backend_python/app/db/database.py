@@ -62,6 +62,9 @@ def _apply_migrations(target_engine):
 
     migrations = [
         ("leads", "instagram_candidates", "TEXT"),
+        ("leads", "in_crm", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("leads", "company_research_data", "TEXT"),
+        ("leads", "company_research_updated_at", "TIMESTAMP"),
         ("leads", "commercial_status", "VARCHAR(50) DEFAULT 'new'"),
         ("leads", "source_provider", "VARCHAR(50) DEFAULT 'google_places'"),
         ("leads", "raw_data_path", "TEXT"),

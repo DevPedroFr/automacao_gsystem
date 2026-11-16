@@ -80,6 +80,9 @@ class Lead(Base):
     owners_info = Column(Text, nullable=True)        # JSON array com nomes e cargos dos sócios
 
     # Status interno e rastreamento
+    in_crm = Column(Boolean, nullable=False, default=False, server_default="false")
+    company_research_data = Column(Text, nullable=True)
+    company_research_updated_at = Column(DateTime, nullable=True)
     commercial_status = Column(String, default="new")
     source_provider = Column(String, default="google_places")
     raw_data_path = Column(String, nullable=True)

@@ -64,8 +64,8 @@ async def test_webhook(body: dict[str, Any], db: Session = Depends(get_db)):
         "event": "test_connection",
         "timestamp": __import__("datetime").datetime.utcnow().isoformat(),
         "data": {
-            "message": "Conexão de teste realizada com sucesso da plataforma CONSULTINGS APD!",
-            "system": "CONSULTINGS APD Automation",
+            "message": "Conexão de teste realizada com sucesso pela Automação de Leads!",
+            "system": "Automação de Leads",
             "status": "active",
         },
     }

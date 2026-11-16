@@ -3,19 +3,25 @@ Router /api/campaigns/:campaignId/leads e /api/leads — Gerenciamento de leads.
 Porta fiel das rotas do backend Node.js (routes/leads.js) com exportação CSV.
 """
 import io
+import json
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from starlette.concurrency import run_in_threadpool
 
+from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Campaign, Lead, Diagnostic
+from app.integrations.company_research import CompanyResearchError, CompanyResearchIntegration
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["Leads"])
+COMPANY_RESEARCH_CACHE_TTL = timedelta(hours=24)
 
 ALLOWED_SORT_FIELDS = {
     "dms", "cos", "google_rating", "name", "priority",
@@ -51,9 +57,21 @@ def _lead_to_dict(lead: Lead) -> dict:
         "dms": lead.dms,
         "cos": lead.cos,
         "priority": lead.priority,
+        "in_crm": lead.in_crm,
         "commercial_status": lead.commercial_status,
         "source_provider": lead.source_provider,
         "created_at": lead.created_at.isoformat() if lead.created_at else None,
+    }
+
+
+def _campaign_lead_to_dict(lead: Lead) -> dict:
+    return {
+        "id": lead.id,
+        "name": lead.name,
+        "address": lead.address,
+        "city": lead.city,
+        "google_rating": lead.google_rating,
+        "in_crm": lead.in_crm,
     }
 
 
@@ -89,8 +107,8 @@ def list_leads(
     campaign_id: str,
     priority: Optional[str] = Query(None, description="Filtrar por prioridade A, B ou C"),
     search: Optional[str] = Query(None, description="Busca parcial pelo nome"),
-    sort_by: Optional[str] = Query("cos", description="Campo de ordenação"),
-    sort_order: Optional[str] = Query("DESC", description="ASC ou DESC"),
+    sort_by: Optional[str] = Query("name", description="Campo de ordenação"),
+    sort_order: Optional[str] = Query("ASC", description="ASC ou DESC"),
     db: Session = Depends(get_db),
 ):
     """GET /api/campaigns/:campaignId/leads — Lista leads com filtros e ordenação."""
@@ -114,14 +132,34 @@ def list_leads(
         query = query.order_by(sort_col.desc())
 
     leads = query.all()
-    return {"data": [_lead_to_dict(l) for l in leads], "total": len(leads)}
+    return {"data": [_campaign_lead_to_dict(lead) for lead in leads], "total": len(leads)}
 
 
-@router.get("/api/leads", summary="Lista todos os leads globalmente (para o CRM)")
+@router.get("/api/leads", summary="Lista leads adicionados ao CRM")
 def list_all_leads(db: Session = Depends(get_db)):
-    """GET /api/leads — Lista todos os leads de todas as campanhas."""
-    leads = db.query(Lead).order_by(Lead.created_at.desc()).all()
+    """GET /api/leads — Lista somente os leads adicionados manualmente ao CRM."""
+    leads = (
+        db.query(Lead)
+        .filter(Lead.in_crm.is_(True))
+        .order_by(Lead.created_at.desc())
+        .all()
+    )
     return {"data": [_lead_to_dict(l) for l in leads], "total": len(leads)}
+
+
+@router.post("/api/leads/{lead_id}/crm", summary="Adiciona um lead ao CRM")
+def add_lead_to_crm(lead_id: str, db: Session = Depends(get_db)):
+    """POST /api/leads/:id/crm — Inclui um lead coletado no CRM."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    if not lead.in_crm:
+        lead.in_crm = True
+        db.commit()
+        db.refresh(lead)
+
+    return {"data": _lead_to_dict(lead), "message": "Lead adicionado ao CRM"}
 
 
 class LeadStatusUpdate(BaseModel):
@@ -163,6 +201,53 @@ def get_lead(lead_id: str, db: Session = Depends(get_db)):
     return {"data": data}
 
 
+@router.post("/api/leads/{lead_id}/research", summary="Busca dados públicos de uma empresa com Gemini")
+async def research_lead(lead_id: str, db: Session = Depends(get_db)):
+    """Pesquisa informações empresariais públicas e retorna dados com fontes."""
+    lead = db.query(Lead).filter(Lead.id == lead_id).first()
+    if not lead:
+        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    if lead.company_research_data and lead.company_research_updated_at:
+        cache_age = now - lead.company_research_updated_at
+        if cache_age < COMPANY_RESEARCH_CACHE_TTL:
+            try:
+                return {"data": json.loads(lead.company_research_data)}
+            except json.JSONDecodeError as err:
+                logger.error("Cache de pesquisa inválido para o lead %s", lead.id)
+                raise HTTPException(
+                    status_code=500,
+                    detail={"error": "invalid_cache", "message": "Os dados de pesquisa armazenados estão inválidos."},
+                ) from err
+
+    if not settings.GEMINI_API_KEY:
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "configuration_error", "message": "GEMINI_API_KEY não está configurada."},
+        )
+
+    try:
+        result = await run_in_threadpool(
+            CompanyResearchIntegration(settings.GEMINI_API_KEY).search_company,
+            lead.name,
+            lead.address or lead.city or "",
+        )
+    except CompanyResearchError as err:
+        logger.error("Pesquisa Gemini falhou para o lead %s: %s", lead.id, err)
+        raise HTTPException(
+            status_code=err.status_code,
+            detail={"error": "research_failed", "message": str(err)},
+            headers={"Retry-After": str(err.retry_after_seconds)} if err.retry_after_seconds else None,
+        ) from err
+
+    lead.company_research_data = json.dumps(result, ensure_ascii=False)
+    lead.company_research_updated_at = now
+    db.commit()
+
+    return {"data": result}
+
+
 
 @router.get("/api/campaigns/{campaign_id}/leads/export", summary="Exporta leads em CSV")
 def export_leads_csv(campaign_id: str, db: Session = Depends(get_db)):
@@ -171,15 +256,9 @@ def export_leads_csv(campaign_id: str, db: Session = Depends(get_db)):
     if not campaign:
         raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
 
-    leads = db.query(Lead).filter(Lead.campaign_id == campaign_id).order_by(Lead.cos.desc()).all()
+    leads = db.query(Lead).filter(Lead.campaign_id == campaign_id).order_by(Lead.name.asc()).all()
 
-    headers = [
-        "Nome", "Categoria", "Telefone", "Website", "Endereço", "Cidade",
-        "Rating Google", "Avaliações Google", "Tem Site",
-        "PageSpeed", "LCP (ms)", "INP (ms)", "CLS",
-        "Instagram", "Facebook", "Último Post (dias)",
-        "DMS", "COS", "Prioridade",
-    ]
+    headers = ["Nome", "Endereço", "Avaliação Google"]
 
     def _q(val):
         return f'"{str(val or "").replace(chr(34), chr(34)+chr(34))}"'
@@ -187,15 +266,7 @@ def export_leads_csv(campaign_id: str, db: Session = Depends(get_db)):
     rows = []
     for lead in leads:
         rows.append([
-            _q(lead.name), _q(lead.category), _q(lead.phone), _q(lead.website),
-            _q(lead.address), _q(lead.city),
-            lead.google_rating or "", lead.google_reviews_count or 0,
-            "Sim" if lead.has_website else "Não",
-            lead.pagespeed_score or "", lead.lcp_ms or "", lead.inp_ms or "", lead.cls or "",
-            "Sim" if lead.has_instagram else "Não",
-            "Sim" if lead.has_facebook else "Não",
-            lead.social_last_post_days if lead.social_last_post_days is not None else "",
-            lead.dms, lead.cos, lead.priority,
+            _q(lead.name), _q(lead.address), lead.google_rating if lead.google_rating is not None else "",
         ])
 
     # BOM UTF-8 para compatibilidade com Excel
