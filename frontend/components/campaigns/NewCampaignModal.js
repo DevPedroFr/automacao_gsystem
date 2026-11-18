@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Modal from '@/components/ui/Modal';
-import Button from '@/components/ui/Button';
 import { fetchApi } from '@/lib/api';
 
 export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
@@ -11,12 +10,49 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
   const [minRating, setMinRating] = useState('4.0');
   const [status, setStatus] = useState('open');
   const [negativeKeywords, setNegativeKeywords] = useState('');
+  const [accessLevel, setAccessLevel] = useState(null);
+  const [campaignTenant, setCampaignTenant] = useState('');
+  const [loadingUser, setLoadingUser] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    let active = true;
+    setAccessLevel(null);
+    setCampaignTenant('');
+    setError('');
+    setLoadingUser(true);
+    fetch('/api/auth')
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Não foi possível verificar o usuário.');
+        }
+        return result.user;
+      })
+      .then((user) => {
+        if (active) setAccessLevel(user.access_level);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Não foi possível verificar o usuário.');
+      })
+      .finally(() => {
+        if (active) setLoadingUser(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!niche.trim() || !location.trim()) return;
+    if (accessLevel === 'diretoria' && !campaignTenant) {
+      setError('Selecione a empresa proprietária da campanha.');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -27,6 +63,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
         body: JSON.stringify({ 
           niche: niche.trim(), 
           location: location.trim(),
+          ...(accessLevel === 'diretoria' ? { tenant_id: campaignTenant } : {}),
           minRating: parseFloat(minRating),
           status,
           negativeKeywords: negativeKeywords.split(',').map(k => k.trim()).filter(Boolean)
@@ -37,6 +74,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
       setMinRating('4.0');
       setStatus('open');
       setNegativeKeywords('');
+      setCampaignTenant('');
       onSuccess?.(result);
     } catch (err) {
       setError(err.message || 'Erro ao criar campanha');
@@ -52,6 +90,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
       setMinRating('4.0');
       setStatus('open');
       setNegativeKeywords('');
+      setCampaignTenant('');
       setError('');
       onClose();
     }
@@ -91,6 +130,26 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
           />
         </div>
 
+        {accessLevel === 'diretoria' && (
+          <div>
+            <label htmlFor="campaignTenant" className="mb-2 block text-sm font-bold uppercase tracking-wider text-gray-300">
+              Empresa da campanha
+            </label>
+            <select
+              id="campaignTenant"
+              value={campaignTenant}
+              onChange={(e) => setCampaignTenant(e.target.value)}
+              className="w-full rounded-xl border border-gray-700/50 bg-gray-900 px-4 py-3 text-sm text-white outline-none transition-all focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/50"
+              required
+              disabled={loading || loadingUser}
+            >
+              <option value="">Selecione uma empresa</option>
+              <option value="spy_car">Spy car</option>
+              <option value="g_system">G-System</option>
+            </select>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="minRating" className="block text-sm font-bold text-gray-300 uppercase tracking-wider mb-2">
@@ -101,7 +160,7 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
               value={minRating}
               onChange={(e) => setMinRating(e.target.value)}
               className="w-full px-4 py-3 bg-gray-900 border border-gray-700/50 rounded-xl text-sm text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all outline-none shadow-inner appearance-none"
-              disabled={loading}
+              disabled={loading || loadingUser || !accessLevel}
             >
               <option value="0">Qualquer Nota</option>
               <option value="3.5">Acima de 3.5</option>
@@ -158,10 +217,14 @@ export default function NewCampaignModal({ isOpen, onClose, onSuccess }) {
           </button>
           <button 
             type="submit" 
-            disabled={loading}
+            disabled={loading || loadingUser || !accessLevel}
             className="px-6 py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-[0_0_15px_rgba(6,182,212,0.4)] transition-all flex items-center gap-2"
           >
-            {loading ? 'Iniciando...' : 'Iniciar Radar'} <span className="text-lg leading-none">🚀</span>
+            {loadingUser
+              ? 'Verificando acesso...'
+              : loading
+                ? 'Iniciando...'
+                : 'Iniciar Radar'} <span className="text-lg leading-none">🚀</span>
           </button>
         </div>
       </form>

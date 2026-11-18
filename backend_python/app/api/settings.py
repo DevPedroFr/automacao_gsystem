@@ -9,11 +9,16 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.access import require_directoria
 from app.db.database import get_db
 from app.db.models import Setting
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/settings", tags=["Configurações"])
+router = APIRouter(
+    prefix="/api/settings",
+    tags=["Configurações"],
+    dependencies=[Depends(require_directoria)],
+)
 
 
 @router.get("", summary="Lista todas as configurações")

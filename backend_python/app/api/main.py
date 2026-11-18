@@ -4,6 +4,7 @@ Substitui completamente o backend Node.js anterior.
 Porta: 8000 (configurável via .env)
 """
 from fastapi import FastAPI
+from fastapi import Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -19,6 +20,8 @@ from app.api.legacy import _legacy as legacy_router
 from app.api.campaigns import router as campaigns_router
 from app.api.leads import router as leads_router
 from app.api.dashboard import router as dashboard_router
+from app.api.auth import router as auth_router
+from app.core.access import require_directoria
 from app.api.settings import router as settings_router
 from app.api.diagnostics import router as diagnostics_router
 
@@ -51,6 +54,7 @@ def on_startup():
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(legacy_router)
+app.include_router(auth_router)
 app.include_router(campaigns_router)
 app.include_router(leads_router)
 app.include_router(dashboard_router)
@@ -82,7 +86,12 @@ async def health():
     }
 
 
-@app.api_route("/api/migrate", methods=["GET", "POST"], tags=["System"])
+@app.api_route(
+    "/api/migrate",
+    methods=["GET", "POST"],
+    tags=["System"],
+    dependencies=[Depends(require_directoria)],
+)
 def run_migrations():
     """Executa as migrações no banco de dados e retorna o status detalhado."""
     from app.db.database import _apply_migrations, engine

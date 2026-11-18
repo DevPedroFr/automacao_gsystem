@@ -3,6 +3,7 @@ import unittest
 from types import SimpleNamespace
 
 from app.api.leads import _campaign_lead_to_dict, export_leads_csv
+from app.core.auth import AuthenticatedUser
 from app.db.models import Campaign, Lead
 from app.workers.campaign_worker import _process_single_lead
 
@@ -41,6 +42,8 @@ class FakeSession:
 
 
 class CampaignWorkerTests(unittest.TestCase):
+    user = AuthenticatedUser(username="test", access_level="g_system")
+
     def test_campaign_lead_keeps_only_basic_google_data(self):
         place_lead = SimpleNamespace(
             name="Clínica Exemplo",
@@ -80,7 +83,7 @@ class CampaignWorkerTests(unittest.TestCase):
         self.assertNotIn("phone", result)
 
     def test_campaign_csv_contains_only_requested_columns(self):
-        response = export_leads_csv("campaign-id", FakeSession())
+        response = export_leads_csv("campaign-id", FakeSession(), self.user)
 
         async def read_response():
             chunks = [chunk async for chunk in response.body_iterator]

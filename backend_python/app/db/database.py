@@ -61,6 +61,8 @@ def _apply_migrations(target_engine):
     is_postgres = target_engine.dialect.name == "postgresql"
 
     migrations = [
+        ("campaigns", "tenant_id", "VARCHAR(32) NOT NULL DEFAULT 'g_system'"),
+        ("leads", "tenant_id", "VARCHAR(32) NOT NULL DEFAULT 'g_system'"),
         ("leads", "instagram_candidates", "TEXT"),
         ("leads", "in_crm", "BOOLEAN NOT NULL DEFAULT FALSE"),
         ("leads", "company_research_data", "TEXT"),

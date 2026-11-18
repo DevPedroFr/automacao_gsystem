@@ -53,7 +53,12 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
                 continue
 
             try:
-                lead_data = _process_single_lead(place_lead, campaign_id, provider_name)
+                lead_data = _process_single_lead(
+                    place_lead,
+                    campaign_id,
+                    provider_name,
+                    campaign.tenant_id,
+                )
                 db.add(lead_data)
                 db.commit()
                 processed_count += 1
@@ -92,7 +97,12 @@ async def process_campaign(campaign_id: str, niche: str, location: str, db: Sess
             logger.error(f"Falha ao atualizar status da campanha: {update_err}")
 
 
-def _process_single_lead(place_lead, campaign_id: str, provider_name: str) -> Lead:
+def _process_single_lead(
+    place_lead,
+    campaign_id: str,
+    provider_name: str,
+    tenant_id: str = "g_system",
+) -> Lead:
     """Cria um lead com nome, endereço e avaliação do provider de busca."""
     address = place_lead.formatted_address or ""
     city = location_from_address(address)
@@ -100,6 +110,7 @@ def _process_single_lead(place_lead, campaign_id: str, provider_name: str) -> Le
     return Lead(
         id=str(uuid.uuid4()),
         campaign_id=campaign_id,
+        tenant_id=tenant_id,
         name=place_lead.name,
         address=address,
         city=city,

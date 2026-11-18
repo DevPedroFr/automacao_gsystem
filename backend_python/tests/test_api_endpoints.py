@@ -17,10 +17,16 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from fastapi.testclient import TestClient
 from app.api.main import app
+from app.core.auth import create_access_token
+from app.core.config import settings
 from app.db.database import init_db, SessionLocal
 from app.db.models import Campaign, Lead, Diagnostic, Setting
 
-client = TestClient(app)
+settings.AUTH_SECRET = "api-endpoint-test-secret"
+client = TestClient(
+    app,
+    headers={"Authorization": f"Bearer {create_access_token('api-test', 'diretoria')}"},
+)
 
 def run_tests():
     print("=" * 70)
@@ -43,9 +49,7 @@ def run_tests():
     assert res.status_code == 200, f"Dashboard stats falhou: {res.text}"
     data = res.json()
     assert "data" in data
-    assert "totalLeads" in data["data"]
-    assert "avgDms" in data["data"]
-    assert "apiUsage" in data["data"]
+    assert "crmStats" in data["data"]
     print("✅ 2. GET /api/dashboard/stats -> OK")
 
     # 3. Settings GET / POST

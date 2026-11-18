@@ -1,0 +1,7 @@
+[
+  {
+    "username": "usuario_exemplo",
+    "password_hash": "SUBSTITUA_PELO_HASH_GERADO",
+    "access_level": "spy_car"
+  }
+]

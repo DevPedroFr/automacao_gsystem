@@ -27,6 +27,7 @@ class Campaign(Base):
     status = Column(String, default="processing")   # processing | completed | failed | cancelled
     total_leads = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
+    tenant_id = Column(String(32), nullable=False, default="g_system", server_default="g_system", index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -84,12 +85,29 @@ class Lead(Base):
     company_research_data = Column(Text, nullable=True)
     company_research_updated_at = Column(DateTime, nullable=True)
     commercial_status = Column(String, default="new")
+    tenant_id = Column(String(32), nullable=False, default="g_system", server_default="g_system", index=True)
     source_provider = Column(String, default="google_places")
     raw_data_path = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     campaign = relationship("Campaign", back_populates="leads")
     diagnostic = relationship("Diagnostic", back_populates="lead", uselist=False, cascade="all, delete-orphan")
+    crm_records = relationship("CrmRecord", back_populates="lead", cascade="all, delete-orphan")
+
+
+class CrmRecord(Base):
+    __tablename__ = "crm_records"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    lead_id = Column(String, ForeignKey("leads.id", ondelete="CASCADE"), nullable=False, index=True)
+    record_type = Column(String(32), nullable=False)
+    content = Column(Text, nullable=True)
+    previous_status = Column(String(50), nullable=True)
+    new_status = Column(String(50), nullable=True)
+    created_by = Column(String(128), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    lead = relationship("Lead", back_populates="crm_records")
 
 
 class Diagnostic(Base):

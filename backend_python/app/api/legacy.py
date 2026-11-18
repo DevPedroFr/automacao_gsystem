@@ -2,9 +2,10 @@
 Rotas legadas do motor de automação (busca de leads, triagem, diagnóstico e geração de site).
 Mantidas para compatibilidade com o script run_demo_pipeline.py.
 """
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
 
+from app.core.auth import get_current_user
 from app.core.config import settings
 from app.models.lead import LeadResult, LeadSearchParams
 from app.models.triage import FullTriageReport
@@ -21,7 +22,10 @@ _triage_service = TriageService()
 _diagnosis_service = DiagnosisService()
 _site_service = SiteService()
 
-_legacy = APIRouter(tags=["Motor de Automação (Legacy)"])
+_legacy = APIRouter(
+    tags=["Motor de Automação (Legacy)"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 @_legacy.get("/leads/search", response_model=List[LeadResult])

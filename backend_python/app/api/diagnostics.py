@@ -31,6 +31,9 @@ import re
 import httpx
 from fastapi.responses import HTMLResponse, Response
 
+from app.core.access import get_accessible_lead
+from app.core.auth import AuthenticatedUser, get_current_user
+
 def _diag_to_dict(d: Diagnostic) -> dict:
     brand_colors_parsed = None
     if getattr(d, "brand_colors", None):
@@ -105,15 +108,17 @@ def _diag_to_dict(d: Diagnostic) -> dict:
 
 
 @router.post("/api/leads/{lead_id}/diagnostic", status_code=201, summary="Gera diagnóstico de um lead via IA")
-async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
+async def generate_diagnostic(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     POST /api/leads/:leadId/diagnostic
     Gera (ou regenera) o diagnóstico inteligente do lead usando Gemini AI.
     Sempre substitui diagnóstico anterior para garantir dados frescos e completos.
     """
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     # Sempre remove diagnóstico anterior para permitir regenerar com o formato rico
     existing = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
@@ -293,11 +298,13 @@ async def generate_diagnostic(lead_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/api/leads/{lead_id}/diagnostic", summary="Consulta diagnóstico de um lead")
-def get_diagnostic(lead_id: str, db: Session = Depends(get_db)):
+def get_diagnostic(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/leads/:leadId/diagnostic — Retorna o diagnóstico existente."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    get_accessible_lead(db, lead_id, user)
 
     diagnostic = None
     try:
@@ -320,7 +327,7 @@ class GenerateLPPayload(BaseModel):
 
 @router.get("/api/design-archetypes", summary="Lista modelos e arquétipos de design de inspiração")
 @router.get("/design-archetypes", include_in_schema=False)
-def get_design_archetypes():
+def get_design_archetypes(user: AuthenticatedUser = Depends(get_current_user)):
     """GET /api/design-archetypes — Retorna os modelos de inspiração arquitetural."""
     from app.services.design_archetypes import DesignArchetypes
     return {"data": DesignArchetypes.list_archetypes()}
@@ -332,7 +339,8 @@ async def generate_landing_page(
     lead_id: str,
     payload: Optional[GenerateLPPayload] = None,
     archetype: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     POST /api/leads/:leadId/generate-lp
@@ -345,9 +353,7 @@ async def generate_landing_page(
     from app.services.lp_prompt_engine import LPPromptEngine
     from app.services.site_generator_service import SiteGeneratorService
 
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead_id).first()
     if not diagnostic:
@@ -525,7 +531,11 @@ def preview_landing_page(lead_id: str, db: Session = Depends(get_db)):
 @router.get("/api/leads/{lead_id}/download-images/", include_in_schema=False)
 @router.get("/leads/{lead_id}/download-images", include_in_schema=False)
 @router.get("/leads/{lead_id}/download-images/", include_in_schema=False)
-async def download_lead_images(lead_id: str, db: Session = Depends(get_db)):
+async def download_lead_images(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """
     GET /api/leads/:leadId/download-images
     Gera dinamicamente e faz download de um arquivo ZIP contendo todas as imagens
@@ -538,12 +548,7 @@ async def download_lead_images(lead_id: str, db: Session = Depends(get_db)):
     import base64
 
     clean_id = (lead_id or "").strip()
-    lead = db.query(Lead).filter(Lead.id == clean_id).first()
-    if not lead:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Lead '{clean_id}' não encontrado no banco de dados."
-        )
+    lead = get_accessible_lead(db, clean_id, user)
 
     diagnostic = db.query(Diagnostic).filter(Diagnostic.lead_id == lead.id).first()
 

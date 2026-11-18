@@ -13,6 +13,7 @@ try:
         APP_NAME: str = "Automação GP - API de Integrações"
         DEBUG: bool = True
         PORT: int = 8000
+        AUTH_SECRET: Optional[str] = None
 
         DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/automacao_gp"
         REDIS_URL: str = "redis://localhost:6379/0"
@@ -55,6 +56,7 @@ except ImportError:
         APP_NAME: str = os.getenv("APP_NAME", "Automação GP - API de Integrações")
         DEBUG: bool = os.getenv("DEBUG", "True").lower() == "true"
         PORT: int = int(os.getenv("PORT", "8000"))
+        AUTH_SECRET: Optional[str] = os.getenv("AUTH_SECRET")
 
         DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/automacao_gp")
         REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")

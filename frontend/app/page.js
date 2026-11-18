@@ -2,107 +2,126 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import {
+  ArrowRight,
+  BadgeCheck,
+  CircleAlert,
+  CircleCheck,
+  FolderKanban,
+  Handshake,
+  LoaderCircle,
+  PauseCircle,
+  Percent,
+  Phone,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import { fetchApi } from '@/lib/api';
 import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
 import StatCard from '@/components/ui/StatCard';
-import PriorityChart from '@/components/dashboard/PriorityChart';
-import CampaignTable from '@/components/dashboard/CampaignTable';
-import NewCampaignModal from '@/components/campaigns/NewCampaignModal';
-import { Users, BarChart3, ClipboardCheck, Rocket } from 'lucide-react';
+
+const EMPTY_CRM_STATS = {
+  contactedCustomers: 0,
+  interestedCustomers: 0,
+  closedCustomers: 0,
+  paidCustomers: 0,
+  conversionRate: 0,
+};
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [stats, setStats] = useState(EMPTY_CRM_STATS);
   const [campaigns, setCampaigns] = useState([]);
-  const [stats, setStats] = useState({ totalLeads: 0, avgDms: 0, activeCampaigns: 0, totalDiagnostics: 0 });
-  const [priorityData, setPriorityData] = useState([]);
-  const [barData, setBarData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState('');
+  const [updatedAt, setUpdatedAt] = useState(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // 1. Busca campanhas para a tabela e o gráfico de barras
-      const campaignsData = await fetchApi('/campaigns');
-      const campaignsList = campaignsData.data || campaignsData.campaigns || (Array.isArray(campaignsData) ? campaignsData : []);
-      setCampaigns(campaignsList);
+  const loadDashboard = useCallback(async () => {
+    const [dashboardResult, campaignsResult] = await Promise.allSettled([
+      fetchApi('/dashboard/stats'),
+      fetchApi('/campaigns'),
+    ]);
+    const errors = [];
 
-      // 2. Busca estatísticas globais consolidadas do dashboard
-      const dashboardRes = await fetchApi('/dashboard/stats');
-      const dashboardData = dashboardRes.data || {};
-
-      setStats({
-        totalLeads: dashboardData.totalLeads || 0,
-        avgDms: dashboardData.avgDms || 0,
-        activeCampaigns: dashboardData.activeCampaigns || 0,
-        totalDiagnostics: dashboardData.totalDiagnostics || 0,
-      });
-
-      if (dashboardData.priorityDistribution) {
-        setPriorityData(dashboardData.priorityDistribution);
-      }
-
-      // 3. Monta dados para o gráfico de barras de leads por campanha
-      const barChartData = campaignsList
-        .filter((c) => c.status === 'completed')
-        .slice(0, 5) // Top 5
-        .map((c) => ({
-          name: `${c.niche}`.substring(0, 15),
-          leads: c.total_leads || 0,
-        }));
-      setBarData(barChartData);
-
-    } catch (err) {
-      console.error('Erro ao carregar dashboard:', err);
-    } finally {
-      setLoading(false);
+    if (dashboardResult.status === 'fulfilled' && dashboardResult.value.data?.crmStats) {
+      setStats(dashboardResult.value.data.crmStats);
+    } else {
+      const message = dashboardResult.status === 'rejected'
+        ? dashboardResult.reason?.message
+        : 'A API não retornou os indicadores do CRM.';
+      errors.push(message || 'Não foi possível carregar os indicadores do CRM.');
+      console.error('Erro ao carregar indicadores do CRM:', dashboardResult.status === 'rejected'
+        ? dashboardResult.reason
+        : message);
     }
+
+    if (campaignsResult.status === 'fulfilled') {
+      const campaignList = campaignsResult.value.data
+        || campaignsResult.value.campaigns
+        || (Array.isArray(campaignsResult.value) ? campaignsResult.value : null);
+      if (Array.isArray(campaignList)) {
+        setCampaigns(campaignList);
+      } else {
+        errors.push('A API retornou uma lista de campanhas inválida.');
+      }
+    } else {
+      errors.push(campaignsResult.reason?.message || 'Não foi possível carregar as campanhas.');
+      console.error('Erro ao carregar campanhas:', campaignsResult.reason);
+    }
+
+    setError(errors.join(' '));
+    if (!errors.length) setUpdatedAt(new Date());
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadDashboard();
+    const intervalId = setInterval(loadDashboard, 15000);
+    window.addEventListener('focus', loadDashboard);
 
-  // Polling automático suave enquanto houver campanhas em execução
-  const hasProcessing = campaigns.some((c) => c.status === 'processing');
-  useEffect(() => {
-    if (!hasProcessing) return;
-    const interval = setInterval(() => {
-      loadData();
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [hasProcessing, loadData]);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('focus', loadDashboard);
+    };
+  }, [loadDashboard]);
 
-  const handleCampaignSuccess = (result) => {
-    setShowModal(false);
-    loadData();
-    const id = result?.data?.id || result?.id;
-    if (id) {
-      router.push(`/campaigns/${id}`);
-    }
+  const conversionRate = Number(stats.conversionRate) || 0;
+  const formattedConversionRate = `${conversionRate.toLocaleString('pt-BR', {
+    maximumFractionDigits: 1,
+  })}%`;
+  const campaignSummary = campaigns.reduce((summary, campaign) => ({
+    total: summary.total + 1,
+    processing: summary.processing + (campaign.status === 'processing' ? 1 : 0),
+    completed: summary.completed + (campaign.status === 'completed' ? 1 : 0),
+    paused: summary.paused + (['cancelled', 'paused'].includes(campaign.status) ? 1 : 0),
+    failed: summary.failed + (campaign.status === 'failed' ? 1 : 0),
+    leads: summary.leads + (Number(campaign.total_leads) || 0),
+  }), { total: 0, processing: 0, completed: 0, paused: 0, failed: 0, leads: 0 });
+  const recentCampaigns = campaigns.slice(0, 5);
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString('pt-BR');
+  };
+  const campaignStatus = {
+    processing: { label: 'Processando', variant: 'info' },
+    completed: { label: 'Concluída', variant: 'success' },
+    failed: { label: 'Falhou', variant: 'danger' },
+    cancelled: { label: 'Pausada', variant: 'warning' },
+    paused: { label: 'Pausada', variant: 'warning' },
   };
 
-  // Loading skeleton
   if (loading) {
     return (
       <div className="space-y-8">
         <div>
-          <div className="h-8 bg-gray-800/60 rounded-xl w-48 animate-pulse-soft border border-gray-700/30" />
-          <div className="h-4 bg-gray-800/40 rounded-lg w-64 mt-2 animate-pulse-soft border border-gray-700/30" />
+          <div className="h-8 w-56 animate-pulse-soft rounded-xl border border-gray-700/30 bg-gray-800/60" />
+          <div className="mt-2 h-4 w-80 animate-pulse-soft rounded-lg border border-gray-700/30 bg-gray-800/40" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 animate-pulse-soft">
-              <div className="h-4 bg-gray-800/80 rounded w-24 mb-3" />
-              <div className="h-8 bg-gray-800/60 rounded w-16" />
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {[1, 2].map((i) => (
-            <div key={i} className="bg-gray-900/60 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-6 h-80 animate-pulse-soft" />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-5">
+          {[1, 2, 3, 4, 5].map((item) => (
+            <div key={item} className="h-32 animate-pulse-soft rounded-2xl border border-gray-700/50 bg-gray-900/60" />
           ))}
         </div>
       </div>
@@ -111,158 +130,219 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
-      {/* Header Premium */}
-      <div className="relative">
-        <div className="absolute -left-4 top-1 w-1 h-12 bg-gradient-to-b from-cyan-400 to-purple-500 rounded-full" />
-        <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-cyan-500 tracking-tight">
-          Painel de Controle
-        </h1>
-        <p className="text-sm text-gray-400 mt-2 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          Sistema operacional online
-        </p>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard
-          title="Total de Leads"
-          value={stats.totalLeads}
-          icon={<Users size={24} strokeWidth={1.5} />}
-          subtitle="Leads coletados no total"
-        />
-        <StatCard
-          title="Média DMS"
-          value={stats.avgDms}
-          icon={<BarChart3 size={24} strokeWidth={1.5} />}
-          subtitle="Índice de Maturidade"
-        />
-        <StatCard
-          title="Diagnósticos IA"
-          value={stats.totalDiagnostics}
-          icon={<ClipboardCheck size={24} strokeWidth={1.5} />}
-          subtitle="Relatórios gerados"
-        />
-        <StatCard
-          title="Campanhas Ativas"
-          value={stats.activeCampaigns}
-          icon={<Rocket size={24} strokeWidth={1.5} />}
-          subtitle="Processamento em andamento"
-        />
-      </div>
-
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">Distribuição por Prioridade</h3>
-          {priorityData.length > 0 ? (
-            <PriorityChart data={priorityData} />
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
-              Sem dados disponíveis
-            </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-gray-100">Visão geral</h1>
+          <p className="mt-2 text-sm text-gray-400">
+            Acompanhe o CRM e o desempenho das campanhas em um só lugar.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          {updatedAt && (
+            <span className="text-xs text-gray-500">
+              Atualizado às {updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+            </span>
           )}
-        </Card>
-
-        <Card>
-          <h3 className="text-sm font-semibold text-gray-300 mb-4">Leads por Campanha (Top 5)</h3>
-          {barData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={barData} margin={{ top: 20, right: 20, left: -20, bottom: 5 }}>
-                <defs>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06B6D4" stopOpacity={1}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: '#9CA3AF' }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: '#6B7280' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
-                  contentStyle={{
-                    backgroundColor: 'rgba(17, 24, 39, 0.8)',
-                    backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '16px',
-                    boxShadow: '0 10px 30px -5px rgba(0,0,0,0.5)',
-                    fontSize: '13px',
-                    color: '#F3F4F6'
-                  }}
-                  itemStyle={{ color: '#06B6D4', fontWeight: 'bold' }}
-                  formatter={(value) => [`${value} leads`, 'Captados']}
-                />
-                <Bar dataKey="leads" fill="url(#colorLeads)" radius={[6, 6, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500 text-sm">
-              Sem dados disponíveis
-            </div>
-          )}
-        </Card>
+          <button
+            type="button"
+            onClick={() => router.push('/crm')}
+            className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition-colors hover:bg-cyan-500/20"
+          >
+            Abrir CRM <ArrowRight size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/campaigns')}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/70 px-4 py-2 text-sm font-semibold text-gray-200 transition-colors hover:bg-gray-700"
+          >
+            Campanhas <ArrowRight size={16} />
+          </button>
+        </div>
       </div>
 
-      {/* Campaign Section */}
-      <Card>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-gray-100">Campanhas de Prospecção</h3>
-              {hasProcessing && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
-                  Automação Ativa
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-gray-400 mt-0.5">Monitore o radar de leads e ative novas automações sob medida</p>
+      {error && (
+        <Card className="border-rose-500/30 bg-rose-500/10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p role="alert" className="text-sm text-rose-300">{error}</p>
+            <button
+              type="button"
+              onClick={loadDashboard}
+              className="text-sm font-semibold text-rose-200 underline underline-offset-2"
+            >
+              Tentar novamente
+            </button>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => router.push('/campaigns')}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-cyan-400 hover:text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-800/50 transition-all flex items-center gap-1"
-            >
-              <span>Gerenciar Campanhas ({campaigns.length})</span>
-              <span>→</span>
-            </button>
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-lg text-xs font-bold shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all"
-            >
-              <Rocket size={14} />
-              <span>⚡ Ativar Campanha</span>
-            </button>
+        </Card>
+      )}
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-gray-100">Visão do CRM</h2>
+          <p className="mt-1 text-xs text-gray-400">Clientes por etapa atual da esteira comercial.</p>
+        </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+        <StatCard
+          title="Contatados"
+          value={stats.contactedCustomers}
+          icon={<Phone size={23} strokeWidth={1.7} />}
+          subtitle="Etapa atual: Contatado"
+        />
+        <StatCard
+          title="Interessados"
+          value={stats.interestedCustomers}
+          icon={<Handshake size={23} strokeWidth={1.7} />}
+          subtitle="Etapa atual: Interessado"
+        />
+        <StatCard
+          title="Fechados"
+          value={stats.closedCustomers}
+          icon={<BadgeCheck size={23} strokeWidth={1.7} />}
+          subtitle="Etapa atual: Fechado"
+        />
+        <StatCard
+          title="Pagos"
+          value={stats.paidCustomers}
+          icon={<Wallet size={23} strokeWidth={1.7} />}
+          subtitle="Etapa atual: Pago"
+        />
+        <StatCard
+          title="Taxa de conversão"
+          value={formattedConversionRate}
+          icon={<Percent size={23} strokeWidth={1.7} />}
+          subtitle="Fechados ÷ contatados"
+        />
+        </div>
+      </section>
+
+      <Card>
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-lg border border-cyan-500/20 bg-cyan-500/10 p-2 text-cyan-300">
+            <Handshake size={18} />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-200">Indicadores ligados à esteira do CRM</h2>
+            <p className="mt-1 text-xs leading-relaxed text-gray-400">
+              Os números consideram somente leads adicionados ao CRM e acompanham o status atual de cada cliente.
+              Ao mover um cliente entre as etapas, os indicadores são atualizados automaticamente.
+            </p>
           </div>
         </div>
-        <CampaignTable campaigns={campaigns} onRefresh={loadData} />
       </Card>
 
-      {/* FAB */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-24 md:bottom-8 right-4 md:right-8 w-14 h-14 md:w-16 md:h-16 bg-gradient-to-tr from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white rounded-full shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:shadow-[0_0_40px_rgba(139,92,246,0.6)] hover:-translate-y-1 transition-all duration-300 flex items-center justify-center z-40 border border-white/20 group"
-        title="Nova Campanha"
-      >
-        <Rocket className="text-white group-hover:scale-110 transition-transform duration-300" size={28} strokeWidth={1.5} />
-      </button>
+      <section className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-gray-100">Visão das campanhas</h2>
+            <p className="mt-1 text-xs text-gray-400">Acompanhe a coleta de leads e o andamento das campanhas.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/campaigns')}
+            className="text-sm font-semibold text-cyan-400 transition-colors hover:text-cyan-300"
+          >
+            Gerenciar campanhas <ArrowRight size={14} className="ml-1 inline" />
+          </button>
+        </div>
 
-      {/* New Campaign Modal */}
-      <NewCampaignModal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={handleCampaignSuccess}
-      />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          <StatCard
+            title="Campanhas"
+            value={campaignSummary.total}
+            icon={<FolderKanban size={22} strokeWidth={1.7} />}
+            subtitle="Total cadastradas"
+          />
+          <StatCard
+            title="Em andamento"
+            value={campaignSummary.processing}
+            icon={<LoaderCircle size={22} strokeWidth={1.7} />}
+            subtitle="Coleta em processamento"
+          />
+          <StatCard
+            title="Concluídas"
+            value={campaignSummary.completed}
+            icon={<CircleCheck size={22} strokeWidth={1.7} />}
+            subtitle="Coleta finalizada"
+          />
+          <StatCard
+            title="Atenção"
+            value={campaignSummary.paused + campaignSummary.failed}
+            icon={campaignSummary.failed
+              ? <CircleAlert size={22} strokeWidth={1.7} />
+              : <PauseCircle size={22} strokeWidth={1.7} />}
+            subtitle={`${campaignSummary.paused} pausadas · ${campaignSummary.failed} com falha`}
+          />
+          <StatCard
+            title="Leads"
+            value={campaignSummary.leads}
+            icon={<Users size={22} strokeWidth={1.7} />}
+            subtitle="Encontrados nas campanhas"
+          />
+        </div>
+
+        <Card padding="p-0">
+          <div className="flex items-center justify-between border-b border-gray-700/50 p-4">
+            <h3 className="text-sm font-semibold text-gray-200">Campanhas recentes</h3>
+            <span className="text-xs text-gray-500">Últimas {recentCampaigns.length}</span>
+          </div>
+          {recentCampaigns.length ? (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left">
+                <thead>
+                  <tr className="border-b border-gray-800 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                    <th className="px-4 py-3">Nicho</th>
+                    <th className="px-4 py-3">Localização</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 text-center">Leads</th>
+                    <th className="px-4 py-3">Criada em</th>
+                    <th className="px-4 py-3" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentCampaigns.map((campaign) => {
+                    const status = campaignStatus[campaign.status] || {
+                      label: campaign.status || 'Desconhecido',
+                      variant: 'default',
+                    };
+                    return (
+                      <tr key={campaign.id} className="border-b border-gray-800/70 text-sm last:border-0">
+                        <td className="px-4 py-3 font-medium text-gray-100">{campaign.niche || '—'}</td>
+                        <td className="px-4 py-3 text-gray-400">{campaign.location || '—'}</td>
+                        <td className="px-4 py-3">
+                          <Badge variant={status.variant}>{status.label}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-center font-semibold text-gray-200">
+                          {Number(campaign.total_leads) || 0}
+                        </td>
+                        <td className="px-4 py-3 text-gray-500">{formatDate(campaign.created_at)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                            className="text-xs font-semibold text-cyan-400 hover:text-cyan-300"
+                          >
+                            Abrir
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-sm text-gray-400">Nenhuma campanha encontrada.</p>
+              <button
+                type="button"
+                onClick={() => router.push('/campaigns')}
+                className="mt-3 text-sm font-semibold text-cyan-400 hover:text-cyan-300"
+              >
+                Ver campanhas
+              </button>
+            </div>
+          )}
+        </Card>
+      </section>
     </div>
   );
 }

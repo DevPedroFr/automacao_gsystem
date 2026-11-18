@@ -13,6 +13,8 @@ from pydantic import BaseModel
 from sqlalchemy import func, case, or_
 from sqlalchemy.orm import Session
 
+from app.core.access import get_accessible_campaign
+from app.core.auth import AuthenticatedUser, allowed_tenants, get_current_user
 from app.db.database import get_db
 from app.db.models import Campaign, Lead, Diagnostic
 
@@ -25,6 +27,7 @@ router = APIRouter(prefix="/api/campaigns", tags=["Campanhas"])
 class CampaignCreate(BaseModel):
     niche: str
     location: str
+    tenant_id: Optional[str] = None
     minRating: Optional[float] = None
     status: Optional[str] = None
     negativeKeywords: Optional[list[str]] = None
@@ -40,6 +43,7 @@ def _campaign_to_dict(c: Campaign, stats: dict = None) -> dict:
         "niche": c.niche,
         "location": c.location,
         "status": c.status,
+        "tenant_id": c.tenant_id,
         "total_leads": total_leads,
         "error_message": c.error_message,
         "created_at": c.created_at.isoformat() if c.created_at else None,
@@ -58,9 +62,17 @@ def _campaign_to_dict(c: Campaign, stats: dict = None) -> dict:
 # ── Rotas ─────────────────────────────────────────────────────────────────────
 
 @router.get("", summary="Lista todas as campanhas com estatísticas enriquecidas")
-def list_campaigns(db: Session = Depends(get_db)):
+def list_campaigns(
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/campaigns — Lista todas as campanhas com métricas consolidadas, mais recente primeiro."""
-    campaigns = db.query(Campaign).order_by(Campaign.created_at.desc()).all()
+    campaigns = (
+        db.query(Campaign)
+        .filter(Campaign.tenant_id.in_(allowed_tenants(user)))
+        .order_by(Campaign.created_at.desc())
+        .all()
+    )
     if not campaigns:
         return {"data": []}
 
@@ -76,6 +88,7 @@ def list_campaigns(db: Session = Depends(get_db)):
             func.round(func.avg(Lead.dms), 1).label("avg_dms"),
             func.round(func.avg(Lead.cos), 1).label("avg_cos"),
         )
+        .filter(Lead.tenant_id.in_(allowed_tenants(user)))
         .group_by(Lead.campaign_id)
         .all()
     )
@@ -98,6 +111,7 @@ def list_campaigns(db: Session = Depends(get_db)):
     diag_rows = (
         db.query(Lead.campaign_id, func.count(Diagnostic.id))
         .join(Diagnostic, Diagnostic.lead_id == Lead.id)
+        .filter(Lead.tenant_id.in_(allowed_tenants(user)))
         .group_by(Lead.campaign_id)
         .all()
     )
@@ -114,11 +128,13 @@ def list_campaigns(db: Session = Depends(get_db)):
 
 
 @router.get("/{campaign_id}", summary="Detalhes de uma campanha com estatísticas")
-def get_campaign(campaign_id: str, db: Session = Depends(get_db)):
+def get_campaign(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/campaigns/:id — Retorna detalhes de uma campanha com métricas consolidadas."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    campaign = get_accessible_campaign(db, campaign_id, user)
 
     stats_row = (
         db.query(
@@ -130,14 +146,20 @@ def get_campaign(campaign_id: str, db: Session = Depends(get_db)):
             func.round(func.avg(Lead.dms), 1).label("avg_dms"),
             func.round(func.avg(Lead.cos), 1).label("avg_cos"),
         )
-        .filter(Lead.campaign_id == campaign_id)
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
         .first()
     )
 
     diag_count = (
         db.query(func.count(Diagnostic.id))
         .join(Lead, Diagnostic.lead_id == Lead.id)
-        .filter(Lead.campaign_id == campaign_id)
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
         .scalar() or 0
     )
 
@@ -163,6 +185,7 @@ async def create_campaign(
     body: CampaignCreate,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     POST /api/campaigns — Cria uma nova campanha e dispara o worker em background.
@@ -174,11 +197,27 @@ async def create_campaign(
             detail={"error": "validation_error", "message": 'Os campos "niche" e "location" são obrigatórios'},
         )
 
+    if user.access_level == "diretoria":
+        if body.tenant_id not in allowed_tenants(user):
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "validation_error", "message": "Selecione Spy car ou G-System para esta campanha."},
+            )
+        campaign_tenant = body.tenant_id
+    else:
+        if body.tenant_id and body.tenant_id != user.access_level:
+            raise HTTPException(
+                status_code=403,
+                detail={"error": "forbidden", "message": "Não é permitido criar campanhas para outra empresa."},
+            )
+        campaign_tenant = user.access_level
+
     campaign_id = str(uuid.uuid4())
     campaign = Campaign(
         id=campaign_id,
         niche=body.niche,
         location=body.location,
+        tenant_id=campaign_tenant,
         status="processing",
         total_leads=0,
         created_at=datetime.utcnow(),
@@ -201,10 +240,12 @@ async def create_campaign(
 
 
 @router.post("/{campaign_id}/cancel", summary="Cancela o processamento de uma campanha")
-def cancel_campaign(campaign_id: str, db: Session = Depends(get_db)):
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+def cancel_campaign(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    campaign = get_accessible_campaign(db, campaign_id, user)
     if campaign.status != "processing":
         raise HTTPException(
             status_code=409,
@@ -224,13 +265,12 @@ def activate_campaign(
     campaign_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """
     POST /api/campaigns/:id/activate — Ativa ou reinicia a execução de busca e triagem de leads.
     """
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    campaign = get_accessible_campaign(db, campaign_id, user)
 
     # Se já está processando, retorna sem duplicar
     if campaign.status == "processing":
@@ -254,11 +294,13 @@ def activate_campaign(
 
 
 @router.delete("/{campaign_id}", summary="Exclui uma campanha e seus leads")
-def delete_campaign(campaign_id: str, db: Session = Depends(get_db)):
+def delete_campaign(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """DELETE /api/campaigns/:id — Remove a campanha e limpa todos os leads e diagnósticos vinculados."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    campaign = get_accessible_campaign(db, campaign_id, user)
 
     db.delete(campaign)
     db.commit()
@@ -267,17 +309,29 @@ def delete_campaign(campaign_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/{campaign_id}/stats", summary="Estatísticas detalhadas de uma campanha")
-def get_campaign_stats(campaign_id: str, db: Session = Depends(get_db)):
+def get_campaign_stats(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/campaigns/:id/stats — Retorna métricas e distribuição de prioridades."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    get_accessible_campaign(db, campaign_id, user)
 
-    total_leads = db.query(func.count(Lead.id)).filter(Lead.campaign_id == campaign_id).scalar() or 0
+    total_leads = (
+        db.query(func.count(Lead.id))
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
+        .scalar() or 0
+    )
 
     priority_counts = (
         db.query(Lead.priority, func.count(Lead.id))
-        .filter(Lead.campaign_id == campaign_id)
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
         .group_by(Lead.priority)
         .all()
     )
@@ -288,7 +342,10 @@ def get_campaign_stats(campaign_id: str, db: Session = Depends(get_db)):
 
     averages = (
         db.query(func.round(func.avg(Lead.dms), 1), func.round(func.avg(Lead.cos), 1))
-        .filter(Lead.campaign_id == campaign_id)
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
         .first()
     )
 

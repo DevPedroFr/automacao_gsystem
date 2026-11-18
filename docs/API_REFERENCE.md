@@ -17,6 +17,9 @@ Todas as respostas JSON bem-sucedidas são envelopadas em um objeto `{ data: ...
 | **GET** | `/api/campaigns/:campaignId/leads` | Lista leads da campanha com filtros e ordenação. |
 | **GET** | `/api/leads/:id` | Detalhes de um lead (incluindo diagnóstico se houver). |
 | **POST** | `/api/leads/:id/research` | Pesquisa dados públicos da empresa com Gemini e retorna fontes. |
+| **GET** | `/api/leads` | Lista leads do CRM; aceita `tenant_id` para filtrar a empresa (Diretoria). |
+| **GET** | `/api/leads/:id/records` | Lista o histórico de registros e usuários responsáveis por um lead. |
+| **POST** | `/api/leads/:id/records` | Adiciona uma anotação ao histórico do lead. |
 | **GET** | `/api/campaigns/:campaignId/leads/export` | Exporta leads da campanha no formato CSV. |
 | **POST** | `/api/leads/:leadId/diagnostic` | Gera e salva o diagnóstico por IA para o lead. |
 | **GET** | `/api/leads/:leadId/diagnostic` | Retorna o diagnóstico gerado de um lead. |
@@ -116,11 +119,26 @@ Todas as respostas JSON bem-sucedidas são envelopadas em um objeto `{ data: ...
     }
   }
   ```
-* **Uso no Frontend:** Chamado pela Home (`app/page.js`) em loop para cada campanha completed para computar o total de leads gerais, a média de DMS e desenhar o gráfico de prioridades do Dashboard.
+* **Uso no Frontend:** Alimenta os indicadores do CRM no dashboard principal (`app/page.js`): contatados, interessados, fechados, pagos e taxa de conversão (fechados ÷ contatados). Os números consideram somente leads adicionados ao CRM e são atualizados conforme o status comercial; o resumo das campanhas vem de `GET /api/campaigns`.
 
 ---
 
 ### 2. Leads
+
+#### `GET /api/leads`
+* **Descrição:** Lista os leads adicionados ao CRM. Cada lead inclui `last_record_at`, data do registro mais recente, ou `null` quando ainda não há registros.
+* **Parâmetros:** `tenant_id` (opcional, `g_system` ou `spy_car`); o filtro por empresa só pode ser usado pela Diretoria.
+* **Histórico:** A inclusão do lead no CRM e mudanças de etapa são registradas automaticamente.
+
+#### `GET /api/leads/:id/records`
+* **Descrição:** Retorna as anotações e eventos de etapa do lead, em ordem cronológica decrescente. Cada item inclui `created_by` e `created_at`.
+
+#### `POST /api/leads/:id/records`
+* **Descrição:** Adiciona uma anotação manual ao histórico do lead.
+* **Payload (JSON Body):**
+  ```json
+  { "content": "Ligação realizada; combinado retorno na próxima semana." }
+  ```
 
 #### `GET /api/campaigns/:campaignId/leads`
 * **Descrição:** Retorna a lista de leads gerada pela campanha especificada, permitindo filtros de busca e ordenação.

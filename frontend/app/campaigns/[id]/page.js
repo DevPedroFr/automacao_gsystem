@@ -22,6 +22,18 @@ export default function CampaignDetailPage() {
   const [cancelling, setCancelling] = useState(false);
   const [activating, setActivating] = useState(false);
   const [addingLeadId, setAddingLeadId] = useState(null);
+  const [selectedLeadIds, setSelectedLeadIds] = useState([]);
+  const [isCollecting, setIsCollecting] = useState(false);
+  const [collectionProgress, setCollectionProgress] = useState(null);
+  const [collectionError, setCollectionError] = useState(null);
+  const [researchResults, setResearchResults] = useState({});
+
+  useEffect(() => {
+    setSelectedLeadIds([]);
+    setCollectionProgress(null);
+    setCollectionError(null);
+    setResearchResults({});
+  }, [campaignId]);
 
   const loadCampaign = useCallback(async () => {
     try {
@@ -126,6 +138,60 @@ export default function CampaignDetailPage() {
     router.push(`/leads/${leadId}`);
   };
 
+  const handleToggleLead = (leadId) => {
+    setSelectedLeadIds((current) =>
+      current.includes(leadId)
+        ? current.filter((id) => id !== leadId)
+        : [...current, leadId]
+    );
+  };
+
+  const handleToggleAllLeads = () => {
+    const allSelected = leads.length > 0 && leads.every((lead) => selectedLeadIds.includes(lead.id));
+    setSelectedLeadIds(allSelected ? [] : leads.map((lead) => lead.id));
+  };
+
+  const handleCollectSelected = async () => {
+    const selectedLeads = leads.filter((lead) => selectedLeadIds.includes(lead.id));
+    if (!selectedLeads.length || isCollecting) return;
+
+    setCollectionError(null);
+    setIsCollecting(true);
+    try {
+      for (let index = 0; index < selectedLeads.length; index += 1) {
+        const lead = selectedLeads[index];
+        setCollectionProgress({
+          current: index + 1,
+          total: selectedLeads.length,
+          leadName: lead.name,
+        });
+
+        try {
+          const result = await fetchApi(`/leads/${lead.id}/research`, { method: 'POST' });
+          setResearchResults((current) => ({
+            ...current,
+            [lead.id]: { data: result?.data || result },
+          }));
+        } catch (err) {
+          console.error(`Erro ao obter dados do lead ${lead.id}:`, err);
+          setResearchResults((current) => ({
+            ...current,
+            [lead.id]: { error: err.message || 'Não foi possível obter os dados.' },
+          }));
+          setCollectionError({
+            leadName: lead.name,
+            message: err.message || 'Não foi possível obter os dados.',
+            remaining: selectedLeads.length - index - 1,
+          });
+          break;
+        }
+      }
+    } finally {
+      setIsCollecting(false);
+      setCollectionProgress(null);
+    }
+  };
+
   const handleAddLeadToCrm = async (leadId) => {
     try {
       setAddingLeadId(leadId);
@@ -152,6 +218,7 @@ export default function CampaignDetailPage() {
   }
 
   const statusConf = STATUS_CONFIG[campaign?.status] || {};
+  const researchedLeads = leads.filter((lead) => researchResults[lead.id]);
   const getStatusVariant = (status) => {
     const map = { processing: 'info', completed: 'success', failed: 'danger', cancelled: 'warning' };
     return map[status] || 'default';
@@ -254,8 +321,76 @@ export default function CampaignDetailPage() {
           onGetData={handleGetLeadData}
           onAddToCrm={handleAddLeadToCrm}
           addingLeadId={addingLeadId}
+          selectedLeadIds={selectedLeadIds}
+          onToggleLead={handleToggleLead}
+          onToggleAll={handleToggleAllLeads}
+          onCollectSelected={handleCollectSelected}
+          isCollecting={isCollecting}
+          collectionProgress={collectionProgress}
+          collectionError={collectionError}
         />
       </Card>
+
+      {researchedLeads.length > 0 && (
+        <Card>
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-100">Dados coletados</h2>
+              <p className="mt-1 text-xs text-gray-400">
+                Resultados e fontes públicas para os leads selecionados.
+              </p>
+            </div>
+            {researchedLeads.map((lead) => {
+              const research = researchResults[lead.id];
+              return (
+                <section key={lead.id} className="space-y-4 border-t border-gray-700/50 pt-4 first:border-0 first:pt-0">
+                  <h3 className="font-semibold text-gray-100">{lead.name}</h3>
+                  {research.error ? (
+                    <p className="text-sm text-rose-400">{research.error}</p>
+                  ) : (
+                    <>
+                      <dl className="grid gap-3 sm:grid-cols-2">
+                        {[
+                          ['Responsável', research.data.responsible_name],
+                          ['Cargo', research.data.responsible_role],
+                          ['Telefone comercial público', research.data.public_business_phone],
+                          ['Abertura da empresa', research.data.opening_date],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-xl border border-gray-700/50 bg-gray-950/40 p-3">
+                            <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</dt>
+                            <dd className="mt-2 text-sm text-gray-100">{value || 'Não encontrado em fonte pública'}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-200">Fontes</h4>
+                        {research.data.sources?.length ? (
+                          <ul className="mt-2 space-y-1">
+                            {research.data.sources.map((source, index) => (
+                              <li key={source.url || `${lead.id}-source-${index}`}>
+                                <a
+                                  href={source.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-cyan-400 hover:text-cyan-300"
+                                >
+                                  {source.title || source.url}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="mt-1 text-xs text-gray-500">Nenhuma fonte foi citada para esta pesquisa.</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </section>
+              );
+            })}
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

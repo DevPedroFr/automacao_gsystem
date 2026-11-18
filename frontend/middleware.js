@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 
 const AUTH_COOKIE_NAME = 'apd_session';
-const AUTH_TOKEN = 'authenticated_gp_2026_secure_token';
+
+function hasSessionToken(request) {
+  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
+  return typeof token === 'string' && token.split('.').length === 3;
+}
 
 export function middleware(request) {
   const { pathname } = request.nextUrl;
@@ -19,8 +23,7 @@ export function middleware(request) {
   ) {
     // Se já estiver logado e tentar acessar /login, manda pro dashboard
     if (pathname === '/login') {
-      const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-      if (token === AUTH_TOKEN) {
+      if (hasSessionToken(request)) {
         return NextResponse.redirect(new URL('/', request.url));
       }
     }
@@ -28,9 +31,7 @@ export function middleware(request) {
   }
 
   // 2. Verificar se o usuário possui cookie de sessão válido
-  const token = request.cookies.get(AUTH_COOKIE_NAME)?.value;
-
-  if (token !== AUTH_TOKEN) {
+  if (!hasSessionToken(request)) {
     // Se for chamada de API interna, responde 401
     if (pathname.startsWith('/api')) {
       return NextResponse.json(

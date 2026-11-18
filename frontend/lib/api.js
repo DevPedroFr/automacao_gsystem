@@ -1,15 +1,15 @@
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const API_PROXY_BASE = '/api/backend';
 
-if (!configuredApiUrl) {
-  throw new Error('NEXT_PUBLIC_API_URL não está configurada. Defina a URL pública da API antes do build.');
+function apiUrl(endpoint = '') {
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${API_PROXY_BASE}${path}`;
 }
 
-const API_BASE = configuredApiUrl.replace(/\/+$/, '');
-
 export async function fetchApi(endpoint, options = {}) {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
+  const { headers: optionHeaders, ...requestOptions } = options;
+  const res = await fetch(apiUrl(endpoint), {
+    ...requestOptions,
+    headers: { 'Content-Type': 'application/json', ...optionHeaders },
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
@@ -22,9 +22,7 @@ export async function fetchApi(endpoint, options = {}) {
   return res.json();
 }
 
-export { API_BASE };
-
 export function getApiUrl(endpoint = '') {
-  return `${API_BASE}${endpoint}`;
+  return apiUrl(endpoint);
 }
 

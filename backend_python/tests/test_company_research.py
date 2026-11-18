@@ -12,12 +12,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.api.leads import research_lead
+from app.core.auth import AuthenticatedUser
 from app.db.database import Base
 from app.db.models import Lead
 from app.integrations.company_research import CompanyResearchError, CompanyResearchIntegration
 
 
 class CompanyResearchTests(unittest.TestCase):
+    user = AuthenticatedUser(username="test", access_level="g_system")
+
     @staticmethod
     def _rate_limit_error(message, headers=None):
         body = {"error": {"message": message, "code": "too_many_requests"}}
@@ -180,8 +183,8 @@ class CompanyResearchTests(unittest.TestCase):
             session.add(Lead(id="lead-id", name="Empresa Exemplo", address="Rua Central, São Paulo"))
             session.commit()
 
-            result = asyncio.run(research_lead("lead-id", session))
-            cached_result = asyncio.run(research_lead("lead-id", session))
+            result = asyncio.run(research_lead("lead-id", session, self.user))
+            cached_result = asyncio.run(research_lead("lead-id", session, self.user))
 
             self.assertEqual(result["data"]["responsible_name"], "Ana Silva")
             self.assertEqual(cached_result, result)
@@ -208,7 +211,7 @@ class CompanyResearchTests(unittest.TestCase):
             session.commit()
 
             with self.assertRaises(HTTPException) as context:
-                asyncio.run(research_lead("lead-id", session))
+                asyncio.run(research_lead("lead-id", session, self.user))
 
             self.assertEqual(context.exception.status_code, 429)
             self.assertEqual(context.exception.headers["Retry-After"], "30")

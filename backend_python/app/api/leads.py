@@ -10,13 +10,16 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
+from app.core.access import get_accessible_campaign, get_accessible_lead
+from app.core.auth import AuthenticatedUser, allowed_tenants, get_current_user
 from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import Campaign, Lead, Diagnostic
+from app.db.models import Campaign, CrmRecord, Lead, Diagnostic
 from app.integrations.company_research import CompanyResearchError, CompanyResearchIntegration
 
 logger = logging.getLogger(__name__)
@@ -33,6 +36,7 @@ def _lead_to_dict(lead: Lead) -> dict:
     return {
         "id": lead.id,
         "campaign_id": lead.campaign_id,
+        "tenant_id": lead.tenant_id,
         "name": lead.name,
         "category": lead.category,
         "phone": lead.phone,
@@ -61,6 +65,19 @@ def _lead_to_dict(lead: Lead) -> dict:
         "commercial_status": lead.commercial_status,
         "source_provider": lead.source_provider,
         "created_at": lead.created_at.isoformat() if lead.created_at else None,
+    }
+
+
+def _crm_record_to_dict(record: CrmRecord) -> dict:
+    return {
+        "id": record.id,
+        "lead_id": record.lead_id,
+        "record_type": record.record_type,
+        "content": record.content,
+        "previous_status": record.previous_status,
+        "new_status": record.new_status,
+        "created_by": record.created_by,
+        "created_at": record.created_at.isoformat() if record.created_at else None,
     }
 
 
@@ -110,13 +127,15 @@ def list_leads(
     sort_by: Optional[str] = Query("name", description="Campo de ordenação"),
     sort_order: Optional[str] = Query("ASC", description="ASC ou DESC"),
     db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
 ):
     """GET /api/campaigns/:campaignId/leads — Lista leads com filtros e ordenação."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    get_accessible_campaign(db, campaign_id, user)
 
-    query = db.query(Lead).filter(Lead.campaign_id == campaign_id)
+    query = db.query(Lead).filter(
+        Lead.campaign_id == campaign_id,
+        Lead.tenant_id.in_(allowed_tenants(user)),
+    )
 
     if priority:
         query = query.filter(Lead.priority == priority.upper())
@@ -136,26 +155,105 @@ def list_leads(
 
 
 @router.get("/api/leads", summary="Lista leads adicionados ao CRM")
-def list_all_leads(db: Session = Depends(get_db)):
+def list_all_leads(
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+    tenant_id: Optional[str] = None,
+):
     """GET /api/leads — Lista somente os leads adicionados manualmente ao CRM."""
+    accessible_tenants = allowed_tenants(user)
+    if tenant_id is not None:
+        if tenant_id not in {"spy_car", "g_system"}:
+            raise HTTPException(status_code=400, detail={"message": "Empresa inválida."})
+        if tenant_id not in accessible_tenants:
+            raise HTTPException(status_code=403, detail={"message": "Você não pode acessar o CRM desta empresa."})
+        accessible_tenants = (tenant_id,)
+
     leads = (
         db.query(Lead)
-        .filter(Lead.in_crm.is_(True))
+        .filter(Lead.in_crm.is_(True), Lead.tenant_id.in_(accessible_tenants))
         .order_by(Lead.created_at.desc())
         .all()
     )
-    return {"data": [_lead_to_dict(l) for l in leads], "total": len(leads)}
+    last_records = {}
+    if leads:
+        last_records = dict(
+            db.query(CrmRecord.lead_id, func.max(CrmRecord.created_at))
+            .filter(CrmRecord.lead_id.in_([lead.id for lead in leads]))
+            .group_by(CrmRecord.lead_id)
+            .all()
+        )
+
+    data = []
+    for lead in leads:
+        lead_data = _lead_to_dict(lead)
+        last_record_at = last_records.get(lead.id)
+        lead_data["last_record_at"] = last_record_at.isoformat() if last_record_at else None
+        data.append(lead_data)
+    return {"data": data, "total": len(data)}
+
+
+@router.get("/api/leads/{lead_id}/records", summary="Lista o histórico de registros de um lead")
+def list_lead_records(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    lead = get_accessible_lead(db, lead_id, user)
+    records = (
+        db.query(CrmRecord)
+        .filter(CrmRecord.lead_id == lead.id)
+        .order_by(CrmRecord.created_at.desc(), CrmRecord.id.desc())
+        .all()
+    )
+    return {"data": [_crm_record_to_dict(record) for record in records], "total": len(records)}
+
+
+class CrmRecordCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=5000)
+
+
+@router.post("/api/leads/{lead_id}/records", summary="Adiciona uma nota ao histórico do lead")
+def create_lead_record(
+    lead_id: str,
+    body: CrmRecordCreate,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
+    lead = get_accessible_lead(db, lead_id, user)
+    content = body.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail={"message": "O registro não pode ficar vazio."})
+
+    record = CrmRecord(
+        lead_id=lead.id,
+        record_type="note",
+        content=content,
+        created_by=user.username,
+    )
+    db.add(record)
+    db.commit()
+    db.refresh(record)
+    return {"data": _crm_record_to_dict(record)}
 
 
 @router.post("/api/leads/{lead_id}/crm", summary="Adiciona um lead ao CRM")
-def add_lead_to_crm(lead_id: str, db: Session = Depends(get_db)):
+def add_lead_to_crm(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """POST /api/leads/:id/crm — Inclui um lead coletado no CRM."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     if not lead.in_crm:
         lead.in_crm = True
+        db.add(CrmRecord(
+            lead_id=lead.id,
+            record_type="crm_added",
+            content="Lead adicionado ao CRM",
+            created_by=user.username,
+        ))
         db.commit()
         db.refresh(lead)
 
@@ -166,28 +264,42 @@ class LeadStatusUpdate(BaseModel):
     status: str
 
 @router.patch("/api/leads/{lead_id}/status", summary="Atualiza o status comercial de um lead")
-def update_lead_status(lead_id: str, body: LeadStatusUpdate, db: Session = Depends(get_db)):
+def update_lead_status(
+    lead_id: str,
+    body: LeadStatusUpdate,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """PATCH /api/leads/:id/status — Atualiza commercial_status."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
-    valid_statuses = ["new", "contacted", "negotiation", "won", "lost"]
+    valid_statuses = ["new", "contacted", "negotiation", "won", "paid", "lost"]
     if body.status not in valid_statuses:
         raise HTTPException(status_code=400, detail={"error": "invalid_status", "message": f"Status inválido. Permitidos: {valid_statuses}"})
 
+    previous_status = lead.commercial_status or "new"
     lead.commercial_status = body.status
+    if previous_status != body.status:
+        db.add(CrmRecord(
+            lead_id=lead.id,
+            record_type="status_change",
+            previous_status=previous_status,
+            new_status=body.status,
+            created_by=user.username,
+        ))
     db.commit()
     db.refresh(lead)
     return {"data": _lead_to_dict(lead)}
 
 
 @router.get("/api/leads/{lead_id}", summary="Detalhes completos de um lead")
-def get_lead(lead_id: str, db: Session = Depends(get_db)):
+def get_lead(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/leads/:id — Retorna detalhes do lead com diagnóstico, se existir."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     diagnostic = None
     try:
@@ -202,11 +314,13 @@ def get_lead(lead_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/api/leads/{lead_id}/research", summary="Busca dados públicos de uma empresa com Gemini")
-async def research_lead(lead_id: str, db: Session = Depends(get_db)):
+async def research_lead(
+    lead_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """Pesquisa informações empresariais públicas e retorna dados com fontes."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
     if lead.company_research_data and lead.company_research_updated_at:
@@ -250,13 +364,23 @@ async def research_lead(lead_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/api/campaigns/{campaign_id}/leads/export", summary="Exporta leads em CSV")
-def export_leads_csv(campaign_id: str, db: Session = Depends(get_db)):
+def export_leads_csv(
+    campaign_id: str,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """GET /api/campaigns/:campaignId/leads/export — Gera arquivo CSV dos leads."""
-    campaign = db.query(Campaign).filter(Campaign.id == campaign_id).first()
-    if not campaign:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Campanha não encontrada"})
+    get_accessible_campaign(db, campaign_id, user)
 
-    leads = db.query(Lead).filter(Lead.campaign_id == campaign_id).order_by(Lead.name.asc()).all()
+    leads = (
+        db.query(Lead)
+        .filter(
+            Lead.campaign_id == campaign_id,
+            Lead.tenant_id.in_(allowed_tenants(user)),
+        )
+        .order_by(Lead.name.asc())
+        .all()
+    )
 
     headers = ["Nome", "Endereço", "Avaliação Google"]
 
@@ -284,11 +408,14 @@ class InstagramSelection(BaseModel):
     handle: str
 
 @router.post("/api/leads/{lead_id}/select-instagram", summary="Seleciona o Instagram correto para o lead")
-def select_instagram(lead_id: str, body: InstagramSelection, db: Session = Depends(get_db)):
+def select_instagram(
+    lead_id: str,
+    body: InstagramSelection,
+    db: Session = Depends(get_db),
+    user: AuthenticatedUser = Depends(get_current_user),
+):
     """Seleciona o Instagram correto dentre os candidatos e atualiza o lead."""
-    lead = db.query(Lead).filter(Lead.id == lead_id).first()
-    if not lead:
-        raise HTTPException(status_code=404, detail={"error": "not_found", "message": "Lead não encontrado"})
+    lead = get_accessible_lead(db, lead_id, user)
 
     # Atualiza o lead com a seleção
     lead.has_instagram = 1

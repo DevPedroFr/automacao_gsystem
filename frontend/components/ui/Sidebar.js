@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   {
@@ -53,6 +54,21 @@ import { useRouter } from 'next/navigation';
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [accessLevel, setAccessLevel] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/auth')
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (active) setAccessLevel(result?.user?.access_level || null);
+      })
+      .catch((err) => console.error('Erro ao carregar nível de acesso:', err));
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   if (pathname === '/login') {
     return null;
@@ -61,10 +77,11 @@ export default function Sidebar() {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth', { method: 'DELETE' });
-      router.push('/login');
-      router.refresh();
     } catch (err) {
       console.error('Erro ao sair:', err);
+    } finally {
+      router.push('/login');
+      router.refresh();
     }
   };
 
@@ -79,7 +96,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-1">
-          {navItems.map((item) => {
+          {navItems.filter((item) => item.href !== '/settings' || accessLevel === 'diretoria').map((item) => {
             const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href) && item.href !== '#';
             return (
               <Link
@@ -117,7 +134,7 @@ export default function Sidebar() {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F2744] border-t border-gray-800 z-50 px-6 py-3 flex items-center justify-between shadow-[0_-5px_20px_rgba(0,0,0,0.3)] print:hidden">
-        {navItems.map((item) => {
+        {navItems.filter((item) => item.href !== '/settings' || accessLevel === 'diretoria').map((item) => {
           const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href) && item.href !== '#';
           return (
             <Link

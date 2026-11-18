@@ -24,6 +24,7 @@ backend_python/*.sqlite3
 .env.development.local
 .env.test.local
 .env.production.local
+backend_python/users.json
 
 # Logs and system
 *.log
