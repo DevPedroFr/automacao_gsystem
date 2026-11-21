@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock, User, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Lock, User, ArrowRight, ShieldCheck, AlertCircle, Activity, Target, Zap } from 'lucide-react';
 
 function LoginForm() {
   const router = useRouter();
@@ -42,7 +42,8 @@ function LoginForm() {
   };
 
   return (
-    <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-3xl p-8 shadow-2xl relative">
+    <div className="relative rounded-3xl border border-white/[0.09] bg-[#0b1421]/85 p-6 shadow-[0_28px_90px_rgba(0,0,0,0.45),0_0_40px_rgba(34,211,238,0.045)] backdrop-blur-2xl sm:p-8">
+      <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/30 to-transparent" />
       <form onSubmit={handleSubmit} className="space-y-5">
         {errorMessage && (
           <div className="flex items-center gap-2.5 p-3.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs animate-fade-in">
@@ -62,7 +63,6 @@ function LoginForm() {
             <input
               type="text"
               required
-              autoFocus
               placeholder="Nome de usuário"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -114,30 +114,96 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const platformFeatures = [
+    { icon: Activity, label: 'Indicadores em tempo real', detail: 'Acompanhamento da operação' },
+    { icon: Target, label: 'Pipeline comercial', detail: 'Leads organizados por etapa' },
+    { icon: Zap, label: 'Campanhas inteligentes', detail: 'Prospecção automatizada' },
+  ];
+
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[#0B0F19] text-gray-100 relative overflow-hidden">
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-cyan-500/10 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-10 right-10 w-[400px] h-[300px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#080d16] text-gray-100">
+      <div className="pointer-events-none absolute -left-40 top-0 h-[540px] w-[540px] rounded-full bg-cyan-500/[0.07] blur-[150px]" />
+      <div className="pointer-events-none absolute -bottom-48 right-0 h-[540px] w-[540px] rounded-full bg-indigo-500/[0.08] blur-[150px]" />
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 text-cyan-400 mb-4 shadow-[0_0_25px_rgba(6,182,212,0.2)]">
-            <ShieldCheck size={28} />
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-[1320px] grid-cols-1 items-center gap-10 px-4 py-8 sm:px-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.8fr)] lg:gap-16 lg:px-14">
+        <section className="hidden lg:block">
+          <div className="mb-10 inline-flex items-center gap-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-200/20 bg-gradient-to-br from-cyan-300/20 to-blue-500/10 text-cyan-100 shadow-[0_8px_28px_rgba(8,145,178,0.15)]">
+              <Zap size={22} fill="currentColor" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold tracking-tight text-white">Automação de Leads</span>
+              <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.2em] text-cyan-100/55">
+                Intelligence suite
+              </span>
+            </span>
           </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-wide">
-            Automação <span className="text-cyan-400">de Leads</span>
-          </h1>
-          <p className="text-xs text-gray-400 mt-1 uppercase tracking-widest font-semibold">
-            Área de Acesso Restrito
-          </p>
-        </div>
 
-        {/* Suspense Wrapper for Next.js 14 */}
-        <Suspense fallback={<div className="text-center text-gray-500 py-8">Carregando painel seguro...</div>}>
-          <LoginForm />
-        </Suspense>
+          <div className="mb-5 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-100/60">
+            <span className="h-px w-7 bg-cyan-200/50" />
+            Lead intelligence platform
+          </div>
+          <h1 className="max-w-2xl text-5xl font-semibold leading-[1.08] tracking-[-0.04em] text-white xl:text-6xl">
+            Transforme dados em{' '}
+            <span className="bg-gradient-to-r from-cyan-200 via-cyan-300 to-blue-300 bg-clip-text text-transparent">
+              movimento comercial.
+            </span>
+          </h1>
+          <p className="mt-6 max-w-lg text-base leading-7 text-gray-400">
+            Um espaço de trabalho para encontrar oportunidades, acompanhar campanhas e conduzir cada lead até a conversão.
+          </p>
+
+          <div className="mt-10 max-w-lg space-y-3">
+            {platformFeatures.map(({ icon: Icon, label, detail }, index) => (
+              <div key={label} className="flex items-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3.5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-200/10 bg-cyan-300/[0.06] text-cyan-100/85">
+                  <Icon size={18} strokeWidth={1.7} />
+                </span>
+                <span className="flex-1">
+                  <span className="block text-sm font-medium text-gray-200">{label}</span>
+                  <span className="mt-0.5 block text-xs text-gray-500">{detail}</span>
+                </span>
+                <span className="font-mono text-[9px] text-gray-700">0{index + 1}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10 flex items-center gap-3 font-mono text-[9px] uppercase tracking-[0.17em] text-gray-600">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/40" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400/80" />
+            </span>
+            Ambiente protegido · G-System + Spy Car
+          </div>
+        </section>
+
+        <div className="relative z-10 mx-auto w-full max-w-md">
+          <div className="mb-8 text-center lg:hidden">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200/20 bg-gradient-to-br from-cyan-300/20 to-blue-600/10 text-cyan-100 shadow-[0_8px_28px_rgba(8,145,178,0.15)]">
+              <ShieldCheck size={27} />
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-white">
+              Automação <span className="text-cyan-200">de Leads</span>
+            </h1>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+              Intelligence suite
+            </p>
+          </div>
+
+          <div className="mb-4 hidden items-center justify-between px-1 lg:flex">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.17em] text-gray-500">
+              Acesso à plataforma
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-emerald-200/65">
+              <ShieldCheck size={13} />
+              Conexão segura
+            </span>
+          </div>
+
+          <Suspense fallback={<div className="py-8 text-center text-gray-500">Carregando painel seguro...</div>}>
+            <LoginForm />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

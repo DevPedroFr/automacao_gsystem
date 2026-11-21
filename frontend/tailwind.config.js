@@ -8,9 +8,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#0B0F19',
-        card: 'rgba(17, 24, 39, 0.7)',
-        cardBorder: 'rgba(255, 255, 255, 0.08)',
+        background: '#080d16',
+        card: 'rgba(12, 21, 34, 0.82)',
+        cardBorder: 'rgba(148, 163, 184, 0.14)',
         accent: {
           cyan: '#06B6D4',
           emerald: '#10B981',

@@ -7,12 +7,12 @@ import Badge from '@/components/ui/Badge';
 import Link from 'next/link';
 
 const STATUS_COLUMNS = [
-  { id: 'new', label: 'Novo', color: 'border-cyan-500' },
-  { id: 'contacted', label: 'Contatado', color: 'border-blue-500' },
-  { id: 'negotiation', label: 'Interessado', color: 'border-yellow-500' },
-  { id: 'won', label: 'Fechado (Ganho)', color: 'border-emerald-500' },
-  { id: 'paid', label: 'Pago', color: 'border-violet-500' },
-  { id: 'lost', label: 'Perdido', color: 'border-rose-500' },
+  { id: 'new', label: 'Novo', color: 'border-t-cyan-300/70' },
+  { id: 'contacted', label: 'Contatado', color: 'border-t-blue-300/70' },
+  { id: 'negotiation', label: 'Interessado', color: 'border-t-amber-300/70' },
+  { id: 'won', label: 'Fechado (Ganho)', color: 'border-t-emerald-300/70' },
+  { id: 'paid', label: 'Pago', color: 'border-t-violet-300/70' },
+  { id: 'lost', label: 'Perdido', color: 'border-t-rose-300/70' },
 ];
 
 const COMPANY_NAMES = {
@@ -135,11 +135,14 @@ export default function CRMPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-100">CRM Vendas</h1>
-          <p className="text-sm text-gray-400">Acompanhe somente os leads adicionados ao CRM.</p>
+          <div className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/60">
+            Workspace <span className="mx-1 text-gray-700">/</span> Pipeline
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight text-gray-100 sm:text-3xl">CRM Vendas</h1>
+          <p className="mt-1 text-sm text-gray-400">Acompanhe somente os leads adicionados ao CRM.</p>
         </div>
         {accessLevel === 'diretoria' && (
           <label className="flex flex-col gap-1 text-xs font-semibold text-gray-400">
@@ -188,13 +191,13 @@ export default function CRMPage() {
             return (
               <div
                 key={column.id}
-                className={`flex-shrink-0 w-80 bg-gray-900/40 rounded-xl border-t-4 ${column.color} flex flex-col snap-center`}
+                className={`flex-shrink-0 w-80 overflow-hidden rounded-2xl border border-white/[0.07] border-t-2 bg-[#09111d]/75 shadow-[0_12px_36px_rgba(0,0,0,0.16)] backdrop-blur-xl ${column.color} flex flex-col snap-center`}
                 onDragOver={handleDragOver}
                 onDrop={(event) => handleDrop(event, column.id)}
               >
-                <div className="p-4 border-b border-gray-800/50 flex justify-between items-center bg-gray-900/60 rounded-t-xl">
-                  <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider">{column.label}</h2>
-                  <span className="bg-gray-800 text-gray-400 text-xs px-2 py-1 rounded-md font-medium">
+                <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] p-4">
+                  <h2 className="text-xs font-semibold uppercase tracking-[0.1em] text-gray-300">{column.label}</h2>
+                  <span className="rounded-lg border border-white/[0.07] bg-white/[0.04] px-2 py-1 font-mono text-[10px] font-medium text-gray-400">
                     {columnLeads.length}
                   </span>
                 </div>

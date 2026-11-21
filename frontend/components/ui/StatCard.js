@@ -5,24 +5,24 @@ export default function StatCard({ title, value, subtitle, icon, trend, trendVal
   const trendArrow = trend === 'up' ? '↑' : trend === 'down' ? '↓' : '';
 
   return (
-    <Card className="group animate-fade-in" padding="p-6">
+    <Card className="group animate-fade-in" padding="p-5 sm:p-6">
       <div className="flex items-start gap-4">
         {icon && (
-          <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/20 to-purple-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(6,182,212,0.4)] group-hover:border-cyan-400/50 transition-all duration-300">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-cyan-300/15 bg-gradient-to-br from-cyan-300/[0.12] to-indigo-400/[0.06] text-cyan-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] transition-all duration-300 group-hover:border-cyan-200/30 group-hover:text-white">
             {icon}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-400 truncate">{title}</p>
-          <div className="flex items-baseline gap-2 mt-2">
-            <p className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 tracking-tight drop-shadow-sm">{value}</p>
+          <p className="truncate text-xs font-medium uppercase tracking-[0.1em] text-gray-500">{title}</p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="text-3xl font-semibold tracking-tight text-gray-100">{value}</p>
             {trendValue && (
               <span className={`text-sm font-semibold tracking-wide ${trendColor}`}>
                 {trendArrow} {trendValue}
               </span>
             )}
           </div>
-          {subtitle && <p className="text-xs text-gray-500 mt-1.5 font-medium tracking-wide">{subtitle}</p>}
+          {subtitle && <p className="mt-1.5 text-xs font-medium text-gray-500">{subtitle}</p>}
         </div>
       </div>
     </Card>

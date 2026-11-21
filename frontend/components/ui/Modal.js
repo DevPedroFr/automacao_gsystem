@@ -29,13 +29,14 @@ export default function Modal({ isOpen, onClose, title, children }) {
       />
 
       {/* Modal container */}
-      <div className="relative z-10 bg-gray-900 border border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-slide-up">
+      <div className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0b1421]/95 shadow-[0_24px_90px_rgba(0,0,0,0.55),0_0_40px_rgba(34,211,238,0.06)] backdrop-blur-2xl animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700/50 shrink-0">
-          <h2 className="text-lg font-bold text-gray-100 tracking-wide">{title}</h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-white/[0.07] px-6 py-4">
+          <h2 className="text-lg font-semibold tracking-tight text-gray-100">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-800 transition-colors text-gray-400 hover:text-white"
+            className="rounded-lg border border-transparent p-1.5 text-gray-500 transition-colors hover:border-white/[0.08] hover:bg-white/[0.05] hover:text-white"
+            aria-label="Fechar janela"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

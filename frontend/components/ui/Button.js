@@ -9,13 +9,13 @@ export default function Button({
   className = '',
   ...props
 }) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseClasses = 'inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-[0.01em] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#080d16] active:scale-[0.98]';
 
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white focus:ring-cyan-500 shadow-[0_0_15px_rgba(6,182,212,0.35)]',
-    secondary: 'bg-gray-800/90 border border-gray-700/80 hover:bg-gray-750 hover:border-gray-600 text-gray-200 hover:text-white focus:ring-cyan-500/50 shadow-sm',
-    danger: 'bg-rose-600 hover:bg-rose-500 text-white focus:ring-rose-500 shadow-sm',
-    ghost: 'bg-transparent hover:bg-gray-800/60 text-gray-300 hover:text-white focus:ring-gray-600',
+    primary: 'border border-cyan-200/20 bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950 shadow-[0_8px_24px_rgba(8,145,178,0.2)] hover:brightness-110 hover:shadow-[0_10px_30px_rgba(8,145,178,0.28)] focus:ring-cyan-300',
+    secondary: 'border border-white/10 bg-white/[0.045] text-gray-200 shadow-sm hover:border-cyan-300/20 hover:bg-white/[0.08] hover:text-white focus:ring-cyan-400/50',
+    danger: 'border border-rose-300/15 bg-rose-500/90 text-white shadow-sm hover:bg-rose-400 focus:ring-rose-400',
+    ghost: 'border border-transparent bg-transparent text-gray-300 hover:border-white/[0.07] hover:bg-white/[0.045] hover:text-white focus:ring-gray-500',
   };
 
   const sizeClasses = {

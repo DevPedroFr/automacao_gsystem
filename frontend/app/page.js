@@ -7,6 +7,7 @@ import {
   BadgeCheck,
   CircleAlert,
   CircleCheck,
+  Activity,
   FolderKanban,
   Handshake,
   LoaderCircle,
@@ -132,14 +133,21 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-100">Visão geral</h1>
-          <p className="mt-2 text-sm text-gray-400">
+          <div className="mb-2 flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200/65">
+            <Activity size={13} />
+            Central de operações
+            <span className="ml-1 inline-flex items-center gap-1.5 rounded-full border border-cyan-300/10 bg-cyan-400/[0.045] px-2 py-1 text-[9px] tracking-[0.12em] text-cyan-100/70">
+              SYNC · 15S
+            </span>
+          </div>
+          <h1 className="text-3xl font-semibold tracking-tight text-gray-100 sm:text-4xl">Visão geral</h1>
+          <p className="mt-2 max-w-2xl text-sm text-gray-400">
             Acompanhe o CRM e o desempenho das campanhas em um só lugar.
           </p>
         </div>
         <div className="flex items-center gap-4">
           {updatedAt && (
-            <span className="text-xs text-gray-500">
+            <span className="hidden rounded-lg border border-white/[0.07] bg-white/[0.025] px-3 py-2 font-mono text-[10px] text-gray-500 sm:inline-flex">
               Atualizado às {updatedAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}

@@ -1,67 +1,47 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import {
+  Activity,
+  BriefcaseBusiness,
+  LayoutDashboard,
+  LogOut,
+  ShieldCheck,
+  Settings2,
+  Target,
+  Zap,
+} from 'lucide-react';
 
 const navItems = [
-  {
-    href: '/',
-    label: 'Dashboard',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    href: '/crm',
-    label: 'CRM',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-    ),
-  },
-  {
-    href: '/campaigns',
-    label: 'Campanhas',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="1" fill="currentColor" />
-      </svg>
-    ),
-  },
-  {
-    href: '/settings',
-    label: 'Configurações',
-    icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-  },
+  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/crm', label: 'CRM', icon: BriefcaseBusiness },
+  { href: '/campaigns', label: 'Campanhas', icon: Target },
+  { href: '/settings', label: 'Configurações', icon: Settings2 },
 ];
 
-import { useRouter } from 'next/navigation';
+const accessLabels = {
+  g_system: 'G-System',
+  spy_car: 'Spy Car',
+  diretoria: 'Diretoria',
+};
+
+function isActiveRoute(pathname, href) {
+  return href === '/' ? pathname === '/' : pathname.startsWith(href);
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [accessLevel, setAccessLevel] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     let active = true;
     fetch('/api/auth')
       .then((response) => response.ok ? response.json() : null)
       .then((result) => {
-        if (active) setAccessLevel(result?.user?.access_level || null);
+        if (active) setUser(result?.user || null);
       })
       .catch((err) => console.error('Erro ao carregar nível de acesso:', err));
 
@@ -70,9 +50,11 @@ export default function Sidebar() {
     };
   }, []);
 
-  if (pathname === '/login') {
-    return null;
-  }
+  if (pathname === '/login') return null;
+
+  const visibleNavItems = navItems.filter(
+    (item) => item.href !== '/settings' || user?.access_level === 'diretoria',
+  );
 
   const handleLogout = async () => {
     try {
@@ -87,69 +69,113 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 min-h-screen bg-[#0F2744] flex-col shrink-0 print:hidden">
-        {/* Logo */}
-        <div className="px-6 py-8">
-          <h1 className="text-white font-bold text-xl tracking-wide">Automação de Leads</h1>
+      <aside className="relative z-20 hidden min-h-screen w-[276px] shrink-0 flex-col border-r border-white/[0.07] bg-[#080f1b]/90 backdrop-blur-2xl md:flex print:hidden">
+        <div className="pointer-events-none absolute inset-y-8 right-0 w-px bg-gradient-to-b from-transparent via-cyan-300/20 to-transparent" />
+
+        <div className="px-5 pb-7 pt-7">
+          <Link href="/" className="group flex items-center gap-3.5 rounded-2xl focus-visible:outline-offset-4">
+            <span className="flex h-11 w-11 items-center justify-center rounded-[14px] border border-cyan-200/20 bg-gradient-to-br from-cyan-300/20 to-blue-500/10 text-cyan-100 shadow-[0_8px_24px_rgba(8,145,178,0.12)] transition-transform group-hover:scale-[1.04]">
+              <Zap size={21} fill="currentColor" strokeWidth={1.7} />
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-semibold tracking-tight text-white">Automação de Leads</span>
+              <span className="mt-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.19em] text-cyan-200/55">
+                Intelligence suite
+              </span>
+            </span>
+          </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-4 space-y-1">
-          {navItems.filter((item) => item.href !== '/settings' || accessLevel === 'diretoria').map((item) => {
-            const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href) && item.href !== '#';
+        <div className="mx-5 mb-3 flex items-center justify-between border-t border-white/[0.06] pt-5">
+          <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.2em] text-gray-600">
+            Workspace
+          </span>
+          <Activity size={13} className="text-gray-600" />
+        </div>
+
+        <nav aria-label="Navegação principal" className="flex-1 space-y-1 px-3">
+          {visibleNavItems.map((item, index) => {
+            const active = isActiveRoute(pathname, item.href);
+            const Icon = item.icon;
             return (
               <Link
-                key={item.label}
+                key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                aria-current={active ? 'page' : undefined}
+                className={`group relative flex items-center gap-3 rounded-xl border px-3.5 py-3 text-[13px] font-medium transition-all duration-200 ${
+                  active
+                    ? 'border-cyan-200/[0.12] bg-gradient-to-r from-cyan-300/[0.11] via-cyan-300/[0.045] to-transparent text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]'
+                    : 'border-transparent text-gray-400 hover:border-white/[0.055] hover:bg-white/[0.035] hover:text-gray-100'
                 }`}
               >
-                {item.icon}
-                {item.label}
+                {active && <span className="absolute -left-px top-2.5 bottom-2.5 w-0.5 rounded-full bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.65)]" />}
+                <span className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+                  active ? 'bg-cyan-300/[0.1] text-cyan-100' : 'text-gray-500 group-hover:text-gray-200'
+                }`}>
+                  <Icon size={17} strokeWidth={1.8} />
+                </span>
+                <span className="flex-1">{item.label}</span>
+                <span className={`font-mono text-[9px] ${active ? 'text-cyan-100/45' : 'text-gray-700'}`}>
+                  0{index + 1}
+                </span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer com botão Sair */}
-        <div className="px-4 py-6 border-t border-white/5 space-y-3">
+        <div className="space-y-3 border-t border-white/[0.06] px-4 pb-5 pt-4">
+          <div className="rounded-2xl border border-white/[0.07] bg-gradient-to-br from-white/[0.045] to-white/[0.015] p-3.5">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={12} className="text-cyan-200/65" />
+                <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.15em] text-gray-400">
+                  Ambiente protegido
+                </span>
+              </div>
+              <span className="rounded-md border border-cyan-300/10 bg-cyan-400/[0.045] px-1.5 py-0.5 font-mono text-[8px] text-cyan-100/60">
+                AUTH
+              </span>
+            </div>
+            <p className="truncate text-xs font-semibold text-gray-200">{user?.username || 'Painel comercial'}</p>
+            <p className="mt-1 text-[10px] text-gray-500">{accessLabels[user?.access_level] || 'Inteligência comercial'}</p>
+          </div>
+
           <button
+            type="button"
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:bg-rose-500/10 hover:text-rose-400 transition-colors"
+            className="group flex w-full items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-xs font-semibold text-gray-500 transition-colors hover:border-rose-300/10 hover:bg-rose-400/[0.05] hover:text-rose-200"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            <span>Encerrar Sessão</span>
+            <LogOut size={15} className="transition-transform group-hover:-translate-x-0.5" />
+            Encerrar sessão
           </button>
-          <div className="px-4 text-[10px] text-gray-500 font-mono">
-            Automação de Leads v1.2
+          <div className="px-3.5 font-mono text-[9px] uppercase tracking-[0.14em] text-gray-700">
+            Commercial intelligence · v1.2
           </div>
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F2744] border-t border-gray-800 z-50 px-6 py-3 flex items-center justify-between shadow-[0_-5px_20px_rgba(0,0,0,0.3)] print:hidden">
-        {navItems.filter((item) => item.href !== '/settings' || accessLevel === 'diretoria').map((item) => {
-          const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href) && item.href !== '#';
+      <nav
+        aria-label="Navegação principal"
+        className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-white/[0.08] bg-[#080f1b]/95 px-2 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl md:hidden print:hidden"
+      >
+        {visibleNavItems.map((item) => {
+          const active = isActiveRoute(pathname, item.href);
+          const Icon = item.icon;
           return (
             <Link
-              key={item.label}
+              key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 p-2 rounded-lg text-xs font-medium transition-all duration-200 ${
-                isActive
-                  ? 'text-cyan-400'
-                  : 'text-gray-400 hover:text-gray-200'
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-w-[68px] flex-col items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[10px] font-medium transition-colors ${
+                active ? 'text-cyan-100' : 'text-gray-500 hover:text-gray-200'
               }`}
             >
-              <div className={`${isActive ? 'scale-110' : ''} transition-transform`}>
-                {item.icon}
-              </div>
-              <span>{item.label}</span>
+              <span className={`flex h-7 w-10 items-center justify-center rounded-lg transition-colors ${
+                active ? 'border border-cyan-200/10 bg-cyan-300/[0.1]' : ''
+              }`}>
+                <Icon size={17} strokeWidth={1.8} />
+              </span>
+              {item.label}
             </Link>
           );
         })}
